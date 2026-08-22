@@ -24,21 +24,35 @@ public sealed class SaveConnectionUseCase(IConnectionProfileRepository repositor
 
         var profile = draft.ToProfile();
         await _repository.SaveAsync(profile, cancellationToken).ConfigureAwait(false);
-        await StoreSecretAsync(profile, secret, cancellationToken).ConfigureAwait(false);
+        await PersistSecretAsync(profile, secret, cancellationToken).ConfigureAwait(false);
 
         return validation;
     }
 
-    private async Task StoreSecretAsync(ConnectionProfile profile, string? secret, CancellationToken cancellationToken)
+    /// <summary>
+    /// 資格情報を預ける、または預けてあるものを消す。
+    /// 「キーリングに保存」を外した接続とパスワード認証をやめた接続では、
+    /// 古い資格情報が残らないように消す。
+    /// パスワード欄が空のときは、伏せて表示しているだけの可能性があるので既存を残す。
+    /// </summary>
+    private async Task PersistSecretAsync(ConnectionProfile profile, string? secret, CancellationToken cancellationToken)
     {
-        var shouldStore = profile.Credentials.StoreSecretInKeyring
-            && profile.Credentials.RequiresSecret
-            && _secretStore.IsAvailable
-            && !string.IsNullOrEmpty(secret);
-
-        if (shouldStore)
+        if (!_secretStore.IsAvailable)
         {
-            await _secretStore.SaveAsync(SecretKeyFor(profile), secret!, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var key = SecretKeyFor(profile);
+
+        if (!profile.Credentials.StoreSecretInKeyring || !profile.Credentials.RequiresSecret)
+        {
+            await _secretStore.DeleteAsync(key, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(secret))
+        {
+            await _secretStore.SaveAsync(key, secret, cancellationToken).ConfigureAwait(false);
         }
     }
 

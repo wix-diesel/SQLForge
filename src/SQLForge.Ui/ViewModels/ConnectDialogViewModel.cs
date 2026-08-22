@@ -41,6 +41,8 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         _selectedTab = Tabs[0];
 
         SavedConnections.ProfileSelected += (_, profile) => OnProfileSelected(profile);
+        SavedConnections.LoadFailed += (_, exception) =>
+            SetStatus(false, "保存済み接続を読み込めません", exception.Message);
     }
 
     public string Title => "データベース接続";
@@ -58,9 +60,17 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     /// <summary>閉じる・キャンセルが押されたことをウィンドウへ伝える。</summary>
     public event EventHandler? CloseRequested;
 
+    /// <summary>起動直後の読み込み。呼び出し側が待たないので、例外はここで受け止める。</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        await SavedConnections.LoadAsync(cancellationToken).ConfigureAwait(true);
+        try
+        {
+            await SavedConnections.LoadAsync(cancellationToken).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            SetStatus(false, "保存済み接続を読み込めません", exception.Message);
+        }
 
         if (SavedConnections.SelectedItem is null)
         {
@@ -142,6 +152,12 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         catch (OperationCanceledException)
         {
             ClearStatus();
+        }
+        catch (Exception exception)
+        {
+            // 差し替え先の実装（DB ドライバー・キーリング）が投げても、
+            // ダイアログは開いたままにして理由を出す。
+            SetStatus(false, "操作に失敗しました", exception.Message);
         }
         finally
         {

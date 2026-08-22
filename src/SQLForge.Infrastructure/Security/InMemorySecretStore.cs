@@ -24,4 +24,10 @@ public sealed class InMemorySecretStore : ISecretStore
 
     public Task<string?> ReadAsync(string key, CancellationToken cancellationToken = default) =>
         Task.FromResult(_secrets.TryGetValue(key, out var secret) ? secret : null);
+
+    public Task DeleteAsync(string key, CancellationToken cancellationToken = default)
+    {
+        _secrets.TryRemove(key, out _);
+        return Task.CompletedTask;
+    }
 }

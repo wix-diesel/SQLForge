@@ -21,7 +21,7 @@ public sealed class ListSavedConnectionsUseCase(IConnectionProfileRepository rep
     private static IReadOnlyList<SavedConnectionGroup> Group(IEnumerable<ConnectionProfile> profiles) =>
         profiles
             .GroupBy(profile => profile.Environment)
-            .OrderBy(group => EnvironmentTag.All.ToList().IndexOf(group.Key))
+            .OrderBy(group => group.Key.SortOrder)
             .Select(group => new SavedConnectionGroup(
                 group.Key,
                 group.OrderBy(profile => profile.Name, StringComparer.OrdinalIgnoreCase).ToList()))

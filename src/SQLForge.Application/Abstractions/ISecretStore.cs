@@ -15,4 +15,7 @@ public interface ISecretStore
     Task SaveAsync(string key, string secret, CancellationToken cancellationToken = default);
 
     Task<string?> ReadAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>預けてある資格情報を消す。無いキーを指定しても失敗させない。</summary>
+    Task DeleteAsync(string key, CancellationToken cancellationToken = default);
 }
