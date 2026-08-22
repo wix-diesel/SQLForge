@@ -1,0 +1,430 @@
+<!--
+  SQLForge コントロールテーマ
+  design/avalonia/Controls.axaml をもとに、接続ダイアログで使うものだけを収めてある。
+  ControlTheme（キー付き）と Style（セレクタ）を 1 ファイルに収めるため Styles として書き、
+  Application.Styles にインクルードする。参照は DynamicResource で統一する。
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+
+  <!-- ===== 主ボタン（接続・実行・適用） ===== -->
+  <ControlTheme x:Key="PrimaryButton" TargetType="Button">
+    <Setter Property="Height"     Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"    Value="18,0"/>
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Cursor"     Value="Hand"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+    </Style>
+    <Style Selector="^:pressed /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}"/>
+    </Style>
+    <Style Selector="^:disabled /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource BgRaisedBrush}"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 副ボタン（枠線あり） ===== -->
+  <ControlTheme x:Key="SecondaryButton" TargetType="Button">
+    <Setter Property="Height"     Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"    Value="12,0"/>
+    <Setter Property="Background" Value="{DynamicResource BgSurfaceBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Cursor"     Value="Hand"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{DynamicResource BorderStrongBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource BgRaisedBrush}"/>
+    </Style>
+    <Style Selector="^:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== ゴーストボタン（枠線なし。キャンセル・タイトルバー） ===== -->
+  <ControlTheme x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding"    Value="16,0"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== アイコンだけのボタン（閉じる・目のアイコン） ===== -->
+  <ControlTheme x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+    <Setter Property="Width"   Value="24"/>
+    <Setter Property="Height"  Value="24"/>
+    <Setter Property="Padding" Value="0"/>
+  </ControlTheme>
+
+  <!-- ===== トグルスイッチ（32×18・ノブ 14） ===== -->
+  <ControlTheme x:Key="SwitchToggle" TargetType="ToggleButton">
+    <Setter Property="Width"              Value="32"/>
+    <Setter Property="Height"             Value="18"/>
+    <Setter Property="Cursor"             Value="Hand"/>
+    <Setter Property="VerticalAlignment"  Value="Center"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Track"
+                Background="{DynamicResource BgRaisedBrush}"
+                BorderBrush="{DynamicResource BorderStrongBrush}"
+                BorderThickness="1"
+                CornerRadius="9"
+                Padding="2">
+          <Ellipse Name="PART_Knob"
+                   Width="14" Height="14"
+                   Fill="{DynamicResource TextDimBrush}"
+                   HorizontalAlignment="Left"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:checked /template/ Border#PART_Track">
+      <Setter Property="Background"      Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="BorderBrush"     Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="^:checked /template/ Ellipse#PART_Knob">
+      <Setter Property="Fill"                Value="{DynamicResource OnAccentBrush}"/>
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 保存済み接続の 1 行 ===== -->
+  <ControlTheme x:Key="ConnectionListItem" TargetType="ListBoxItem">
+    <!-- 見出し行 (IsSelectable=false) はフォーカスも選択もさせない -->
+    <Setter Property="IsEnabled"                 Value="{ReflectionBinding IsSelectable}"/>
+    <Setter Property="Padding"                   Value="0"/>
+    <Setter Property="Margin"                    Value="0"/>
+    <Setter Property="MinHeight"                 Value="0"/>
+    <Setter Property="Background"                Value="Transparent"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="Transparent"
+                BorderThickness="2,0,0,0">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="Background"  Value="{DynamicResource TreeSelectedBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 環境タグの色見本（選択時にリングを出す） ===== -->
+  <ControlTheme x:Key="SwatchListItem" TargetType="ListBoxItem">
+    <Setter Property="Padding"    Value="0"/>
+    <Setter Property="Margin"     Value="0,0,7,0"/>
+    <Setter Property="MinHeight"  Value="0"/>
+    <Setter Property="Cursor"     Value="Hand"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Ring"
+                Width="20" Height="20"
+                BorderBrush="Transparent"
+                BorderThickness="1"
+                CornerRadius="5">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Ring">
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Ring">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextDimBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== ダイアログのタブ（下線 2px） ===== -->
+  <ControlTheme x:Key="DialogTabItem" TargetType="ListBoxItem">
+    <Setter Property="Height"                    Value="{DynamicResource DialogTabStripHeight}"/>
+    <Setter Property="MinHeight"                 Value="0"/>
+    <Setter Property="Padding"                   Value="14,0"/>
+    <Setter Property="Margin"                    Value="0"/>
+    <Setter Property="FontSize"                  Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Foreground"                Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="Background"                Value="Transparent"/>
+    <Setter Property="Cursor"                    Value="Hand"/>
+    <Setter Property="VerticalContentAlignment"  Value="Center"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="Transparent"
+                BorderThickness="0,0,0,2"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    </Style>
+    <Style Selector="^:selected">
+      <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+  </ControlTheme>
+
+
+
+  <!-- ===== アイコンだけのトグル（パスワード表示） ===== -->
+  <ControlTheme x:Key="IconToggle" TargetType="ToggleButton">
+    <Setter Property="Width"      Value="24"/>
+    <Setter Property="Height"     Value="24"/>
+    <Setter Property="Padding"    Value="0"/>
+    <Setter Property="Cursor"     Value="Hand"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusSm}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 文字つきの小さなトグル（キーリングに保存） ===== -->
+  <ControlTheme x:Key="InlineToggle" TargetType="ToggleButton" BasedOn="{StaticResource IconToggle}">
+    <Setter Property="Width"      Value="NaN"/>
+    <Setter Property="Height"     Value="24"/>
+    <Setter Property="Padding"    Value="8,0"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    <Style Selector="^:checked">
+      <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 区切り線 ===== -->
+  <ControlTheme x:Key="VerticalDivider" TargetType="Border">
+    <Setter Property="Width"             Value="1"/>
+    <Setter Property="Height"            Value="18"/>
+    <Setter Property="Background"        Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin"            Value="4,0"/>
+  </ControlTheme>
+  </Styles.Resources>
+
+  <!-- ===== 入力欄 ===== -->
+  <Style Selector="TextBox">
+    <Setter Property="MinHeight"                Value="0"/>
+    <Setter Property="Height"                   Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"                  Value="10,0"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background"               Value="{DynamicResource InputBackgroundBrush}"/>
+    <Setter Property="BorderBrush"              Value="{DynamicResource BorderStrongBrush}"/>
+    <Setter Property="BorderThickness"          Value="1"/>
+    <Setter Property="CornerRadius"             Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="Foreground"               Value="{DynamicResource TextHighBrush}"/>
+    <Setter Property="FontSize"                 Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="SelectionBrush"           Value="{DynamicResource TreeSelectedBrush}"/>
+    <Setter Property="CaretBrush"               Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="TextBox.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeMono}"/>
+  </Style>
+  <Style Selector="TextBox.error">
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+  <Style Selector="TextBox.search">
+    <Setter Property="Height"          Value="{DynamicResource ControlHeightSm}"/>
+    <Setter Property="FontSize"        Value="{DynamicResource FontSizeMd}"/>
+    <Setter Property="Padding"         Value="0"/>
+    <Setter Property="Background"      Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <!-- ===== ドロップダウン ===== -->
+  <Style Selector="ComboBox">
+    <Setter Property="MinHeight"                Value="0"/>
+    <Setter Property="Height"                   Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"                  Value="10,0"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background"               Value="{DynamicResource InputBackgroundBrush}"/>
+    <Setter Property="BorderBrush"              Value="{DynamicResource BorderStrongBrush}"/>
+    <Setter Property="BorderThickness"          Value="1"/>
+    <Setter Property="CornerRadius"             Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="Foreground"               Value="{DynamicResource TextHighBrush}"/>
+    <Setter Property="FontSize"                 Value="{DynamicResource FontSizeBase}"/>
+  </Style>
+  <Style Selector="ComboBoxItem">
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Height"    Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"   Value="10,0"/>
+    <Setter Property="FontSize"  Value="{DynamicResource FontSizeBase}"/>
+  </Style>
+
+  <!-- ===== アイコン（16px ビューボックス・線 1.4px） ===== -->
+  <Style Selector="Path.icon">
+    <Setter Property="Stroke"          Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="StrokeThickness" Value="1.4"/>
+    <Setter Property="StrokeLineCap"   Value="Round"/>
+    <Setter Property="StrokeJoin"      Value="Round"/>
+    <Setter Property="Stretch"         Value="None"/>
+    <Setter Property="Width"           Value="16"/>
+    <Setter Property="Height"          Value="16"/>
+  </Style>
+  <Style Selector="Path.icon.accent">
+    <Setter Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="Path.icon.success">
+    <Setter Property="Stroke" Value="{DynamicResource SuccessBrush}"/>
+  </Style>
+  <Style Selector="Path.icon.faint">
+    <Setter Property="Stroke" Value="{DynamicResource TextFaintBrush}"/>
+  </Style>
+  <Style Selector="Path.icon.base">
+    <Setter Property="Stroke" Value="{DynamicResource TextBaseBrush}"/>
+  </Style>
+  <Style Selector="Path.icon.danger">
+    <Setter Property="Stroke" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+
+  <!-- ===== 見出し・補助テキスト ===== -->
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeSm}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.groupHeader">
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeXs}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextFaintBrush}"/>
+    <Setter Property="LetterSpacing"     Value="0.8"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeMono}"/>
+  </Style>
+
+
+  <!-- ===== 環境タグの色（危険度で決まる） ===== -->
+  <Style Selector="Border.envColor">
+    <Setter Property="Background" Value="{DynamicResource TextFaintBrush}"/>
+  </Style>
+  <Style Selector="Border.envColor.critical">
+    <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+  <Style Selector="Border.envColor.elevated">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="Border.envColor.normal">
+    <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+  </Style>
+  <Style Selector="Border.envColor.neutral">
+    <Setter Property="Background" Value="{DynamicResource TextDimBrush}"/>
+  </Style>
+
+  <!-- ===== 接続 URL の色分け ===== -->
+  <Style Selector="TextBlock.urlPart">
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeMd}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextDimBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.urlPart.scheme">
+    <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.urlPart.database">
+    <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.urlPart.param">
+    <Setter Property="Foreground" Value="{DynamicResource TealBrush}"/>
+  </Style>
+
+  <!-- ===== 操作結果の見出し ===== -->
+  <Style Selector="TextBlock.statusHeadline">
+    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.statusHeadline.error">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+
+</Styles>

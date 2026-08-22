@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             x:Class="SQLForge.Ui.Views.ConnectDialogFooter"
+             x:DataType="vm:ConnectDialogViewModel">
+
+  <!-- 接続ダイアログ下部: テスト・結果表示・確定操作 -->
+  <Border Height="{DynamicResource DialogFooterHeight}"
+          Padding="16,0"
+          Background="{DynamicResource BgPanelBrush}"
+          BorderBrush="{DynamicResource BorderBrush}"
+          BorderThickness="0,1,0,0">
+    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
+      <Button Grid.Column="0"
+              Theme="{StaticResource SecondaryButton}"
+              Command="{Binding TestConnectionCommand}"
+              IsEnabled="{Binding !IsBusy}">
+        <StackPanel Orientation="Horizontal" Spacing="7">
+          <Path Classes="icon base" Data="{StaticResource IconProbe}"/>
+          <TextBlock Text="接続をテスト" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+
+      <!-- 直前の操作の結果 -->
+      <StackPanel Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="7"
+                  Margin="6,0,0,0"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding HasStatus}">
+        <Path Classes="icon success"
+              Data="{StaticResource IconCheckCircle}"
+              IsVisible="{Binding !IsStatusError}"/>
+        <Path Classes="icon danger"
+              Data="{StaticResource IconAlertCircle}"
+              IsVisible="{Binding IsStatusError}"/>
+        <TextBlock Classes="statusHeadline"
+                   Classes.error="{Binding IsStatusError}"
+                   Text="{Binding StatusHeadline}"
+                   VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding StatusDetail}"
+                   FontSize="{DynamicResource FontSizeMd}"
+                   Foreground="{DynamicResource TextDimBrush}"
+                   TextTrimming="CharacterEllipsis"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+        <Button Theme="{StaticResource GhostButton}"
+                Content="キャンセル"
+                Command="{Binding CancelCommand}"/>
+        <Button Theme="{StaticResource SecondaryButton}"
+                Content="保存"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding !IsBusy}"/>
+        <Button Theme="{StaticResource PrimaryButton}"
+                Content="接続"
+                Command="{Binding ConnectCommand}"
+                IsDefault="True"
+                IsEnabled="{Binding !IsBusy}"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</UserControl>
