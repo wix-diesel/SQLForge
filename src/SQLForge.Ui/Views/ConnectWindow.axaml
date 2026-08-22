@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SQLForge.Ui.ViewModels"
+        xmlns:views="using:SQLForge.Ui.Views"
+        x:Class="SQLForge.Ui.Views.ConnectWindow"
+        x:DataType="vm:ConnectDialogViewModel"
+        Title="SQLForge — データベース接続"
+        Width="880" Height="640"
+        MinWidth="760" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgSurfaceBrush}"
+        Foreground="{DynamicResource TextBaseBrush}"
+        FontFamily="{DynamicResource FontFamilyUi}"
+        FontSize="{DynamicResource FontSizeBase}">
+
+  <!-- 起動時に最初に出るウィンドウ。design/Connect.dc.html に対応する。 -->
+  <Border BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- タイトルバー（OS の装飾を使わない環境では、ここをドラッグして移動する） -->
+      <Border Name="TitleBar"
+              Grid.Row="0"
+              Height="{DynamicResource DialogHeaderHeight}"
+              Padding="14,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,0,0,1"
+              PointerPressed="OnTitleBarPressed">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <Path Grid.Column="0" Classes="icon accent" Data="{StaticResource IconDatabase}"/>
+          <TextBlock Grid.Column="1"
+                     Text="{Binding Title}"
+                     FontSize="{DynamicResource FontSizeLg}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextHighBrush}"
+                     VerticalAlignment="Center"/>
+          <Button Name="CloseButton"
+                  Grid.Column="2"
+                  Theme="{StaticResource IconButton}"
+                  Command="{Binding CancelCommand}"
+                  ToolTip.Tip="閉じる">
+            <Path Classes="icon" Data="{StaticResource IconClose}"/>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- 本体: 保存済み接続 / 入力欄 -->
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+        <views:SavedConnectionsPane Grid.Column="0" Width="{DynamicResource DialogSidebarWidth}"/>
+
+        <Grid Grid.Column="1" RowDefinitions="Auto,*">
+          <!-- タブ -->
+          <Border Grid.Row="0"
+                  Height="{DynamicResource DialogTabStripHeight}"
+                  Background="{DynamicResource BgPanelBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="0,0,0,1">
+            <ListBox Background="Transparent"
+                     BorderThickness="0"
+                     Padding="0"
+                     ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab}"
+                     ItemContainerTheme="{StaticResource DialogTabItem}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:DialogTabViewModel">
+                  <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+
+          <!-- タブの中身 -->
+          <Panel Grid.Row="1">
+            <views:ConnectionFormView IsVisible="{Binding SelectedTab.IsImplemented}"/>
+            <TextBlock IsVisible="{Binding !SelectedTab.IsImplemented}"
+                       Text="{Binding SelectedTab.Placeholder}"
+                       Foreground="{DynamicResource TextFaintBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="380"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+          </Panel>
+        </Grid>
+      </Grid>
+
+      <!-- フッター -->
+      <views:ConnectDialogFooter Grid.Row="2"/>
+
+    </Grid>
+  </Border>
+</Window>

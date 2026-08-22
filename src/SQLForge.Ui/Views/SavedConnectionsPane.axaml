@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             x:Class="SQLForge.Ui.Views.SavedConnectionsPane"
+             x:DataType="vm:ConnectDialogViewModel">
+
+  <!-- 接続ダイアログ左ペイン: 検索・環境タグごとの一覧・新規作成 -->
+  <Border Background="{DynamicResource BgPanelBrush}"
+          BorderBrush="{DynamicResource BorderBrush}"
+          BorderThickness="0,0,1,0">
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- 検索 -->
+      <Border Grid.Row="0"
+              Height="{DynamicResource ControlHeightSm}"
+              Margin="12,10,12,6"
+              Padding="9,0"
+              Background="{DynamicResource InputBackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RadiusMd}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+          <Path Grid.Column="0" Classes="icon faint"
+                Data="{StaticResource IconSearch}"
+                VerticalAlignment="Center"/>
+          <TextBox Grid.Column="1" Classes="search"
+                   Text="{Binding SavedConnections.SearchText}"
+                   Watermark="保存済み接続を検索"
+                   VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+
+      <!-- 一覧（見出し行 + 接続行） -->
+      <ListBox Grid.Row="1"
+               Background="Transparent"
+               BorderThickness="0"
+               Padding="0"
+               ItemsSource="{Binding SavedConnections.Entries}"
+               SelectedItem="{Binding SavedConnections.SelectedItem}"
+               ItemContainerTheme="{StaticResource ConnectionListItem}"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.DataTemplates>
+
+          <DataTemplate DataType="vm:ConnectionGroupHeaderViewModel">
+            <Border Height="{DynamicResource GroupHeaderHeight}" Margin="12,6,12,0">
+              <TextBlock Classes="groupHeader" Text="{Binding Title}"/>
+            </Border>
+          </DataTemplate>
+
+          <DataTemplate DataType="vm:SavedConnectionItemViewModel">
+            <Grid Height="{DynamicResource ConnectionRowHeight}"
+                  Margin="12,0"
+                  ColumnDefinitions="Auto,*,Auto"
+                  ColumnSpacing="9">
+              <Border Grid.Column="0" Classes="envColor"
+                      Classes.critical="{Binding IsCritical}"
+                      Classes.elevated="{Binding IsElevated}"
+                      Classes.normal="{Binding IsNormal}"
+                      Classes.neutral="{Binding IsNeutral}"
+                      Width="8" Height="8" CornerRadius="2"
+                      VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}"
+                           Foreground="{DynamicResource TextHighBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+                <TextBlock Classes="mono"
+                           Text="{Binding Summary}"
+                           FontSize="{DynamicResource FontSizeMonoSm}"
+                           Foreground="{DynamicResource TextDimBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+              <Path Grid.Column="2" Classes="icon faint"
+                    Data="{StaticResource IconShield}"
+                    IsVisible="{Binding IsReadOnly}"
+                    ToolTip.Tip="読み取り専用で開く接続"
+                    VerticalAlignment="Center"/>
+            </Grid>
+          </DataTemplate>
+
+        </ListBox.DataTemplates>
+      </ListBox>
+
+      <!-- 一致なし -->
+      <TextBlock Grid.Row="1"
+                 Text="一致する接続がありません"
+                 Foreground="{DynamicResource TextFaintBrush}"
+                 HorizontalAlignment="Center"
+                 Margin="0,24,0,0"
+                 IsVisible="{Binding SavedConnections.IsEmpty}"/>
+
+      <!-- 新しい接続 -->
+      <Border Grid.Row="2"
+              Height="34"
+              Padding="12,0"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="*,Auto">
+          <Button Grid.Column="0"
+                  Theme="{StaticResource GhostButton}"
+                  Padding="0"
+                  HorizontalAlignment="Left"
+                  Command="{Binding NewConnectionCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Path Classes="icon accent"
+                    Data="{StaticResource IconPlus}"
+                    VerticalAlignment="Center"/>
+              <TextBlock Text="新しい接続"
+                         Foreground="{DynamicResource AccentBrush}"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Grid.Column="1"
+                  Theme="{StaticResource IconButton}"
+                  IsEnabled="False"
+                  ToolTip.Tip="接続情報の取り込み（未実装）">
+            <Path Classes="icon"
+                  Data="{StaticResource IconImport}"/>
+          </Button>
+        </Grid>
+      </Border>
+
+    </Grid>
+  </Border>
+</UserControl>
