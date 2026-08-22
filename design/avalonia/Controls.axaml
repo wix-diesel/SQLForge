@@ -1,0 +1,189 @@
+<!--
+  SQLForge コントロールテーマ（抜粋）
+  Tokens.axaml を先にマージしてから読み込むこと。
+  Fluent テーマ前提。リソース参照はマージ順に依存しないよう DynamicResource で統一。
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===== 主ボタン（実行・接続・適用） ===== -->
+  <ControlTheme x:Key="PrimaryButton" TargetType="Button">
+    <Setter Property="Height"     Value="{DynamicResource ControlHeightSm}"/>
+    <Setter Property="Padding"    Value="10,0"/>
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+    </Style>
+    <Style Selector="^:pressed /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}"/>
+    </Style>
+    <Style Selector="^:disabled /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource BgRaisedBrush}"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 副ボタン（枠線あり） ===== -->
+  <ControlTheme x:Key="SecondaryButton" TargetType="Button">
+    <Setter Property="Height"     Value="{DynamicResource ControlHeightSm}"/>
+    <Setter Property="Padding"    Value="12,0"/>
+    <Setter Property="Background" Value="{DynamicResource BgSurfaceBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{DynamicResource BorderStrongBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource BgRaisedBrush}"/>
+    </Style>
+    <Style Selector="^:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== ゴーストボタン（ツールバー既定） ===== -->
+  <ControlTheme x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding"    Value="9,0"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <!-- ===== 破壊的操作 ===== -->
+  <ControlTheme x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+    <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+  </ControlTheme>
+
+  <!-- ===== バッジ（PK / FK / UQ / 行数） ===== -->
+  <ControlTheme x:Key="KeyBadge" TargetType="Border">
+    <Setter Property="CornerRadius"        Value="3"/>
+    <Setter Property="Padding"             Value="4,1"/>
+    <Setter Property="Background"          Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="VerticalAlignment"   Value="Center"/>
+  </ControlTheme>
+
+  <!-- ===== 入力欄 =====
+       Fluent の TextBox テンプレートは状態別に自前のリソースキーを引くため、
+       見た目を完全に握るには TextControl* キーの上書きが要る（avalonia.md 参照）。 -->
+  <Style Selector="TextBox">
+    <Setter Property="MinHeight"                Value="0"/>
+    <Setter Property="Height"                   Value="{DynamicResource ControlHeightMd}"/>
+    <Setter Property="Padding"                  Value="10,0"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background"               Value="{DynamicResource BgAppBrush}"/>
+    <Setter Property="BorderBrush"              Value="{DynamicResource BorderStrongBrush}"/>
+    <Setter Property="BorderThickness"          Value="1"/>
+    <Setter Property="CornerRadius"             Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="Foreground"               Value="{DynamicResource TextHighBrush}"/>
+    <Setter Property="FontSize"                 Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="SelectionBrush"           Value="{DynamicResource TreeSelectedBrush}"/>
+    <Setter Property="CaretBrush"               Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="TextBox:focus">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="TextBox.error">
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+  <Style Selector="TextBox.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeMono}"/>
+  </Style>
+
+  <!-- ===== 結果グリッド / ツリー（TreeDataGrid） =====
+       セレクタ名は TreeDataGrid のバージョンで変わることがあるので実機で要確認。 -->
+  <Style Selector="TreeDataGridRow">
+    <Setter Property="Height"     Value="{DynamicResource GridRowHeight}"/>
+    <Setter Property="MinHeight"  Value="0"/>
+    <Setter Property="FontFamily" Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeMono}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+  </Style>
+  <Style Selector="TreeDataGridRow:pointerover">
+    <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+  </Style>
+  <Style Selector="TreeDataGridRow:selected">
+    <Setter Property="Background" Value="{DynamicResource RowSelectedBrush}"/>
+  </Style>
+  <Style Selector="TreeDataGridColumnHeader">
+    <Setter Property="Height"          Value="{DynamicResource GridHeaderHeight}"/>
+    <Setter Property="MinHeight"       Value="0"/>
+    <Setter Property="Background"      Value="{DynamicResource BgRaisedBrush}"/>
+    <Setter Property="Foreground"      Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="BorderBrush"     Value="{DynamicResource BorderStrongBrush}"/>
+    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+    <Setter Property="Padding"         Value="10,0"/>
+    <Setter Property="FontSize"        Value="{DynamicResource FontSizeSm}"/>
+  </Style>
+
+  <!-- ===== エディタタブ ===== -->
+  <Style Selector="TabItem">
+    <Setter Property="Height"                   Value="{DynamicResource TabHeight}"/>
+    <Setter Property="MinHeight"                Value="0"/>
+    <Setter Property="Padding"                  Value="11,0"/>
+    <Setter Property="FontSize"                 Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Foreground"               Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="Background"               Value="Transparent"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TabItem:selected">
+    <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource BgSurfaceBrush}"/>
+  </Style>
+
+  <!-- ===== ステータスバー / ツールバーの区切り ===== -->
+  <ControlTheme x:Key="VerticalDivider" TargetType="Border">
+    <Setter Property="Width"             Value="1"/>
+    <Setter Property="Height"            Value="18"/>
+    <Setter Property="Background"        Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin"            Value="4,0"/>
+  </ControlTheme>
+
+</ResourceDictionary>

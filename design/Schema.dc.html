@@ -1,0 +1,394 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; font-family:"IBM Plex Sans JP","IBM Plex Sans",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#e8913f; text-decoration:none; }
+    a:hover { color:#f2a75f; }
+  </style>
+</helmet>
+
+<div style="width:1440px;height:900px;display:flex;flex-direction:column;background:#0f1115;color:#c2c9d4;font-size:12.5px;overflow:hidden">
+
+  <div style="height:34px;flex:0 0 34px;display:flex;align-items:center;background:#14171c;border-bottom:1px solid #2a3039;padding:0 8px">
+    <div style="display:flex;align-items:center;gap:7px;padding-right:16px">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 1.8l6.4 3.7v7.4L10 16.6 3.6 12.9V5.5z" stroke="#e8913f" stroke-width="1.5" stroke-linejoin="round"/><path d="M10.9 6.1L7.4 10.6h2.5l-.8 3.3 3.5-4.5h-2.5z" fill="#e8913f"/></svg>
+      <span style="font-size:12.5px;font-weight:600;color:#e8ebf0;letter-spacing:.02em">SQLForge</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1px">
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">ファイル</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">編集</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">表示</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">クエリ</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#e8ebf0;background:rgba(255,255,255,0.06)">データベース</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">ツール</span>
+      <span style="padding:0 9px;height:22px;line-height:22px;border-radius:4px;font-size:12px;color:#c2c9d4">ヘルプ</span>
+    </div>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:2px">
+      <span style="width:26px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#8a93a1" stroke-width="1.2" stroke-linecap="round"><path d="M1 5h8"/></svg></span>
+      <span style="width:26px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#8a93a1" stroke-width="1.2"><rect x="1.2" y="1.2" width="7.6" height="7.6" rx="1"/></svg></span>
+      <span style="width:26px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#8a93a1" stroke-width="1.2" stroke-linecap="round"><path d="M1.6 1.6l6.8 6.8M8.4 1.6l-6.8 6.8"/></svg></span>
+    </div>
+  </div>
+
+  <div style="height:36px;flex:0 0 36px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#14171c;border-bottom:1px solid #2a3039">
+    <div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 9px;border:1px solid #39414d;border-radius:5px;background:#1a1e24">
+      <span style="width:7px;height:7px;border-radius:50%;background:#4fb477;box-shadow:0 0 6px rgba(79,180,119,0.7)"></span>
+      <span style="font-size:12px;font-weight:500;color:#e8ebf0">prod-analytics</span>
+      <span style="color:#39414d">/</span>
+      <span style="font-size:12px;color:#8a93a1">sales_db</span>
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg>
+    </div>
+    <div style="width:1px;height:18px;background:#2a3039"></div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:5px;color:#c2c9d4"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.4" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg><span style="font-size:12px">列を追加</span></div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:5px;color:#c2c9d4"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.4" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg><span style="font-size:12px">列を削除</span></div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:5px;color:#c2c9d4"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V4M5 7l3-3 3 3"/><path d="M3 13.4h10"/></svg><span style="font-size:12px">並べ替え</span></div>
+    <div style="width:1px;height:18px;background:#2a3039"></div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:5px;color:#c2c9d4"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#5fbfc9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 8h10.8M9.4 4l4 4-4 4"/></svg><span style="font-size:12px">ER 図で開く</span></div>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid #39414d;border-radius:5px;background:#1a1e24">
+      <span style="width:6px;height:6px;border-radius:50%;background:#e8913f"></span>
+      <span style="font-size:11.5px;color:#e8ebf0">未適用の変更 3 件</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 11px;border-radius:5px;background:#e8913f">
+      <span style="font-size:12px;font-weight:600;color:#14171c">変更を適用</span>
+      <span style="font-size:10.5px;font-weight:500;color:#14171c;background:rgba(0,0,0,0.16);border-radius:3px;padding:1px 4px">Ctrl+Enter</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex:1 1 auto;min-height:0">
+
+    <aside style="width:288px;flex:0 0 288px;display:flex;flex-direction:column;background:#14171c;border-right:1px solid #2a3039;min-height:0">
+      <div style="height:28px;flex:0 0 28px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid #2a3039">
+        <span style="font-size:11px;font-weight:500;letter-spacing:.06em;color:#8a93a1">オブジェクトエクスプローラー</span>
+        <div style="flex-grow:1"></div>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13.2 2.6v2.6h-2.6"/></svg>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h10M5 8h6M7 11h2"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;height:26px;margin:6px 8px;padding:0 8px;border:1px solid #2a3039;border-radius:5px;background:#0f1115">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#616a77" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L14 14"/></svg>
+        <span style="font-size:11.5px;color:#616a77">フィルター（テーブル名、列名…）</span>
+      </div>
+      <div style="flex:1 1 auto;min-height:0;overflow:hidden;padding-top:2px">
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:8px;padding-right:8px;font-size:12.5px;color:#e8ebf0;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#4fb477" stroke-width="1.3"><rect x="2.5" y="2.8" width="11" height="4.2" rx="1.2"/><rect x="2.5" y="9" width="11" height="4.2" rx="1.2"/><path d="M4.8 4.9h.01M4.8 11.1h.01" stroke-linecap="round" stroke-width="1.6"/></svg><span style="font-weight:500;">prod-analytics</span><span style="font-size:11px;color:#616a77">PostgreSQL 16.2</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:21px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">データベース</span><span style="font-size:11px;color:#616a77">3</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:34px;padding-right:8px;font-size:12.5px;color:#e8ebf0;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#e8913f" stroke-width="1.3"><ellipse cx="8" cy="4.3" rx="4.6" ry="1.9"/><path d="M3.4 4.3v7.4c0 1.05 2.06 1.9 4.6 1.9s4.6-.85 4.6-1.9V4.3"/><path d="M3.4 8c0 1.05 2.06 1.9 4.6 1.9s4.6-.85 4.6-1.9"/></svg><span style="font-weight:500;">sales_db</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:47px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">スキーマ</span><span style="font-size:11px;color:#616a77">4</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:60px;padding-right:8px;font-size:12.5px;color:#e8ebf0;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#5fbfc9" stroke-width="1.3"><path d="M2.6 5.2h10.8v7.6H2.6z"/><path d="M2.6 5.2l2.6-2.4h8.2v2.4"/></svg><span style="font-weight:500;">sales</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:73px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">テーブル</span><span style="font-size:11px;color:#616a77">48</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">campaigns</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">coupons</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">customers</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">invoices</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">order_items</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:84px;padding-right:8px;font-size:12.5px;color:#e8ebf0;background:rgba(232,145,63,0.14);border-left:2px solid #e8913f;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#e8913f" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="font-weight:500;">orders</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:99px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">列 (14)</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:99px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">インデックス (6)</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:99px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">制約 (5)</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:99px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">トリガー (2)</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">payments</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">products</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">refunds</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">shipments</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:86px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><span style="width:11px;flex:0 0 11px"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="">subscriptions</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:73px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">ビュー</span><span style="font-size:11px;color:#616a77">7</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:73px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><path d="M2.2 4.6h4L7.4 6.2H13.8v7.2H2.2z"/></svg><span style="">関数・プロシージャ</span><span style="font-size:11px;color:#616a77">18</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding-left:60px;padding-right:8px;font-size:12.5px;color:#c2c9d4;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#5fbfc9" stroke-width="1.3"><path d="M2.6 5.2h10.8v7.6H2.6z"/><path d="M2.6 5.2l2.6-2.4h8.2v2.4"/></svg><span style="">public</span></div>
+      </div>
+    </aside>
+
+    <section style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;background:#0f1115">
+
+      <div style="height:32px;flex:0 0 32px;display:flex;align-items:stretch;background:#14171c;border-bottom:1px solid #2a3039">
+        <div style="display:flex;align-items:center;gap:7px;padding:0 11px;background:#1a1e24;border-right:1px solid #2a3039;box-shadow:inset 0 2px 0 #e8913f">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#e8913f" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8ebf0">sales.orders</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:#e8913f"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;padding:0 11px;border-right:1px solid #2a3039">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#616a77" stroke-width="1.3"><path d="M4 2.2h5l3 3v8.6H4z"/><path d="M9 2.2v3h3"/></svg>
+          <span style="font-size:12px;color:#8a93a1">monthly_revenue.sql</span>
+        </div>
+        <div style="flex-grow:1"></div>
+      </div>
+
+      <div style="height:32px;flex:0 0 32px;display:flex;align-items:stretch;background:#1a1e24;border-bottom:1px solid #2a3039;padding-left:4px">
+        <div style="display:flex;align-items:center;padding:0 12px;box-shadow:inset 0 -2px 0 #e8913f"><span style="font-size:12px;color:#e8ebf0;font-weight:500">列</span><span style="font-size:10.5px;color:#8a93a1;margin-left:6px">14</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">インデックス</span><span style="font-size:10.5px;color:#616a77;margin-left:6px">6</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">制約</span><span style="font-size:10.5px;color:#616a77;margin-left:6px">5</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">トリガー</span><span style="font-size:10.5px;color:#616a77;margin-left:6px">2</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">データ</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">DDL</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">権限</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:12px;color:#8a93a1">統計</span></div>
+      </div>
+      <div style="display:flex;height:28px;flex:0 0 28px;background:#21262e;border-bottom:1px solid #39414d">
+        <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">#</span></div>
+        <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">名前</span></div>
+        <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">データ型</span></div>
+        <div style="flex:0 0 56px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">NULL</span></div>
+        <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">既定値</span></div>
+        <div style="flex:0 0 60px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">キー</span></div>
+        <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-size:11.5px;color:#c2c9d4">コメント</span></div>
+      </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">1</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">order_id</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">bigint</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">nextval('orders_id_seq')</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><span style="font-size:9.5px;font-weight:600;color:#14171c;background:#e8913f;border-radius:3px;padding:1px 4px">PK</span></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">注文の内部 ID</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">2</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">customer_id</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">bigint</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8a93a1">—</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#5fbfc9;border-radius:3px;padding:1px 4px">FK</span></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">sales.customers を参照</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">3</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">order_date</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">date</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">CURRENT_DATE</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">受注日（タイムゾーン非依存）</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">4</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">status</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">sales.order_status</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">'pending'</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">pending / paid / shipped / cancelled</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">5</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">currency</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">char(3)</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">'JPY'</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ISO 4217</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">6</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">subtotal</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">numeric(14,2)</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">0</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">税・割引前の小計</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">7</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">discount_total</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">numeric(14,2)</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">0</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">クーポン等の割引合計</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">8</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">tax_total</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">numeric(14,2)</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">0</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">消費税合計</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">9</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">total_amount</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">numeric(14,2)</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">生成列</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">subtotal - discount_total + tax_total</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;background:rgba(232,145,63,0.09);border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid #e8913f;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">10</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">channel</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">sales.channel_type</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/><path d="M5.2 8.2l1.9 1.9 3.7-4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">'web'</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">text → 列挙型に変更予定</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">11</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">external_ref</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">text</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/><path d="M5.2 8.2l1.9 1.9 3.7-4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8a93a1">—</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#8a93a1;border-radius:3px;padding:1px 4px">UQ</span></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">外部システムの注文番号</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">12</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">note</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">text</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/><path d="M5.2 8.2l1.9 1.9 3.7-4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8a93a1">—</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">運用メモ（自由記述）</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">13</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">created_at</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">timestamptz</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">now()</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid transparent;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">14</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">updated_at</span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">timestamptz</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8ec07c">now()</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">トリガーで自動更新</span></div>
+        </div>
+        <div style="display:flex;height:26px;flex:0 0 26px;background:rgba(79,180,119,0.09);border-bottom:1px solid #21262e">
+          <div style="flex:0 0 36px;display:flex;align-items:center;justify-content:flex-end;border-left:2px solid #4fb477;padding-right:8px;background:#14171c;border-right:1px solid #2a3039;color:#616a77;font-size:11px;font-family:'JetBrains Mono',ui-monospace,monospace">15</div>
+          <div style="flex:0 0 176px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;outline:1.5px solid #e8913f;outline-offset:-1.5px;background:#0f1115;"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#e8ebf0">fulfilled_at</span><span style="display:inline-block;width:1.5px;height:13px;background:#e8913f;margin-left:1px"></span></div>
+          <div style="flex:0 0 150px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#5fbfc9">timestamptz</span></div>
+          <div style="flex:0 0 56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.4"/><path d="M5.2 8.2l1.9 1.9 3.7-4"/></svg></div>
+          <div style="flex:0 0 168px;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#8a93a1">—</span></div>
+          <div style="flex:0 0 60px;display:flex;align-items:center;justify-content:center;border-right:1px solid #21262e"></div>
+          <div style="flex:1 1 auto;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e"><span style="font-size:12px;color:#8a93a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">出荷完了日時（NULL は未出荷）</span></div>
+        </div>
+
+      <div style="height:6px;flex:0 0 6px;background:#0f1115;border-top:1px solid #2a3039;border-bottom:1px solid #2a3039;display:flex;align-items:center;justify-content:center">
+        <span style="width:30px;height:2px;border-radius:1px;background:#39414d"></span>
+      </div>
+
+      <div style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:#1a1e24">
+        <div style="height:28px;flex:0 0 28px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#14171c;border-bottom:1px solid #2a3039">
+          <span style="font-size:11.5px;color:#e8ebf0;font-weight:500">生成される DDL</span>
+          <span style="font-size:11px;color:#8a93a1">プレビュー · 適用前に編集できます</span>
+          <div style="flex-grow:1"></div>
+          <div style="display:flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:4px;background:#21262e"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.4"><rect x="5.4" y="5.4" width="8" height="8" rx="1.4"/><path d="M10.6 5.4V3.8a1.2 1.2 0 0 0-1.2-1.2H3.8a1.2 1.2 0 0 0-1.2 1.2v5.6a1.2 1.2 0 0 0 1.2 1.2h1.6"/></svg><span style="font-size:11px;color:#c2c9d4">コピー</span></div>
+          <div style="display:flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:4px;background:#21262e"><span style="font-size:11px;color:#c2c9d4">エディタで開く</span></div>
+        </div>
+        <div style="flex:1 1 auto;padding:8px 0;overflow:hidden;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;line-height:19px">
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">1</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">ALTER TABLE</span> <span style="color:#dfe4ec">sales</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">orders</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">2</span><span style="white-space:pre;padding-left:8px">    <span style="color:#82aef0">ADD COLUMN</span> <span style="color:#dfe4ec">fulfilled_at</span> <span style="color:#5fbfc9">timestamptz</span><span style="color:#8b94a3">,</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">3</span><span style="white-space:pre;padding-left:8px">    <span style="color:#82aef0">ALTER COLUMN</span> <span style="color:#dfe4ec">channel</span> <span style="color:#82aef0">TYPE</span> <span style="color:#5fbfc9">sales.channel_type</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">4</span><span style="white-space:pre;padding-left:8px">        <span style="color:#82aef0">USING</span> <span style="color:#dfe4ec">channel</span><span style="color:#8b94a3">::</span><span style="color:#5fbfc9">sales.channel_type</span><span style="color:#8b94a3">;</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">5</span><span style="white-space:pre;padding-left:8px"></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">6</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">COMMENT ON COLUMN</span> <span style="color:#dfe4ec">sales</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">orders</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">fulfilled_at</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">7</span><span style="white-space:pre;padding-left:8px">    <span style="color:#82aef0">IS</span> <span style="color:#8ec07c">&#39;出荷完了日時（NULL は未出荷）&#39;</span><span style="color:#8b94a3">;</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">8</span><span style="white-space:pre;padding-left:8px"></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">9</span><span style="white-space:pre;padding-left:8px"><span style="color:#5f6875;font-style:italic">-- 8,412,905 行のテーブルです。ロックを避けるため CONCURRENTLY を使用します。</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">10</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">CREATE INDEX CONCURRENTLY</span> <span style="color:#dfe4ec">idx_orders_fulfilled_at</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">11</span><span style="white-space:pre;padding-left:8px">    <span style="color:#82aef0">ON</span> <span style="color:#dfe4ec">sales</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">orders</span> <span style="color:#8b94a3">(</span><span style="color:#dfe4ec">fulfilled_at</span><span style="color:#8b94a3">)</span></span></div>
+          <div style="display:flex;height:19px;align-items:center"><span style="width:46px;flex:0 0 46px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">12</span><span style="white-space:pre;padding-left:8px">    <span style="color:#82aef0">WHERE</span> <span style="color:#dfe4ec">fulfilled_at</span> <span style="color:#82aef0">IS NOT NULL</span><span style="color:#8b94a3">;</span></span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <aside style="width:320px;flex:0 0 320px;display:flex;flex-direction:column;background:#14171c;border-left:1px solid #2a3039;min-height:0">
+      <div style="height:28px;flex:0 0 28px;display:flex;align-items:stretch;border-bottom:1px solid #2a3039">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 12px;box-shadow:inset 0 -2px 0 #e8913f"><span style="font-size:11.5px;color:#e8ebf0;font-weight:500">未適用の変更</span><span style="font-size:10px;font-weight:600;color:#14171c;background:#e8913f;border-radius:8px;padding:1px 6px">3</span></div>
+        <div style="display:flex;align-items:center;padding:0 12px"><span style="font-size:11.5px;color:#8a93a1">検証</span></div>
+        <div style="flex-grow:1"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1px;background:#2a3039;border-bottom:1px solid #2a3039">
+        <div style="background:#14171c;padding:10px 12px;display:flex;gap:9px">
+          <svg width="15" height="15" style="flex:0 0 15px;margin-top:1px" viewBox="0 0 16 16" fill="none" stroke="#4fb477" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <span style="font-size:12px;color:#e8ebf0">列を追加 <span style="font-family:'JetBrains Mono',monospace;color:#c2c9d4">fulfilled_at</span></span>
+            <span style="font-size:11px;color:#8a93a1">timestamptz · NULL 許可 · 既定値なし</span>
+            <span style="font-size:11px;color:#4fb477">安全 · テーブル書き換えなし</span>
+          </div>
+        </div>
+        <div style="background:#14171c;padding:10px 12px;display:flex;gap:9px">
+          <svg width="15" height="15" style="flex:0 0 15px;margin-top:1px" viewBox="0 0 16 16" fill="none" stroke="#e8913f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.4 2.6l2 2-7.4 7.4-2.6.6.6-2.6z"/></svg>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <span style="font-size:12px;color:#e8ebf0">型を変更 <span style="font-family:'JetBrains Mono',monospace;color:#c2c9d4">channel</span></span>
+            <span style="font-size:11px;color:#8a93a1"><span style="font-family:'JetBrains Mono',monospace">text</span> → <span style="font-family:'JetBrains Mono',monospace">sales.channel_type</span></span>
+            <span style="font-size:11px;color:#e05c62">警告 · ACCESS EXCLUSIVE ロック / 全行の書き換え（推定 3 分 40 秒）</span>
+          </div>
+        </div>
+        <div style="background:#14171c;padding:10px 12px;display:flex;gap:9px">
+          <svg width="15" height="15" style="flex:0 0 15px;margin-top:1px" viewBox="0 0 16 16" fill="none" stroke="#5fbfc9" stroke-width="1.5"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2"/></svg>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <span style="font-size:12px;color:#e8ebf0">インデックスを作成 <span style="font-family:'JetBrains Mono',monospace;color:#c2c9d4">idx_orders_fulfilled_at</span></span>
+            <span style="font-size:11px;color:#8a93a1">部分インデックス · CONCURRENTLY</span>
+            <span style="font-size:11px;color:#4fb477">安全 · 書き込みをブロックしません</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;height:24px;padding:0 12px;background:#0f1115;border-bottom:1px solid #2a3039">
+        <span style="font-size:10.5px;letter-spacing:.06em;color:#8a93a1">影響の見積り</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:1px;background:#2a3039;border-bottom:1px solid #2a3039">
+        <div style="background:#14171c;padding:8px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;color:#8a93a1">対象行数</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#e8ebf0">8,412,905</span></div>
+        <div style="background:#14171c;padding:8px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;color:#8a93a1">推定所要時間</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#e8913f">3 分 40 秒</span></div>
+        <div style="background:#14171c;padding:8px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;color:#8a93a1">必要な追加容量</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#e8ebf0">2.6 GB</span></div>
+        <div style="background:#14171c;padding:8px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;color:#8a93a1">依存オブジェクト</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#e8ebf0">4</span></div>
+      </div>
+
+      <div style="display:flex;gap:9px;padding:10px 12px;border-bottom:1px solid #2a3039">
+        <svg width="15" height="15" style="flex:0 0 15px;margin-top:1px" viewBox="0 0 16 16" fill="none" stroke="#e05c62" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4l6 11.2H2z"/><path d="M8 6.6v3.2M8 11.8h.01"/></svg>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:12px;color:#e8ebf0">本番環境への破壊的変更です</span>
+          <span style="font-size:11px;color:#8a93a1">この接続は読み取り専用モードです。適用するには昇格が必要です。ロールバック用スクリプトは自動生成されます。</span>
+        </div>
+      </div>
+
+      <div style="flex-grow:1"></div>
+      <div style="display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-top:1px solid #2a3039">
+        <div style="display:flex;gap:7px">
+          <div style="flex:1 1 0;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="font-size:12px;color:#c2c9d4">すべて破棄</span></div>
+          <div style="flex:1 1 0;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="font-size:12px;color:#c2c9d4">スクリプトを保存</span></div>
+        </div>
+        <div style="height:30px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:5px;background:#e8913f">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#14171c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="6.8" width="10.8" height="6.6" rx="1.4"/><path d="M5.2 6.8V4.9a2.8 2.8 0 0 1 5.6 0v1.9"/></svg>
+          <span style="font-size:12px;font-weight:600;color:#14171c">昇格して 3 件を適用</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div style="height:24px;flex:0 0 24px;display:flex;align-items:center;background:#14171c;border-top:1px solid #2a3039;padding:0 10px;font-size:11px;color:#8a93a1">
+    <span style="width:7px;height:7px;border-radius:50%;background:#4fb477;margin-right:7px"></span>
+    <span style="color:#c2c9d4">prod-analytics</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span>PostgreSQL 16.2</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span>sales_db</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span style="color:#e8913f">読み取り専用モード</span>
+    <div style="flex-grow:1"></div>
+    <span style="font-family:'JetBrains Mono',monospace">sales.orders</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span style="font-family:'JetBrains Mono',monospace">14 列 / 6 インデックス</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span>未適用の変更 3 件</span>
+    <span style="margin:0 8px;color:#39414d">·</span><span>UTF-8</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

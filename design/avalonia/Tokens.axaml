@@ -1,0 +1,132 @@
+<!--
+  SQLForge デザイントークン
+  App.axaml の <Application.Resources> にマージして使う。
+  色はテーマバリアント別、寸法とタイポはバリアント非依存。
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary x:Key="Dark">
+      <!-- 面（奥から手前へ 4 段） -->
+      <SolidColorBrush x:Key="BgAppBrush"        Color="#0f1115"/>
+      <SolidColorBrush x:Key="BgPanelBrush"      Color="#14171c"/>
+      <SolidColorBrush x:Key="BgSurfaceBrush"    Color="#1a1e24"/>
+      <SolidColorBrush x:Key="BgRaisedBrush"     Color="#21262e"/>
+      <!-- 境界（2 段だけ） -->
+      <SolidColorBrush x:Key="BorderBrush"       Color="#2a3039"/>
+      <SolidColorBrush x:Key="BorderStrongBrush" Color="#39414d"/>
+      <!-- テキスト（4 段だけ） -->
+      <SolidColorBrush x:Key="TextHighBrush"     Color="#e8ebf0"/>
+      <SolidColorBrush x:Key="TextBaseBrush"     Color="#c2c9d4"/>
+      <SolidColorBrush x:Key="TextDimBrush"      Color="#8a93a1"/>
+      <SolidColorBrush x:Key="TextFaintBrush"    Color="#616a77"/>
+      <!-- アクセント（1 色のみ） -->
+      <SolidColorBrush x:Key="AccentBrush"        Color="#e8913f"/>
+      <SolidColorBrush x:Key="AccentHoverBrush"   Color="#f2a75f"/>
+      <SolidColorBrush x:Key="AccentPressedBrush" Color="#c9762c"/>
+      <SolidColorBrush x:Key="OnAccentBrush"      Color="#14171c"/>
+      <!-- 意味を持つ色 -->
+      <SolidColorBrush x:Key="TealBrush"    Color="#5fbfc9"/>
+      <SolidColorBrush x:Key="SuccessBrush" Color="#4fb477"/>
+      <SolidColorBrush x:Key="DangerBrush"  Color="#e05c62"/>
+      <SolidColorBrush x:Key="InfoBrush"    Color="#82aef0"/>
+      <SolidColorBrush x:Key="CautionBrush" Color="#cba05e"/>
+      <!-- オーバーレイ（#AARRGGBB） -->
+      <SolidColorBrush x:Key="HoverOverlayBrush"    Color="#0bffffff"/>
+      <SolidColorBrush x:Key="RowSelectedBrush"     Color="#08ffffff"/>
+      <SolidColorBrush x:Key="TreeSelectedBrush"    Color="#24e8913f"/>
+      <SolidColorBrush x:Key="CellSelectedBrush"    Color="#1fe8913f"/>
+      <SolidColorBrush x:Key="DataBarBrush"         Color="#295fbfc9"/>
+      <SolidColorBrush x:Key="RowAddedBrush"        Color="#174fb477"/>
+      <SolidColorBrush x:Key="RowChangedBrush"      Color="#17e8913f"/>
+      <SolidColorBrush x:Key="RowWarningBrush"      Color="#12e05c62"/>
+      <!-- SQL シンタックス（AvaloniaEdit / TextMate テーマへ流し込む） -->
+      <SolidColorBrush x:Key="SyntaxKeywordBrush"     Color="#82aef0"/>
+      <SolidColorBrush x:Key="SyntaxFunctionBrush"    Color="#cba05e"/>
+      <SolidColorBrush x:Key="SyntaxStringBrush"      Color="#8ec07c"/>
+      <SolidColorBrush x:Key="SyntaxNumberBrush"      Color="#d99a6c"/>
+      <SolidColorBrush x:Key="SyntaxCommentBrush"     Color="#5f6875"/>
+      <SolidColorBrush x:Key="SyntaxIdentifierBrush"  Color="#dfe4ec"/>
+      <SolidColorBrush x:Key="SyntaxPunctuationBrush" Color="#8b94a3"/>
+      <SolidColorBrush x:Key="SyntaxTypeBrush"        Color="#5fbfc9"/>
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="BgAppBrush"        Color="#dfe3e8"/>
+      <SolidColorBrush x:Key="BgPanelBrush"      Color="#eef0f3"/>
+      <SolidColorBrush x:Key="BgSurfaceBrush"    Color="#fbfcfd"/>
+      <SolidColorBrush x:Key="BgRaisedBrush"     Color="#e6e9ed"/>
+      <SolidColorBrush x:Key="BorderBrush"       Color="#ccd1d8"/>
+      <SolidColorBrush x:Key="BorderStrongBrush" Color="#aeb5bf"/>
+      <SolidColorBrush x:Key="TextHighBrush"     Color="#12151a"/>
+      <SolidColorBrush x:Key="TextBaseBrush"     Color="#363c44"/>
+      <SolidColorBrush x:Key="TextDimBrush"      Color="#69707b"/>
+      <SolidColorBrush x:Key="TextFaintBrush"    Color="#98a0aa"/>
+      <SolidColorBrush x:Key="AccentBrush"        Color="#b0570f"/>
+      <SolidColorBrush x:Key="AccentHoverBrush"   Color="#8f4409"/>
+      <SolidColorBrush x:Key="AccentPressedBrush" Color="#7a3906"/>
+      <SolidColorBrush x:Key="OnAccentBrush"      Color="#eef0f3"/>
+      <SolidColorBrush x:Key="TealBrush"    Color="#0e7c88"/>
+      <SolidColorBrush x:Key="SuccessBrush" Color="#1e7944"/>
+      <SolidColorBrush x:Key="DangerBrush"  Color="#bf2c32"/>
+      <SolidColorBrush x:Key="InfoBrush"    Color="#1e5eb6"/>
+      <SolidColorBrush x:Key="CautionBrush" Color="#8b5a10"/>
+      <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0b000000"/>
+      <SolidColorBrush x:Key="RowSelectedBrush"  Color="#09000000"/>
+      <SolidColorBrush x:Key="TreeSelectedBrush" Color="#1fb0570f"/>
+      <SolidColorBrush x:Key="CellSelectedBrush" Color="#1ab0570f"/>
+      <SolidColorBrush x:Key="DataBarBrush"      Color="#240e7c88"/>
+      <SolidColorBrush x:Key="RowAddedBrush"     Color="#141e7944"/>
+      <SolidColorBrush x:Key="RowChangedBrush"   Color="#14b0570f"/>
+      <SolidColorBrush x:Key="RowWarningBrush"   Color="#10bf2c32"/>
+      <SolidColorBrush x:Key="SyntaxKeywordBrush"     Color="#1e5eb6"/>
+      <SolidColorBrush x:Key="SyntaxFunctionBrush"    Color="#8b5a10"/>
+      <SolidColorBrush x:Key="SyntaxStringBrush"      Color="#2c7a30"/>
+      <SolidColorBrush x:Key="SyntaxNumberBrush"      Color="#b0511e"/>
+      <SolidColorBrush x:Key="SyntaxCommentBrush"     Color="#79828f"/>
+      <SolidColorBrush x:Key="SyntaxIdentifierBrush"  Color="#1b2025"/>
+      <SolidColorBrush x:Key="SyntaxPunctuationBrush" Color="#6a717c"/>
+      <SolidColorBrush x:Key="SyntaxTypeBrush"        Color="#0e7c88"/>
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- ===== タイポグラフィ（テーマ非依存） ===== -->
+  <FontFamily x:Key="FontFamilyUi">avares://SQLForge/Assets/Fonts#IBM Plex Sans JP</FontFamily>
+  <FontFamily x:Key="FontFamilyMono">avares://SQLForge/Assets/Fonts#JetBrains Mono</FontFamily>
+
+  <x:Double x:Key="FontSizeXs">10</x:Double>
+  <x:Double x:Key="FontSizeSm">11</x:Double>
+  <x:Double x:Key="FontSizeMono">12</x:Double>
+  <x:Double x:Key="FontSizeBase">12.5</x:Double>
+  <x:Double x:Key="FontSizeLg">13</x:Double>
+  <x:Double x:Key="FontSizeXl">19</x:Double>
+
+  <!-- ===== 角丸 ===== -->
+  <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">5</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">6</CornerRadius>
+
+  <!-- ===== 密度: コンパクト（既定）=====
+       標準は +2、ゆったりは +6。Density.*.axaml として切り出し、
+       実行時にマージ辞書ごと差し替える。 -->
+  <x:Double x:Key="TreeRowHeight">24</x:Double>
+  <x:Double x:Key="GridRowHeight">26</x:Double>
+  <x:Double x:Key="GridHeaderHeight">28</x:Double>
+  <x:Double x:Key="EditorLineHeight">19</x:Double>
+  <x:Double x:Key="ControlHeightSm">24</x:Double>
+  <x:Double x:Key="ControlHeightMd">30</x:Double>
+
+  <!-- ===== 固定寸法 ===== -->
+  <x:Double x:Key="TitleBarHeight">34</x:Double>
+  <x:Double x:Key="ToolBarHeight">36</x:Double>
+  <x:Double x:Key="TabHeight">32</x:Double>
+  <x:Double x:Key="StatusBarHeight">24</x:Double>
+  <x:Double x:Key="SidebarWidth">288</x:Double>
+  <x:Double x:Key="InspectorWidth">300</x:Double>
+  <x:Double x:Key="SplitterThickness">6</x:Double>
+  <x:Double x:Key="PaneMinWidth">180</x:Double>
+
+</ResourceDictionary>

@@ -1,0 +1,394 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin:0; font-family:"IBM Plex Sans JP","IBM Plex Sans",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#e8913f; text-decoration:none; }
+    a:hover { color:#f2a75f; }
+    ::selection { background:rgba(232,145,63,0.30); }
+  </style>
+</helmet>
+
+<div style="width:1200px;min-height:1240px;background:#0f1115;color:#c2c9d4;font-size:12.5px;padding:32px 32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:26px">
+
+  <div style="display:flex;align-items:flex-end;gap:14px;padding-bottom:18px;border-bottom:1px solid #2a3039">
+    <svg width="30" height="30" viewBox="0 0 20 20" fill="none"><path d="M10 1.8l6.4 3.7v7.4L10 16.6 3.6 12.9V5.5z" stroke="#e8913f" stroke-width="1.4" stroke-linejoin="round"/><path d="M10.9 6.1L7.4 10.6h2.5l-.8 3.3 3.5-4.5h-2.5z" fill="#e8913f"/></svg>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:19px;font-weight:600;color:#e8ebf0;letter-spacing:.01em">SQLForge デザインシステム</span>
+      <span style="font-size:12.5px;color:#8a93a1">ダークテーマ基準 · 高密度データツール · 1 px = 1 論理ピクセル（96 dpi）</span>
+    </div>
+    <div style="flex-grow:1"></div>
+    <div style="display:flex;flex-direction:column;gap:4px;text-align:right">
+      <span style="font-size:11px;color:#616a77">UI</span>
+      <span style="font-size:12.5px;color:#c2c9d4">IBM Plex Sans JP</span>
+      <span style="font-size:11px;color:#616a77;margin-top:4px">コード・数値</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#c2c9d4">JetBrains Mono</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">カラー — 面と境界</span><span style="font-size:11.5px;color:#616a77">背景から手前へ 4 段。境界線は 2 段のみ</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:14px">
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#0f1115;border:1px solid #39414d"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#0f1115</span>
+          <span style="font-size:11.5px;color:#e8ebf0">bg / app</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">ウィンドウ背景・分割溝・セクション見出し帯</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#14171c"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#14171c</span>
+          <span style="font-size:11.5px;color:#e8ebf0">bg / panel</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">サイドバー・ツールバー・ステータスバー</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#1a1e24"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#1a1e24</span>
+          <span style="font-size:11.5px;color:#e8ebf0">bg / surface</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">エディタ・グリッド・ダイアログ本体</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#21262e"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#21262e</span>
+          <span style="font-size:11.5px;color:#e8ebf0">bg / raised</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">グリッドヘッダー・ホバー・ポップオーバー</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#2a3039"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#2a3039</span>
+          <span style="font-size:11.5px;color:#e8ebf0">border</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">既定の区切り線・非強調の枠</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#39414d"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#39414d</span>
+          <span style="font-size:11.5px;color:#e8ebf0">border / strong</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">入力欄・ボタン・カードの枠</span>
+        </div>
+      </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">カラー — テキスト</span><span style="font-size:11.5px;color:#616a77">4 段。本文は #c2c9d4、強調のみ #e8ebf0</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:14px">
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#e8ebf0"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#e8ebf0</span>
+          <span style="font-size:11.5px;color:#e8ebf0">text / high</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">テーブル名・値・見出し・選択中の行</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#c2c9d4"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#c2c9d4</span>
+          <span style="font-size:11.5px;color:#e8ebf0">text / base</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">本文・ツリー項目・ラベル</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#8a93a1"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#8a93a1</span>
+          <span style="font-size:11.5px;color:#e8ebf0">text / dim</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">補助情報・単位・セクション見出し</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#616a77"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#616a77</span>
+          <span style="font-size:11.5px;color:#e8ebf0">text / faint</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">行番号・プレースホルダー・NULL・無効</span>
+        </div>
+      </div>
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:7px;padding:12px 14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+        <span style="font-size:11px;color:#616a77">コントラスト（#14171c 上）</span>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;color:#e8ebf0">text / high</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#4fb477">13.9 : 1</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;color:#c2c9d4">text / base</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#4fb477">9.8 : 1</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;color:#8a93a1">text / dim</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#4fb477">5.1 : 1</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;color:#616a77">text / faint</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8913f">2.9 : 1 — 装飾のみ</span></div>
+      </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">カラー — アクセントと状態</span><span style="font-size:11.5px;color:#616a77">アクセントは 1 色のみ。ほかは意味を持つ色として使い分ける</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:14px">
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#e8913f"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#e8913f</span>
+          <span style="font-size:11.5px;color:#e8ebf0">accent / ember</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">実行ボタン・選択・アクティブタブ・未保存</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#5fbfc9"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#5fbfc9</span>
+          <span style="font-size:11.5px;color:#e8ebf0">teal</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">リレーション・FK・データバー・補助アクション</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#4fb477"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#4fb477</span>
+          <span style="font-size:11.5px;color:#e8ebf0">success</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">接続済み・安全な操作・検証通過</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#e05c62"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#e05c62</span>
+          <span style="font-size:11.5px;color:#e8ebf0">danger</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">エラー・破壊的操作・本番環境タグ</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#82aef0"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#82aef0</span>
+          <span style="font-size:11.5px;color:#e8ebf0">info</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">キーワード・リンク・情報メッセージ</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="height:52px;border-radius:5px;background:#cba05e"></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c2c9d4">#cba05e</span>
+          <span style="font-size:11.5px;color:#e8ebf0">caution</span>
+          <span style="font-size:11px;color:#8a93a1;line-height:15px">関数名・注意喚起（警告色は accent と共用）</span>
+        </div>
+      </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">カラー — SQL シンタックス</span><span style="font-size:11.5px;color:#616a77">エディタ・DDL プレビュー・履歴で共通</span>
+  </div>
+  <div style="display:flex;gap:14px">
+    <div style="flex:1 1 0;padding:14px 0;border:1px solid #2a3039;border-radius:6px;background:#1a1e24;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;line-height:19px">
+      <div style="display:flex;height:19px;align-items:center"><span style="width:40px;flex:0 0 40px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">1</span><span style="white-space:pre;padding-left:8px"><span style="color:#5f6875;font-style:italic">-- コメント</span></span></div>
+      <div style="display:flex;height:19px;align-items:center"><span style="width:40px;flex:0 0 40px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">2</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">SELECT</span> <span style="color:#5fbfc9">o</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">order_id</span><span style="color:#8b94a3">,</span> <span style="color:#cba05e">sum</span><span style="color:#8b94a3">(</span><span style="color:#dfe4ec">amount</span><span style="color:#8b94a3">)</span> <span style="color:#82aef0">AS</span> <span style="color:#dfe4ec">total</span></span></div>
+      <div style="display:flex;height:19px;align-items:center"><span style="width:40px;flex:0 0 40px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">3</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">FROM</span> <span style="color:#dfe4ec">sales</span><span style="color:#8b94a3">.</span><span style="color:#dfe4ec">orders</span> <span style="color:#82aef0">AS</span> <span style="color:#5fbfc9">o</span></span></div>
+      <div style="display:flex;height:19px;align-items:center"><span style="width:40px;flex:0 0 40px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">4</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">WHERE</span> <span style="color:#dfe4ec">status</span> <span style="color:#8b94a3">=</span> <span style="color:#8ec07c">&#39;paid&#39;</span> <span style="color:#82aef0">AND</span> <span style="color:#dfe4ec">qty</span> <span style="color:#8b94a3">&gt;</span> <span style="color:#d99a6c">10</span></span></div>
+      <div style="display:flex;height:19px;align-items:center"><span style="width:40px;flex:0 0 40px;text-align:right;padding-right:12px;color:#616a77;font-size:11.5px">5</span><span style="white-space:pre;padding-left:8px"><span style="color:#82aef0">GROUP BY</span> <span style="color:#d99a6c">1</span><span style="color:#8b94a3">;</span></span></div>
+    </div>
+    <div style="flex:1 1 0;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px;align-content:center;padding:0 4px">
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#82aef0"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#82aef0</span><span style="font-size:12px;color:#c2c9d4">キーワード</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#cba05e"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#cba05e</span><span style="font-size:12px;color:#c2c9d4">関数</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#8ec07c"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#8ec07c</span><span style="font-size:12px;color:#c2c9d4">文字列</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#d99a6c"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#d99a6c</span><span style="font-size:12px;color:#c2c9d4">数値</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#dfe4ec"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#dfe4ec</span><span style="font-size:12px;color:#c2c9d4">識別子・列名</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#5fbfc9"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#5fbfc9</span><span style="font-size:12px;color:#c2c9d4">エイリアス・型</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#8b94a3"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#8b94a3</span><span style="font-size:12px;color:#c2c9d4">記号・演算子</span></div>
+      <div style="display:flex;align-items:center;gap:9px"><span style="width:14px;height:14px;border-radius:3px;background:#5f6875"></span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a93a1">#5f6875</span><span style="font-size:12px;color:#c2c9d4">コメント</span></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">タイポグラフィ</span><span style="font-size:11.5px;color:#616a77">5 段のみ。数値・識別子は必ず等幅</span>
+  </div>
+  <div style="display:flex;flex-direction:column;border:1px solid #2a3039;border-radius:6px;background:#14171c;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">19 / 600</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">見出し（ダイアログタイトル、設定の章）</span>
+      <span style="font-size:19px;font-weight:600;color:#e8ebf0">SQLForge デザインシステム</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">13 / 600</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">セクション見出し・オブジェクト名</span>
+      <span style="font-size:13px;font-weight:600;color:#e8ebf0">sales.orders</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">12.5 / 400</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">本文・ツリー・フォームの値（既定）</span>
+      <span style="font-size:12.5px;color:#c2c9d4">地域別 月次売上サマリ</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">12 / 400 等幅</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">グリッドのセル・SQL・識別子</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#c2c9d4">128,940.50 / order_items</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">11 / 400</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">ラベル・補助情報・ステータスバー</span>
+      <span style="font-size:11px;color:#8a93a1">PostgreSQL 16.2 · 1,284 行 · 128 ms</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid #1f242b">
+      <span style="flex:0 0 116px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a93a1">10 / 600</span>
+      <span style="flex:0 0 300px;font-size:11.5px;color:#8a93a1">バッジ・キーバインドチップ</span>
+      <span style="font-size:10px;font-weight:600;color:#14171c;background:#e8913f;border-radius:3px;padding:2px 5px">PK</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">寸法</span><span style="font-size:11.5px;color:#616a77">コンパクト密度（既定）の値。標準は +2 px、ゆったりは +6 px</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:14px">
+    <div style="display:flex;flex-direction:column;border:1px solid #2a3039;border-radius:6px;background:#14171c;overflow:hidden">
+      <div style="padding:8px 14px;background:#0f1115;border-bottom:1px solid #2a3039"><span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">行の高さ</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">ツリー行</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">24 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">グリッド行</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">26 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">グリッドヘッダー</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">28 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">エディタ行</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">19 px</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;border:1px solid #2a3039;border-radius:6px;background:#14171c;overflow:hidden">
+      <div style="padding:8px 14px;background:#0f1115;border-bottom:1px solid #2a3039"><span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">バーとタブ</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">タイトルバー</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">34 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">ツールバー</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">36 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">タブ</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">30–32 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">ステータスバー</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">24 px</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;border:1px solid #2a3039;border-radius:6px;background:#14171c;overflow:hidden">
+      <div style="padding:8px 14px;background:#0f1115;border-bottom:1px solid #2a3039"><span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">コントロール</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">ボタン・入力欄</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">24 / 30 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">角丸</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">4 / 5 / 6 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">枠線</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">1 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">アイコン</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">13 / 14 / 16 px</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;border:1px solid #2a3039;border-radius:6px;background:#14171c;overflow:hidden">
+      <div style="padding:8px 14px;background:#0f1115;border-bottom:1px solid #2a3039"><span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">パネル幅</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">左サイドバー</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">288 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">右インスペクタ</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">300–320 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">スプリッター</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">6 px</span></div>
+      <div style="display:flex;align-items:center;padding:7px 14px"><span style="font-size:12px;color:#c2c9d4">最小ペイン</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">180 px</span></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">コンポーネント</span><span style="font-size:11.5px;color:#616a77">状態は 既定 / ホバー / 押下 / 無効 の 4 つ</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:14px">
+
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">ボタン</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px 0 10px;border-radius:5px;background:#e8913f"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2.5 1.6l7.4 4.4-7.4 4.4z" fill="#14171c"/></svg><span style="font-size:12px;font-weight:600;color:#14171c">実行</span><span style="font-size:10.5px;font-weight:500;color:#14171c;background:rgba(0,0,0,0.16);border-radius:3px;padding:1px 4px">F5</span></div>
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border-radius:5px;background:#f2a75f"><span style="font-size:12px;font-weight:600;color:#14171c">ホバー</span></div>
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border-radius:5px;background:#c9762c"><span style="font-size:12px;font-weight:600;color:#14171c">押下</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="font-size:12px;color:#c2c9d4">副ボタン</span></div>
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border-radius:5px"><span style="font-size:12px;color:#c2c9d4">ゴースト</span></div>
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="font-size:12px;color:#616a77">無効</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 12px;border-radius:5px;background:#e05c62"><span style="font-size:12px;font-weight:600;color:#14171c">テーブルを削除</span></div>
+        <div style="display:flex;align-items:center;height:24px;padding:0 12px;border:1px solid #e05c62;border-radius:5px;background:rgba(224,92,98,0.10)"><span style="font-size:12px;color:#e05c62">強制ロールバック</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">入力とフォーム</span>
+      <div style="height:30px;display:flex;align-items:center;padding:0 10px;border:1px solid #39414d;border-radius:5px;background:#0f1115"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#e8ebf0">10.2.0.14</span></div>
+      <div style="height:30px;display:flex;align-items:center;padding:0 10px;border:1px solid #e8913f;border-radius:5px;background:#0f1115;box-shadow:0 0 0 2px rgba(232,145,63,0.18)"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#e8ebf0">5432</span><span style="display:inline-block;width:1.5px;height:14px;background:#e8913f;margin-left:1px"></span><div style="flex-grow:1"></div><span style="font-size:11px;color:#616a77">フォーカス</span></div>
+      <div style="height:30px;display:flex;align-items:center;padding:0 10px;border:1px solid #e05c62;border-radius:5px;background:#0f1115"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#e8ebf0">-1</span><div style="flex-grow:1"></div><span style="font-size:11px;color:#e05c62">1 以上を指定してください</span></div>
+      <div style="height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #39414d;border-radius:5px;background:#0f1115"><span style="font-size:12.5px;color:#e8ebf0">PostgreSQL</span><div style="flex-grow:1"></div><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5l4 4 4-4"/></svg></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.4" y="2.4" width="11.2" height="11.2" rx="2.6" fill="#e8913f"/><path d="M5.2 8.2l1.9 1.9 3.7-4" stroke="#14171c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-size:12px;color:#c2c9d4">選択済み</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.5"><rect x="2.4" y="2.4" width="11.2" height="11.2" rx="2.6"/></svg><span style="font-size:12px;color:#c2c9d4">未選択</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:18px;border-radius:9px;background:#e8913f;display:flex;align-items:center;justify-content:flex-end;padding:0 2px"><span style="width:14px;height:14px;border-radius:50%;background:#14171c"></span></div><span style="font-size:12px;color:#c2c9d4">オン</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">バッジとチップ</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <span style="font-size:9.5px;font-weight:600;color:#14171c;background:#e8913f;border-radius:3px;padding:1px 4px">PK</span>
+        <span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#5fbfc9;border-radius:3px;padding:1px 4px">FK</span>
+        <span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#8a93a1;border-radius:3px;padding:1px 4px">UQ</span>
+        <span style="font-size:10.5px;color:#8a93a1;background:#21262e;border-radius:3px;padding:2px 6px">1,284 行</span>
+        <span style="font-size:10px;font-weight:600;color:#14171c;background:#e05c62;border-radius:8px;padding:1px 6px">2</span>
+        <span style="font-size:10.5px;color:#616a77;border:1px solid #2a3039;border-radius:3px;padding:1px 5px">Ctrl+P</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="width:7px;height:7px;border-radius:50%;background:#4fb477"></span><span style="font-size:11.5px;color:#e8ebf0">接続済み</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="width:7px;height:7px;border-radius:50%;background:#e8913f"></span><span style="font-size:11.5px;color:#e8ebf0">実行中</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #39414d;border-radius:5px;background:#1a1e24"><span style="width:7px;height:7px;border-radius:50%;background:#616a77"></span><span style="font-size:11.5px;color:#8a93a1">切断</span></div>
+        <div style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border:1px solid #e05c62;border-radius:5px;background:rgba(224,92,98,0.10)"><span style="width:8px;height:8px;border-radius:2px;background:#e05c62"></span><span style="font-size:11.5px;color:#e05c62">本番</span></div>
+      </div>
+      <div style="display:flex;align-items:center;height:26px;border:1px solid #2a3039;border-radius:5px;overflow:hidden;align-self:flex-start">
+        <span style="padding:0 12px;line-height:26px;font-size:11.5px;color:#14171c;background:#e8913f;font-weight:500">ツリー</span>
+        <span style="padding:0 12px;line-height:26px;font-size:11.5px;color:#c2c9d4;border-left:1px solid #2a3039">フロー図</span>
+        <span style="padding:0 12px;line-height:26px;font-size:11.5px;color:#c2c9d4;border-left:1px solid #2a3039">生テキスト</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1;margin-bottom:10px">ツリー行の状態</span>
+      <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;font-size:12.5px;color:#c2c9d4"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span>既定</span></div>
+      <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;font-size:12.5px;color:#c2c9d4;background:rgba(255,255,255,0.045)"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span>ホバー</span></div>
+      <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px 0 6px;font-size:12.5px;color:#e8ebf0;background:rgba(232,145,63,0.14);border-left:2px solid #e8913f"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8a93a1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#e8913f" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="font-weight:500">選択中</span></div>
+      <div style="display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;font-size:12.5px;color:#616a77"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#39414d" stroke-width="1.3"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span>権限なし</span></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1;margin-bottom:10px">グリッドのセル状態</span>
+      <div style="display:flex;height:26px;background:#21262e;border-bottom:1px solid #39414d">
+        <div style="flex:0 0 34px;border-right:1px solid #39414d"></div>
+        <div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px;border-right:1px solid #39414d"><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">region</span></div>
+        <div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px"><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e8ebf0">revenue</span></div>
+      </div>
+      <div style="display:flex;height:26px;border-bottom:1px solid #21262e"><div style="flex:0 0 34px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;background:#1a1e24;border-right:1px solid #2a3039;font-family:'JetBrains Mono',monospace;font-size:11px;color:#616a77">1</div><div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;font-size:12px;color:#c2c9d4">既定</div><div style="position:relative;flex:1 1 0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8ebf0"><span style="position:absolute;left:0;top:4px;bottom:4px;width:72%;background:rgba(47,179,196,0.16)"></span><span style="position:relative">128,940.50</span></div></div>
+      <div style="display:flex;height:26px;border-bottom:1px solid #21262e;background:rgba(255,255,255,0.03)"><div style="flex:0 0 34px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;background:#1a1e24;border-right:1px solid #2a3039;font-family:'JetBrains Mono',monospace;font-size:11px;color:#616a77">2</div><div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;font-size:12px;color:#c2c9d4">行選択</div><div style="flex:1 1 0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8ebf0;outline:1.5px solid #e8913f;outline-offset:-1.5px;background:rgba(232,145,63,0.12)">96,220.00</div></div>
+      <div style="display:flex;height:26px;border-bottom:1px solid #21262e"><div style="flex:0 0 34px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;background:#1a1e24;border-right:1px solid #2a3039;font-family:'JetBrains Mono',monospace;font-size:11px;color:#616a77">3</div><div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;font-size:12px;color:#c2c9d4">NULL</div><div style="flex:1 1 0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#616a77;font-style:italic">NULL</div></div>
+      <div style="display:flex;height:26px;background:rgba(79,180,119,0.09)"><div style="flex:0 0 34px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;background:#1a1e24;border-right:1px solid #4fb477;font-family:'JetBrains Mono',monospace;font-size:11px;color:#616a77">4</div><div style="flex:1 1 0;display:flex;align-items:center;padding:0 10px;border-right:1px solid #21262e;font-size:12px;color:#c2c9d4">編集中</div><div style="flex:1 1 0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8ebf0;outline:1.5px solid #4fb477;outline-offset:-1.5px;background:#0f1115">54,308.20<span style="display:inline-block;width:1.5px;height:13px;background:#4fb477;margin-left:1px"></span></div></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+      <span style="font-size:11px;letter-spacing:.06em;color:#8a93a1">補完ポップアップ</span>
+      <div style="border:1px solid #39414d;border-radius:6px;background:#21262e;box-shadow:0 12px 28px rgba(0,0,0,0.5);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;height:24px;padding:0 10px;background:rgba(232,145,63,0.16)"><span style="font-size:9.5px;font-weight:600;color:#14171c;background:#e8913f;border-radius:2px;padding:0 3px">列</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8ebf0">status</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8a93a1">order_status</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:24px;padding:0 10px"><span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#5fbfc9;border-radius:2px;padding:0 3px">列</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#c2c9d4">subtotal</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#616a77">numeric</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:24px;padding:0 10px"><span style="font-size:9.5px;font-weight:600;color:#0f1115;background:#8a93a1;border-radius:2px;padding:0 3px">関</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#c2c9d4">sum(numeric)</span><div style="flex-grow:1"></div><span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#616a77">集約</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:26px;padding:0 10px;background:#1a1e24;border-top:1px solid #39414d"><span style="font-size:10.5px;color:#8a93a1">sales.orders.status · NOT NULL · 既定 &#39;pending&#39;</span><div style="flex-grow:1"></div><span style="font-size:10px;color:#616a77;border:1px solid #39414d;border-radius:3px;padding:0 4px">Tab</span></div>
+      </div>
+      <span style="font-size:11px;color:#8a93a1;line-height:16px">補完はスキーマから生成。左のバッジで 列 / 表 / 関 / 予約語 を区別し、右に型を出す。</span>
+    </div>
+
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font-size:13px;font-weight:600;color:#e8ebf0;letter-spacing:.04em">アイコン</span><span style="font-size:11.5px;color:#616a77">16 px グリッド・ストローク 1.3–1.5 px・角丸のみ。絵文字は使わない</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(8, minmax(0, 1fr));gap:14px;padding:16px;border:1px solid #2a3039;border-radius:6px;background:#14171c">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.8" width="11" height="4.2" rx="1.2"/><rect x="2.5" y="9" width="11" height="4.2" rx="1.2"/><path d="M4.8 4.9h.01M4.8 11.1h.01"/></svg><span style="font-size:11px;color:#8a93a1">接続</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="4.3" rx="4.6" ry="1.9"/><path d="M3.4 4.3v7.4c0 1.05 2.06 1.9 4.6 1.9s4.6-.85 4.6-1.9V4.3"/><path d="M3.4 8c0 1.05 2.06 1.9 4.6 1.9s4.6-.85 4.6-1.9"/></svg><span style="font-size:11px;color:#8a93a1">データベース</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 5.2h10.8v7.6H2.6z"/><path d="M2.6 5.2l2.6-2.4h8.2v2.4"/></svg><span style="font-size:11px;color:#8a93a1">スキーマ</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2.4" y="3.2" width="11.2" height="9.6" rx="1.2"/><path d="M2.4 6.4h11.2M6.2 6.4v6.4"/></svg><span style="font-size:11px;color:#8a93a1">テーブル</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 8s2.4-4.2 6.4-4.2S14.4 8 14.4 8s-2.4 4.2-6.4 4.2S1.6 8 1.6 8z"/><circle cx="8" cy="8" r="1.7"/></svg><span style="font-size:11px;color:#8a93a1">ビュー</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.4L2.6 8 6 12.6M10 3.4L13.4 8 10 12.6"/></svg><span style="font-size:11px;color:#8a93a1">関数</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 2.6l8.6 5.4-8.6 5.4z"/></svg><span style="font-size:11px;color:#8a93a1">実行</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3M8 11v3M3.5 5.5h9M5 8.5h6M6.5 11.5h3"/></svg><span style="font-size:11px;color:#8a93a1">実行プラン</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="1.6" y="2.6" width="5.4" height="4.4" rx="1"/><rect x="9" y="9" width="5.4" height="4.4" rx="1"/><path d="M4.3 7v3.4a.8.8 0 0 0 .8.8H9"/></svg><span style="font-size:11px;color:#8a93a1">ER 図</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.4V2.6"/><path d="M5.2 7.6L8 10.4l2.8-2.8"/><path d="M2.8 12.8h10.4"/></svg><span style="font-size:11px;color:#8a93a1">書き出し</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="6.8" width="10.8" height="6.6" rx="1.4"/><path d="M5.2 6.8V4.9a2.8 2.8 0 0 1 5.6 0v1.9"/></svg><span style="font-size:11px;color:#8a93a1">鍵</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L14 14"/></svg><span style="font-size:11px;color:#8a93a1">検索</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13.2 2.6v2.6h-2.6"/></svg><span style="font-size:11px;color:#8a93a1">更新</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 4h10.8L9.2 8.6v4.2l-2.4-1.4V8.6z"/></svg><span style="font-size:11px;color:#8a93a1">フィルター</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4l6 11.2H2z"/><path d="M8 6.6v3.2M8 11.8h.01"/></svg><span style="font-size:11px;color:#8a93a1">警告</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c2c9d4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8L3.5 3.5"/></svg><span style="font-size:11px;color:#8a93a1">設定</span></div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
