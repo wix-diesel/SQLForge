@@ -15,6 +15,7 @@ Linux 向け SQL 管理スタジオ（SSMS 相当）のデザイン案。
 | `MainLight.dc.html` | ライトテーマ（Main と同一レイアウト、色トークンのみ差し替え） |
 
 `sqlforge-linux-design.html` は上記をまとめて公開用に書き出したもの。
+Avalonia / C# 実装への対応は `avalonia.md` と `avalonia/*.axaml` を参照。
 
 ## 方向性
 
