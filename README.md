@@ -2,7 +2,7 @@
 
 Linux で SQL Server を操作するためのアプリ。
 
-UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 11 + .NET 8。
+UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 11 + .NET 10。
 
 ## 現在の状態
 
@@ -33,7 +33,11 @@ dotnet run --project src/SQLForge.Ui      # 起動すると接続ダイアログ
 dotnet test                                # ヘッドレス描画テストを含む
 ```
 
-.NET 8 SDK が要る。Linux では X11（Wayland では XWayland 経由）で動く。
+.NET 10 SDK が要る（`global.json` で 10.0 系に固定している）。
+Linux では X11（Wayland では XWayland 経由）で動く。
+
+Avalonia は 11.3 系を使う。11.3 のパッケージが配っているのは net8.0 向けアセットだが、
+net10.0 からそのまま参照できる。
 
 ## 構成
 

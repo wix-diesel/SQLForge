@@ -12,7 +12,7 @@ public sealed class InMemoryConnectionProfileRepository : IConnectionProfileRepo
 {
     private readonly ConcurrentDictionary<ConnectionProfileId, ConnectionProfile> _profiles = new();
     private readonly List<ConnectionProfileId> _order = [];
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
 
     // DI コンテナが IEnumerable<T> を空コレクションとして解決してしまうため、
     // 一覧を受け取る口はコンストラクタではなく静的メソッドにしてある。
