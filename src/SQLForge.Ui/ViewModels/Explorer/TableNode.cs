@@ -28,9 +28,15 @@ public sealed partial class TableNode : ObjectExplorerNode
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>([]);
 
     /// <summary>
+    /// 作業領域がつながっている構成か。ツリーだけを組むとき（テストなど）は
+    /// 行き先が無いので、押せるのに何も起きないメニューを出さない。
+    /// </summary>
+    public bool CanQuery => _context.Query is not null;
+
+    /// <summary>
     /// 右クリックの「クエリを実行」。このテーブルのあるデータベースを実行先にして、
     /// 空のエディタを開く。
     /// </summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanQuery))]
     private void OpenQuery() => _context.Query?.OpenNewQuery(_database);
 }

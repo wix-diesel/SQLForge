@@ -78,7 +78,10 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 
     public int ExecutedMaxRows { get; private set; }
 
-    public Task<QueryResult> ExecuteQueryAsync(
+    /// <summary>置くと、合図をもらうまで実行が返らなくなる。実行中の割り込みを作るのに使う。</summary>
+    public TaskCompletionSource? QueryGate { get; set; }
+
+    public async Task<QueryResult> ExecuteQueryAsync(
         DatabaseName database,
         string sql,
         int maxRows,
@@ -88,9 +91,14 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         ExecutedSql = sql;
         ExecutedMaxRows = maxRows;
 
+        if (QueryGate is { } gate)
+        {
+            await gate.Task.ConfigureAwait(false);
+        }
+
         return QueryFailure is not null
-            ? Task.FromException<QueryResult>(QueryFailure)
-            : Task.FromResult(NextResult ?? new QueryResult([], -1, TimeSpan.Zero));
+            ? throw QueryFailure
+            : NextResult ?? new QueryResult([], -1, TimeSpan.Zero);
     }
 
     public ValueTask DisposeAsync()

@@ -26,8 +26,11 @@ public sealed partial class DatabaseNode : ObjectExplorerNode
 
     public string? Collation => _descriptor.Collation;
 
-    /// <summary>開けないデータベースにはクエリも投げられない。</summary>
-    public bool CanQuery => _descriptor.IsAccessible;
+    /// <summary>
+    /// 開けないデータベースにはクエリも投げられない。作業領域がつながっていない構成
+    /// （ツリーだけを組むとき）も同じで、押せるのに何も起きないメニューは出さない。
+    /// </summary>
+    public bool CanQuery => _descriptor.IsAccessible && _context.Query is not null;
 
     /// <summary>右クリックの「新しいクエリ」。このデータベースを実行先にして空のエディタを開く。</summary>
     [RelayCommand(CanExecute = nameof(CanQuery))]

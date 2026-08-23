@@ -44,7 +44,7 @@ public class QueryEditorViewModelTests
     }
 
     [Fact]
-    public void 開き直すと前の結果を持ち越さない()
+    public async Task 開き直すと前の結果を持ち越さない()
     {
         var session = ReadWriteSession();
         session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
@@ -52,7 +52,7 @@ public class QueryEditorViewModelTests
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
         editor.OpenNewQuery(SalesDb);
         editor.Sql = "SELECT 1";
-        editor.RunCommand.Execute(null);
+        await editor.RunCommand.ExecuteAsync(null);
 
         editor.OpenNewQuery(SalesDb);
 
@@ -60,6 +60,31 @@ public class QueryEditorViewModelTests
         Assert.Empty(editor.Tabs);
         Assert.Null(editor.SelectedTab);
         Assert.Equal(string.Empty, editor.Status);
+    }
+
+    [Fact]
+    public async Task 実行中に開き直すと後から返ってきた結果は出さない()
+    {
+        var session = ReadWriteSession();
+        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
+        session.QueryGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        editor.OpenNewQuery(SalesDb);
+        editor.Sql = "SELECT 1";
+
+        var running = editor.RunCommand.ExecuteAsync(null);
+
+        // 結果が返る前に、ツリーから別のクエリを開き直す。
+        editor.OpenNewQuery(SalesDb);
+        session.QueryGate.SetResult();
+        await running;
+
+        // 開き直した先はもう別のクエリ。そこへ前の実行の結果を出すと嘘になる。
+        Assert.Empty(editor.Tabs);
+        Assert.Null(editor.SelectedTab);
+        Assert.Equal(string.Empty, editor.Status);
+        Assert.False(editor.HasFailed);
     }
 
     [Fact]

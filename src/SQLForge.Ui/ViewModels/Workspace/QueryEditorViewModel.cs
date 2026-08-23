@@ -25,6 +25,11 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
     /// <summary>実行先。接続時に開いたデータベースを初期値にする。</summary>
     private DatabaseName? _target;
 
+    /// <summary>
+    /// エディタを開き直した回数。実行の最中に開き直されたかを見分けるのに使う。
+    /// </summary>
+    private int _generation;
+
     [ObservableProperty] private bool _isOpen;
 
     [ObservableProperty]
@@ -81,6 +86,7 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
             return;
         }
 
+        var generation = _generation;
         IsRunning = true;
 
         try
@@ -89,16 +95,25 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
                 .ExecuteAsync(_session, new QueryRequest(database, Sql), cancellationToken)
                 .ConfigureAwait(true);
 
-            ShowResult(result);
+            if (IsCurrent(generation))
+            {
+                ShowResult(result);
+            }
         }
         catch (OperationCanceledException)
         {
-            ShowFailure("実行を取り消しました。");
+            if (IsCurrent(generation))
+            {
+                ShowFailure("実行を取り消しました。");
+            }
         }
         catch (Exception exception)
         {
             // 権限エラーも構文エラーもここへ来る。理由はサーバーの言葉のまま出す。
-            ShowFailure(exception.Message);
+            if (IsCurrent(generation))
+            {
+                ShowFailure(exception.Message);
+            }
         }
         finally
         {
@@ -106,12 +121,22 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
         }
     }
 
+    /// <summary>
+    /// 待っている間にエディタを開き直されていないか。
+    ///
+    /// 開き直した先はもう別のクエリなので、あとから返ってきた結果をそこへ出すと
+    /// 「書いていない文の結果が出ている」ことになる。結果は捨てるだけで、
+    /// 走っているクエリ自体は止めない（止めたいときは「停止」を押す）。
+    /// </summary>
+    private bool IsCurrent(int generation) => generation == _generation;
+
     /// <summary>作業領域を畳む。文面は残しておき、次に開いたときに続きから書けるようにする。</summary>
     [RelayCommand]
     private void Close() => IsOpen = false;
 
     private void Open()
     {
+        _generation++;
         Tabs.Clear();
         SelectedTab = null;
         Status = string.Empty;
