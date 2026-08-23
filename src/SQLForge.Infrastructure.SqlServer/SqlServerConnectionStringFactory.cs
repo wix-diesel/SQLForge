@@ -2,7 +2,7 @@ using Microsoft.Data.SqlClient;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// 接続情報を SQL Server の接続文字列へ写す。

@@ -5,7 +5,7 @@ using SQLForge.Application.Connections;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
 
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// SQL Server 用の接続口。接続を開いた直後にサーバーの素性を読んでセッションに持たせる。

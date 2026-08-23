@@ -76,23 +76,37 @@ SQLForge.Application     ユースケースとポート（IDatabaseConnector / I
                          IConnectionProfileRepository / IConnectionProbe / ISecretStore /
                          IPlatformProfile）。入力は ConnectionDraft で受ける
       ↑
-SQLForge.Infrastructure  ポートの実装。SQL Server ドライバーはここだけにある
+SQLForge.Infrastructure  ポートの実装のうち、DBMS に依らないもの。
+      |                  接続の台帳・接続テスト・ADO.NET 共通の足回り（AdoDatabaseSession）と、
+      |                  保存済み接続・キーリング・OS 判定
+      ↑
+SQLForge.Infrastructure.SqlServer
+                         SQL Server ドライバー。Microsoft.Data.SqlClient を抱えるのはここだけ
       ↑
 SQLForge.Ui              Avalonia のビューとビューモデル。合成ルートは Composition/AppServices
 ```
+
+**ドライバーは DBMS ごとに別プロジェクト**にしてある。1 つの Infrastructure に全部入れると、
+DBMS を 1 つ足すたびに全利用者がその依存（SqlClient・Npgsql・…）を引き込むことになるため。
+この境目は口約束ではなく `LayerDependencyTests` が組み上がったアセンブリの参照から見張っている。
 
 エンティティ（`ConnectionProfile`）は常に妥当である前提なので、編集中の値は
 `ConnectionDraft` で持ち、検証を通ってからエンティティへ変換する。
 
 ### DBMS を増やすとき
 
-PostgreSQL などを足すときに触るのは **Infrastructure と合成ルートの 1 行だけ**で、
-Domain・Application・UI は変わらない。
+PostgreSQL などを足すときに触るのは **新しいドライバープロジェクトと合成ルートの 1 行だけ**で、
+Domain・Application・UI と既存のドライバーは変わらない。
 
-1. `IDatabaseConnector` の実装を書く（接続を開いてサーバーの素性を読む）
-2. `AdoDatabaseSession` を継承してカタログの読み方を 3 つ埋める
+1. `src/SQLForge.Infrastructure.PostgreSql`（例）を作り、`SQLForge.Infrastructure` を参照して
+   ドライバーのパッケージ（`Npgsql` など）を入れる。SQL Server 側がそのまま雛形になる
+2. `IDatabaseConnector` の実装を書く（接続を開いてサーバーの素性を読む）
+3. `AdoDatabaseSession` を継承してカタログの読み方を 3 つ埋める
    （`ReadDatabasesAsync` / `ReadSchemasAsync` / `ReadTablesAsync`）
-3. `AppServices.AddInfrastructure` に `services.AddSingleton<IDatabaseConnector, XxxConnector>()` を足す
+4. `SQLForge.Ui` から新しいプロジェクトを参照し、`AppServices.AddInfrastructure` に
+   `services.AddSingleton<IDatabaseConnector, XxxConnector>()` を足す
+5. `LayerDependencyTests.DriverAssemblies` に新しいパッケージ名を足す
+   （共通の Infrastructure へ混ざり込んだら落ちるようにするため）
 
 `DatabaseConnectorRegistry` は登録された実装を勝手に拾うので、台帳も接続テストも接続も、
 未対応の文言も、追加したドライバーへそのまま追随する。

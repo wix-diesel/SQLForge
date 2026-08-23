@@ -5,8 +5,4 @@
   <ItemGroup>
     <ProjectReference Include="..\SQLForge.Application\SQLForge.Application.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- DB ドライバー。DBMS を増やすときはここへ足す（Npgsql / MySqlConnector / …）。 -->
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
-  </ItemGroup>
 </Project>

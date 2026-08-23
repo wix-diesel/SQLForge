@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
-using SQLForge.Infrastructure.Connections.SqlServer;
+using SQLForge.Infrastructure.SqlServer;
 using Xunit;
 
 namespace SQLForge.Ui.Tests;

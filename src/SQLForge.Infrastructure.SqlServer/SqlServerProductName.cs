@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// バージョン番号を人が読む名前にする。SERVERPROPERTY('ProductVersion') は

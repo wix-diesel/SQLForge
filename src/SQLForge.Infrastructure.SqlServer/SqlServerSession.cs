@@ -2,8 +2,9 @@ using System.Data.Common;
 using System.Globalization;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Infrastructure.Connections;
 
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// SQL Server 1 接続ぶんのセッション。カタログは sys スキーマのビューから読む。

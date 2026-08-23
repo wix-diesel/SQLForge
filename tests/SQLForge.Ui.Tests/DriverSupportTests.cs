@@ -2,8 +2,8 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
-using SQLForge.Infrastructure.Connections.SqlServer;
 using SQLForge.Infrastructure.Security;
+using SQLForge.Infrastructure.SqlServer;
 using Xunit;
 
 namespace SQLForge.Ui.Tests;

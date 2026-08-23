@@ -1,4 +1,4 @@
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// 識別子の引用符付け。データベース名はパラメータにできず SQL 文へ直接書くしかないので、

@@ -1,4 +1,4 @@
-namespace SQLForge.Infrastructure.Connections.SqlServer;
+namespace SQLForge.Infrastructure.SqlServer;
 
 /// <summary>
 /// カタログ照会の SQL。データベース名だけは 3 部名として文面に埋めるので

@@ -3,9 +3,9 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Connections;
 using SQLForge.Infrastructure.Connections;
-using SQLForge.Infrastructure.Connections.SqlServer;
 using SQLForge.Infrastructure.Platform;
 using SQLForge.Infrastructure.Security;
+using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
 
 namespace SQLForge.Ui.Composition;
@@ -13,6 +13,9 @@ namespace SQLForge.Ui.Composition;
 /// <summary>
 /// 合成ルート。オニオンアーキテクチャで外側の実装（Infrastructure）を
 /// 内側のポート（Application）へ差し込むのはここだけ。
+///
+/// ドライバーの具体型を知ってよいのもここだけで、その代わりに
+/// SQLForge.Ui はドライバーのプロジェクトを参照する。
 /// </summary>
 public static class AppServices
 {
@@ -31,8 +34,9 @@ public static class AppServices
 
     private static void AddInfrastructure(IServiceCollection services)
     {
-        // DBMS を増やすときに触るのはこの 1 行の並びだけ。
-        // IDatabaseConnector を足せば、台帳・接続テスト・接続がそのまま新しいドライバーを拾う。
+        // DBMS を増やすときに触るのはこの 1 行の並びだけ。ドライバーは DBMS ごとに
+        // 別プロジェクト（SQLForge.Infrastructure.<DBMS>）に置き、ここで差し込む。
+        // 台帳・接続テスト・接続は登録された IDatabaseConnector をそのまま拾う。
         services.AddSingleton<IDatabaseConnector, SqlServerConnector>();
         services.AddSingleton<IDatabaseConnectorRegistry, DatabaseConnectorRegistry>();
         services.AddSingleton<IConnectionProbe, DriverConnectionProbe>();
