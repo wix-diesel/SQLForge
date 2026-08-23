@@ -64,11 +64,17 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         Func<DbConnection, CancellationToken, Task<T>> read,
         CancellationToken cancellationToken)
     {
+        // 門を待つ前の早い弾き。ここを通れても、待っている間に閉じられることはある。
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // 門を取れた時点で閉じ始めていたら、接続を触る前にここで弾く。
+            // 上のチェックを通ってから門を待つ間に破棄が割り込むと、破棄が先に門を取って
+            // 接続を閉じてしまうため、門の内側でもう一度見ないと破棄済みの接続を使ってしまう。
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             return await read(_connection, cancellationToken).ConfigureAwait(false);
         }
         finally

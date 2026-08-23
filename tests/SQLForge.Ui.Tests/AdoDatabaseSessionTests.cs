@@ -57,6 +57,33 @@ public class AdoDatabaseSessionTests
     }
 
     [Fact]
+    public async Task 門を待っている間に閉じられた照会は接続を触らずに弾く()
+    {
+        // 先の照会が門を握っている間に次の照会が並び、その状態でウィンドウが閉じられる、という並び。
+        // 門を待つ前のチェックはすでに通過しているので、門の内側で見直さないと
+        // 破棄されようとしている接続をそのまま使ってしまう。
+        var connection = new StubConnection();
+        var session = new BlockingSession(connection);
+
+        var running = session.ListDatabasesAsync();
+        await session.Started.Task;
+
+        var queued = session.ListDatabasesAsync();       // 門待ちに並ぶ（破棄前なので早い弾きは通る）
+        await session.WaitingAtGate();
+
+        var dispose = session.DisposeAsync();            // ここで閉じ始める
+        session.Finish.SetResult();                      // 先の照会が門を返す
+
+        await running;
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => queued);
+        await dispose;
+
+        // 弾かれた照会は接続まで届いていない。
+        Assert.Equal(1, session.ReadCount);
+        Assert.True(connection.IsDisposed);
+    }
+
+    [Fact]
     public async Task 二度閉じても何も起きない()
     {
         var connection = new StubConnection();
@@ -88,10 +115,26 @@ public class AdoDatabaseSessionTests
 
         public TaskCompletionSource Finish { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        /// <summary>接続まで届いた照会の数。弾かれた照会はここに現れない。</summary>
+        public int ReadCount { get; private set; }
+
+        /// <summary>
+        /// 次の照会が門待ちの列に並ぶまで待つ。門の内側へ入れるのは 1 本だけなので、
+        /// 空きが 0 のまま数回譲れば、並び終えたとみなせる。
+        /// </summary>
+        public async Task WaitingAtGate()
+        {
+            for (var attempt = 0; attempt < 20; attempt++)
+            {
+                await Task.Yield();
+            }
+        }
+
         protected override async Task<IReadOnlyList<DatabaseDescriptor>> ReadDatabasesAsync(
             DbConnection connection,
             CancellationToken cancellationToken)
         {
+            ReadCount++;
             Started.TrySetResult();
             await Finish.Task;
 
