@@ -174,12 +174,39 @@ public class ObjectExplorerTests
         Assert.False(Database(explorer, "restoring_db").OpenQueryCommand.CanExecute(null));
     }
 
+    [Fact]
+    public async Task 先頭1000件を表示すると角括弧で囲んだTOPの文面が実行される()
+    {
+        var launcher = new StubLauncher();
+        var explorer = NewExplorer(NewSession(), launcher);
+        await explorer.InitializeAsync();
+
+        var database = Database(explorer, "sales_db");
+        var schemas = await ExpandAsync(database);
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
+
+        Assert.True(orders.ShowTopRowsCommand.CanExecute(null));
+        orders.ShowTopRowsCommand.Execute(null);
+
+        Assert.Equal("sales_db", launcher.RanFor?.Value);
+        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", launcher.RanSql);
+    }
+
     /// <summary>行き先があることだけを表す差し込み。開かれたデータベースを覚えておく。</summary>
     private sealed class StubLauncher : IQueryLauncher
     {
         public DatabaseName? Opened { get; private set; }
+        public DatabaseName? RanFor { get; private set; }
+        public string? RanSql { get; private set; }
 
         public void OpenNewQuery(DatabaseName database) => Opened = database;
+
+        public void OpenAndRunQuery(DatabaseName database, string sql)
+        {
+            RanFor = database;
+            RanSql = sql;
+        }
     }
 
     private static ObjectExplorerViewModel NewExplorer(

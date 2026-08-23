@@ -39,4 +39,21 @@ public sealed partial class TableNode : ObjectExplorerNode
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanQuery))]
     private void OpenQuery() => _context.Query?.OpenNewQuery(_database);
+
+    /// <summary>
+    /// 右クリックの「先頭 1000 件を表示」。このテーブルの先頭 1000 行を選ぶ文面を
+    /// 組み立てて、エディタを開くと同時に実行する。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanQuery))]
+    private void ShowTopRows() =>
+        _context.Query?.OpenAndRunQuery(_database, $"SELECT TOP (1000) * FROM {QuotedQualifiedName};");
+
+    /// <summary>
+    /// スキーマ名・テーブル名それぞれを角括弧で囲む。閉じ括弧はテーブル名の側に
+    /// 含まれ得るので、二重にして閉じられないようにする（SQL Server の識別子の作法）。
+    /// </summary>
+    private string QuotedQualifiedName =>
+        $"{Quote(_descriptor.Schema.Value)}.{Quote(_descriptor.Name)}";
+
+    private static string Quote(string identifier) => $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
 }

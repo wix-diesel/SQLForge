@@ -13,4 +13,7 @@ public interface IQueryLauncher
 {
     /// <summary>空のエディタをそのデータベース向けに開く。</summary>
     void OpenNewQuery(DatabaseName database);
+
+    /// <summary>エディタをそのデータベース向けに開き、渡した文面をそのまま実行する。</summary>
+    void OpenAndRunQuery(DatabaseName database, string sql);
 }

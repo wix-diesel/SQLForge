@@ -71,6 +71,22 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
         Open();
     }
 
+    /// <summary>
+    /// 「上位 1000 行を表示」など、ツリーが文面まで決めてくる入口。開いてすぐ実行する。
+    /// </summary>
+    public void OpenAndRunQuery(DatabaseName database, string sql)
+    {
+        if (string.IsNullOrWhiteSpace(sql))
+        {
+            throw new ArgumentException("実行する文面は空にできません。", nameof(sql));
+        }
+
+        SetTarget(database);
+        Sql = sql;
+        Open();
+        RunCommand.Execute(null);
+    }
+
     private bool CanRun => !IsRunning && !string.IsNullOrWhiteSpace(Sql);
 
     /// <summary>
