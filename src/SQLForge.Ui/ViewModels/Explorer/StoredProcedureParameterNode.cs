@@ -13,7 +13,7 @@ public sealed class StoredProcedureParameterNode : ObjectExplorerNode
         Detail = StoredProcedureParameterDetailFormat.Describe(descriptor);
     }
 
-    /// <summary>OUTPUT パラメーターか。ツリーのアイコンを出力向けに差し替えるのに使う。</summary>
+    /// <summary>OUTPUT パラメーターか。<see cref="Detail"/> の表示に使う。</summary>
     public bool IsOutput { get; }
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>

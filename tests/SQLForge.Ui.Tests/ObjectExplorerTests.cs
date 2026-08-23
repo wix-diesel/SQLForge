@@ -280,6 +280,35 @@ public class ObjectExplorerTests
     }
 
     [Fact]
+    public void 定義を表示すると文字列リテラル内の引用符を二重化する()
+    {
+        // 区切り識別子はスキーマ名・プロシージャ名に ' を含められる。角括弧の引用符付けとは
+        // 別に、文字列リテラルへ埋め込むところでも二重化しないと文が途中で終わってしまう。
+        var launcher = new StubLauncher();
+        var context = new CatalogContext(
+            new FakeDatabaseSession(),
+            new ListDatabasesUseCase(),
+            new ListSchemasUseCase(),
+            new ListTablesUseCase(),
+            new ListColumnsUseCase(),
+            new ListStoredProceduresUseCase(),
+            new ListStoredProcedureParametersUseCase(),
+            launcher);
+
+        var node = new StoredProcedureNode(
+            context,
+            new DatabaseName("sales_db"),
+            new StoredProcedureDescriptor(new SchemaName("weird's"), "usp_o'rder"));
+
+        node.ViewDefinitionCommand.Execute(null);
+
+        Assert.Equal("sales_db", launcher.RanFor?.Value);
+        Assert.Equal(
+            "SELECT OBJECT_DEFINITION(OBJECT_ID(N'[weird''s].[usp_o''rder]')) AS definition;",
+            launcher.RanSql);
+    }
+
+    [Fact]
     public async Task 作業領域がつながっていなければストアドプロシージャのメニューは押せない()
     {
         var explorer = NewExplorer(NewSession());

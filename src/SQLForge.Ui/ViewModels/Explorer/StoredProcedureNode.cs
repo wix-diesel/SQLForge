@@ -51,10 +51,17 @@ public sealed partial class StoredProcedureNode : ObjectExplorerNode
     private void ViewDefinition() =>
         _context.Query?.OpenAndRunQuery(
             _database,
-            $"SELECT OBJECT_DEFINITION(OBJECT_ID(N'{QuotedQualifiedName}')) AS definition;");
+            $"SELECT OBJECT_DEFINITION(OBJECT_ID(N'{EscapeLiteral(QuotedQualifiedName)}')) AS definition;");
 
     private string QuotedQualifiedName =>
         $"{Quote(_descriptor.Schema.Value)}.{Quote(_descriptor.Name)}";
 
     private static string Quote(string identifier) => $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
+
+    /// <summary>
+    /// 文字列リテラルに埋め込む前のエスケープ。角括弧で囲んだ識別子でも、
+    /// スキーマ名やプロシージャ名自体に ' を含む区切り識別子は作れるので、
+    /// 角括弧の引用符付けとは別にここでも二重化しておく。
+    /// </summary>
+    private static string EscapeLiteral(string value) => value.Replace("'", "''", StringComparison.Ordinal);
 }
