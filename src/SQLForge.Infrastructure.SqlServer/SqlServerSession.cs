@@ -99,6 +99,49 @@ public sealed class SqlServerSession(ConnectionProfile profile, DbConnection con
         return tables;
     }
 
+    protected override async Task<IReadOnlyList<ColumnDescriptor>> ReadColumnsAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = Format(SqlServerCatalogQueries.ColumnsFormat, database);
+
+        var schemaParameter = command.CreateParameter();
+        schemaParameter.ParameterName = "@schema";
+        schemaParameter.Value = schema.Value;
+        command.Parameters.Add(schemaParameter);
+
+        var tableParameter = command.CreateParameter();
+        tableParameter.ParameterName = "@table";
+        tableParameter.Value = table;
+        command.Parameters.Add(tableParameter);
+
+        var columns = new List<ColumnDescriptor>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var dataType = SqlServerTypeFormat.Describe(
+                reader.GetString(2),
+                reader.GetInt16(3),
+                reader.GetByte(4),
+                reader.GetByte(5));
+
+            columns.Add(new ColumnDescriptor(
+                reader.GetString(0),
+                reader.GetInt32(1),
+                dataType,
+                IsNullable: reader.GetBoolean(6),
+                IsIdentity: reader.GetBoolean(7),
+                IsPrimaryKey: reader.GetBoolean(8)));
+        }
+
+        return columns;
+    }
+
     /// <summary>データベース名だけは 3 部名として文面に埋める（識別子はパラメータにできない）。</summary>
     private static string Format(string queryFormat, DatabaseName database) =>
         string.Format(CultureInfo.InvariantCulture, queryFormat, Quote(database.Value));

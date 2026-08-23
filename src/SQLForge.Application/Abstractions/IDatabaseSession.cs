@@ -33,6 +33,13 @@ public interface IDatabaseSession : IAsyncDisposable
         SchemaName schema,
         CancellationToken cancellationToken = default);
 
+    /// <summary>指定テーブルのカラム定義一覧。</summary>
+    Task<IReadOnlyList<ColumnDescriptor>> ListColumnsAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// エディタの文面をこの接続で実行する。文面はそのまま送る（分割も書き換えもしない）。
     ///

@@ -12,7 +12,7 @@ public sealed partial class TableNode : ObjectExplorerNode
     private readonly TableDescriptor _descriptor;
 
     public TableNode(CatalogContext context, DatabaseName database, TableDescriptor descriptor)
-        : base(descriptor.Name, canExpand: false)
+        : base(descriptor.Name, canExpand: true)
     {
         _context = context;
         _database = database;
@@ -25,7 +25,19 @@ public sealed partial class TableNode : ObjectExplorerNode
     public long? RowCount => _descriptor.RowCount;
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ObjectExplorerNode>>([]);
+        Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
+        [
+            new CatalogFolderNode("列", LoadColumnsAsync)
+        ]);
+
+    private async Task<IReadOnlyList<ObjectExplorerNode>> LoadColumnsAsync(CancellationToken cancellationToken)
+    {
+        var columns = await _context.Columns
+            .ExecuteAsync(_context.Session, _database, _descriptor.Schema, _descriptor.Name, cancellationToken)
+            .ConfigureAwait(true);
+
+        return columns.Select(column => new ColumnNode(column)).ToList();
+    }
 
     /// <summary>
     /// 作業領域がつながっている構成か。ツリーだけを組むとき（テストなど）は

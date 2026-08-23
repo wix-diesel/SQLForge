@@ -48,6 +48,13 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         CancellationToken cancellationToken = default) =>
         QueryAsync((connection, token) => ReadTablesAsync(connection, database, schema, token), cancellationToken);
 
+    public Task<IReadOnlyList<ColumnDescriptor>> ListColumnsAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        CancellationToken cancellationToken = default) =>
+        QueryAsync((connection, token) => ReadColumnsAsync(connection, database, schema, table, token), cancellationToken);
+
     /// <summary>
     /// エディタの文面を実行する。カタログの照会と同じ門を通すので、
     /// ツリーの展開と同時に走っても接続を取り合うことはない。
@@ -87,6 +94,13 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         DbConnection connection,
         DatabaseName database,
         SchemaName schema,
+        CancellationToken cancellationToken);
+
+    protected abstract Task<IReadOnlyList<ColumnDescriptor>> ReadColumnsAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        string table,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -193,6 +193,30 @@ public class ObjectExplorerTests
         Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", launcher.RanSql);
     }
 
+    [Fact]
+    public async Task テーブルを開くと列の見出しの下にカラム定義が並ぶ()
+    {
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
+
+        var columns = await ExpandAsync(orders);
+
+        Assert.Equal("列", columns.Title);
+        Assert.Equal(["id", "customer_id"], columns.Children.Select(node => node.Title));
+
+        var id = Assert.IsType<ColumnNode>(columns.Children.First(node => node.Title == "id"));
+        Assert.True(id.IsPrimaryKey);
+        Assert.Equal("PK, IDENTITY, int, not null", id.Detail);
+
+        var customerId = Assert.IsType<ColumnNode>(columns.Children.First(node => node.Title == "customer_id"));
+        Assert.False(customerId.IsPrimaryKey);
+        Assert.Equal("int, null", customerId.Detail);
+    }
+
     /// <summary>行き先があることだけを表す差し込み。開かれたデータベースを覚えておく。</summary>
     private sealed class StubLauncher : IQueryLauncher
     {
@@ -217,6 +241,7 @@ public class ObjectExplorerTests
             new ListDatabasesUseCase(),
             new ListSchemasUseCase(),
             new ListTablesUseCase(),
+            new ListColumnsUseCase(),
             query));
 
     private static DatabaseNode Database(ObjectExplorerViewModel explorer, string name) =>
@@ -251,6 +276,9 @@ public class ObjectExplorerTests
         .WithTables("sales_db", "dbo",
             new TableDescriptor(dbo, "orders", 8_400_000),
             new TableDescriptor(dbo, "customers", 120),
-            new TableDescriptor(dbo, "Invoices", 0));
+            new TableDescriptor(dbo, "Invoices", 0))
+        .WithColumns("sales_db", "dbo", "orders",
+            new ColumnDescriptor("id", 1, "int", IsNullable: false, IsIdentity: true, IsPrimaryKey: true),
+            new ColumnDescriptor("customer_id", 2, "int", IsNullable: true, IsIdentity: false, IsPrimaryKey: false));
     }
 }

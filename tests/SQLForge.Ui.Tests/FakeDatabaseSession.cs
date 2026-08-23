@@ -14,6 +14,7 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 {
     private readonly Dictionary<string, IReadOnlyList<SchemaDescriptor>> _schemas = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IReadOnlyList<TableDescriptor>> _tables = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlyList<ColumnDescriptor>> _columns = new(StringComparer.Ordinal);
 
     public FakeDatabaseSession(ConnectionProfile? profile = null)
     {
@@ -46,6 +47,12 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return this;
     }
 
+    public FakeDatabaseSession WithColumns(string database, string schema, string table, params ColumnDescriptor[] columns)
+    {
+        _columns[$"{database}.{schema}.{table}"] = columns;
+        return this;
+    }
+
     public Task<IReadOnlyList<DatabaseDescriptor>> ListDatabasesAsync(CancellationToken cancellationToken = default)
     {
         DatabaseCallCount++;
@@ -65,6 +72,13 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         SchemaName schema,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_tables.TryGetValue($"{database.Value}.{schema.Value}", out var tables) ? tables : []);
+
+    public Task<IReadOnlyList<ColumnDescriptor>> ListColumnsAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_columns.TryGetValue($"{database.Value}.{schema.Value}.{table}", out var columns) ? columns : []);
 
     /// <summary>実行で返す結果。差し替えて結果ペインの見え方を確かめる。</summary>
     public QueryResult? NextResult { get; set; }

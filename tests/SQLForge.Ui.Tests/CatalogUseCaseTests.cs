@@ -58,6 +58,21 @@ public class CatalogUseCaseTests
         Assert.Equal(["customers", "Invoices", "orders"], tables.Select(table => table.Name));
     }
 
+    [Fact]
+    public async Task カラムはテーブル定義での並び順のまま出す()
+    {
+        var schema = new SchemaName("dbo");
+        var session = new FakeDatabaseSession()
+            .WithColumns("sales_db", "dbo", "orders",
+                new ColumnDescriptor("total", 3, "decimal(18, 2)", IsNullable: false, IsIdentity: false, IsPrimaryKey: false),
+                new ColumnDescriptor("id", 1, "int", IsNullable: false, IsIdentity: true, IsPrimaryKey: true),
+                new ColumnDescriptor("customer_id", 2, "int", IsNullable: false, IsIdentity: false, IsPrimaryKey: false));
+
+        var columns = await new ListColumnsUseCase().ExecuteAsync(session, new DatabaseName("sales_db"), schema, "orders");
+
+        Assert.Equal(["id", "customer_id", "total"], columns.Select(column => column.Name));
+    }
+
     private static DatabaseDescriptor Database(string name, bool isSystem = false) =>
         new(new DatabaseName(name), IsSystem: isSystem);
 }

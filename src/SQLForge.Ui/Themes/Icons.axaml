@@ -55,6 +55,12 @@
   <!-- テーブル -->
   <StreamGeometry x:Key="IconTable">M3.6,3.2 H12.4 A1.2,1.2 0 0 1 13.6,4.4 V11.6 A1.2,1.2 0 0 1 12.4,12.8 H3.6 A1.2,1.2 0 0 1 2.4,11.6 V4.4 A1.2,1.2 0 0 1 3.6,3.2 Z M2.4,6.4 H13.6 M6.2,6.4 V12.8</StreamGeometry>
 
+  <!-- カラム（列） -->
+  <StreamGeometry x:Key="IconColumn">M5.6,2.6 V13.4 M2.6,2.6 H13.4 V13.4 H2.6 Z</StreamGeometry>
+
+  <!-- 主キー（鍵） -->
+  <StreamGeometry x:Key="IconKey">M6.6,9.4 A2.6,2.6 0 1 0 6.6,4.2 A2.6,2.6 0 1 0 6.6,9.4 M8.5,7.5 L13.4,12.4 M11.2,10.2 L13.0,12.0 M10.0,11.4 L11.4,12.8</StreamGeometry>
+
   <!-- 読み直し -->
   <StreamGeometry x:Key="IconRefresh">M13,8 A5,5 0 1 1 11.4,4.3 M13.2,2.6 V5.2 H10.6</StreamGeometry>
 
