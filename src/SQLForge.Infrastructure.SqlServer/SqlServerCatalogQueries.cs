@@ -94,4 +94,43 @@ internal static class SqlServerCatalogQueries
         WHERE s.name = @schema AND t.name = @table
         ORDER BY c.column_id;
         """;
+
+    /// <summary>
+    /// ストアド プロシージャ一覧とパラメーター数。sys.procedures は type IN ('P', 'RF') のみを
+    /// 返すビューなので、スカラー関数などは含まれない。is_ms_shipped = 0 でエンジンが
+    /// 用意したものを外すのはテーブルと同じ。parameter_id = 0 は戻り値なので数に入れない。
+    /// </summary>
+    public const string StoredProceduresFormat = """
+        SELECT p.name                                                              AS name,
+               (
+                   SELECT COUNT(*)
+                   FROM {0}.sys.parameters AS pr
+                   WHERE pr.object_id = p.object_id AND pr.parameter_id > 0
+               )                                                                   AS parameter_count
+        FROM {0}.sys.procedures AS p
+        INNER JOIN {0}.sys.schemas AS s ON s.schema_id = p.schema_id
+        WHERE s.name = @schema AND p.is_ms_shipped = 0
+        ORDER BY p.name;
+        """;
+
+    /// <summary>
+    /// ストアド プロシージャのパラメーター一覧。parameter_id は宣言順そのもの。
+    /// parameter_id = 0 は戻り値を表す行なので除く。
+    /// </summary>
+    public const string StoredProcedureParametersFormat = """
+        SELECT pr.name                                                            AS name,
+               pr.parameter_id                                                    AS ordinal_position,
+               ty.name                                                            AS type_name,
+               pr.max_length                                                      AS max_length,
+               pr.precision                                                       AS precision,
+               pr.scale                                                           AS scale,
+               pr.is_output                                                       AS is_output,
+               CONVERT(bit, CASE WHEN pr.has_default_value = 1 THEN 1 ELSE 0 END) AS has_default_value
+        FROM {0}.sys.parameters AS pr
+        INNER JOIN {0}.sys.procedures AS p ON p.object_id = pr.object_id
+        INNER JOIN {0}.sys.schemas AS s ON s.schema_id = p.schema_id
+        INNER JOIN {0}.sys.types AS ty ON ty.user_type_id = pr.user_type_id
+        WHERE s.name = @schema AND p.name = @procedure AND pr.parameter_id > 0
+        ORDER BY pr.parameter_id;
+        """;
 }

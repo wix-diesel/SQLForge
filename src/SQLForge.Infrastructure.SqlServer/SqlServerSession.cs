@@ -142,6 +142,76 @@ public sealed class SqlServerSession(ConnectionProfile profile, DbConnection con
         return columns;
     }
 
+    protected override async Task<IReadOnlyList<StoredProcedureDescriptor>> ReadStoredProceduresAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = Format(SqlServerCatalogQueries.StoredProceduresFormat, database);
+
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@schema";
+        parameter.Value = schema.Value;
+        command.Parameters.Add(parameter);
+
+        var procedures = new List<StoredProcedureDescriptor>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            procedures.Add(new StoredProcedureDescriptor(
+                schema,
+                reader.GetString(0),
+                ParameterCount: reader.GetInt32(1)));
+        }
+
+        return procedures;
+    }
+
+    protected override async Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ReadStoredProcedureParametersAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        string procedure,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = Format(SqlServerCatalogQueries.StoredProcedureParametersFormat, database);
+
+        var schemaParameter = command.CreateParameter();
+        schemaParameter.ParameterName = "@schema";
+        schemaParameter.Value = schema.Value;
+        command.Parameters.Add(schemaParameter);
+
+        var procedureParameter = command.CreateParameter();
+        procedureParameter.ParameterName = "@procedure";
+        procedureParameter.Value = procedure;
+        command.Parameters.Add(procedureParameter);
+
+        var parameters = new List<StoredProcedureParameterDescriptor>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var dataType = SqlServerTypeFormat.Describe(
+                reader.GetString(2),
+                reader.GetInt16(3),
+                reader.GetByte(4),
+                reader.GetByte(5));
+
+            parameters.Add(new StoredProcedureParameterDescriptor(
+                reader.GetString(0),
+                reader.GetInt32(1),
+                dataType,
+                IsOutput: reader.GetBoolean(6),
+                HasDefaultValue: reader.GetBoolean(7)));
+        }
+
+        return parameters;
+    }
+
     /// <summary>データベース名だけは 3 部名として文面に埋める（識別子はパラメータにできない）。</summary>
     private static string Format(string queryFormat, DatabaseName database) =>
         string.Format(CultureInfo.InvariantCulture, queryFormat, Quote(database.Value));

@@ -15,6 +15,8 @@ public sealed class FakeDatabaseSession : IDatabaseSession
     private readonly Dictionary<string, IReadOnlyList<SchemaDescriptor>> _schemas = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IReadOnlyList<TableDescriptor>> _tables = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IReadOnlyList<ColumnDescriptor>> _columns = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlyList<StoredProcedureDescriptor>> _storedProcedures = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlyList<StoredProcedureParameterDescriptor>> _storedProcedureParameters = new(StringComparer.Ordinal);
 
     public FakeDatabaseSession(ConnectionProfile? profile = null)
     {
@@ -53,6 +55,20 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return this;
     }
 
+    public FakeDatabaseSession WithStoredProcedures(
+        string database, string schema, params StoredProcedureDescriptor[] procedures)
+    {
+        _storedProcedures[$"{database}.{schema}"] = procedures;
+        return this;
+    }
+
+    public FakeDatabaseSession WithStoredProcedureParameters(
+        string database, string schema, string procedure, params StoredProcedureParameterDescriptor[] parameters)
+    {
+        _storedProcedureParameters[$"{database}.{schema}.{procedure}"] = parameters;
+        return this;
+    }
+
     public Task<IReadOnlyList<DatabaseDescriptor>> ListDatabasesAsync(CancellationToken cancellationToken = default)
     {
         DatabaseCallCount++;
@@ -79,6 +95,23 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         string table,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_columns.TryGetValue($"{database.Value}.{schema.Value}.{table}", out var columns) ? columns : []);
+
+    public Task<IReadOnlyList<StoredProcedureDescriptor>> ListStoredProceduresAsync(
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(
+            _storedProcedures.TryGetValue($"{database.Value}.{schema.Value}", out var procedures) ? procedures : []);
+
+    public Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ListStoredProcedureParametersAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string procedure,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(
+            _storedProcedureParameters.TryGetValue($"{database.Value}.{schema.Value}.{procedure}", out var parameters)
+                ? parameters
+                : []);
 
     /// <summary>実行で返す結果。差し替えて結果ペインの見え方を確かめる。</summary>
     public QueryResult? NextResult { get; set; }

@@ -73,6 +73,40 @@ public class CatalogUseCaseTests
         Assert.Equal(["id", "customer_id", "total"], columns.Select(column => column.Name));
     }
 
+    [Fact]
+    public async Task ストアドプロシージャも名前順に並ぶ()
+    {
+        var schema = new SchemaName("dbo");
+        var session = new FakeDatabaseSession()
+            .WithStoredProcedures("sales_db", "dbo",
+                new StoredProcedureDescriptor(schema, "usp_place_order", 3),
+                new StoredProcedureDescriptor(schema, "usp_cancel_order", 1),
+                new StoredProcedureDescriptor(schema, "Usp_refund_order", 2));
+
+        var procedures = await new ListStoredProceduresUseCase()
+            .ExecuteAsync(session, new DatabaseName("sales_db"), schema);
+
+        Assert.Equal(
+            ["usp_cancel_order", "usp_place_order", "Usp_refund_order"],
+            procedures.Select(procedure => procedure.Name));
+    }
+
+    [Fact]
+    public async Task ストアドプロシージャのパラメーターは宣言順のまま出す()
+    {
+        var schema = new SchemaName("dbo");
+        var session = new FakeDatabaseSession()
+            .WithStoredProcedureParameters("sales_db", "dbo", "usp_place_order",
+                new StoredProcedureParameterDescriptor("@total", 3, "decimal(18, 2)", IsOutput: false, HasDefaultValue: false),
+                new StoredProcedureParameterDescriptor("@customer_id", 1, "int", IsOutput: false, HasDefaultValue: false),
+                new StoredProcedureParameterDescriptor("@order_id", 2, "int", IsOutput: true, HasDefaultValue: false));
+
+        var parameters = await new ListStoredProcedureParametersUseCase()
+            .ExecuteAsync(session, new DatabaseName("sales_db"), schema, "usp_place_order");
+
+        Assert.Equal(["@customer_id", "@order_id", "@total"], parameters.Select(parameter => parameter.Name));
+    }
+
     private static DatabaseDescriptor Database(string name, bool isSystem = false) =>
         new(new DatabaseName(name), IsSystem: isSystem);
 }

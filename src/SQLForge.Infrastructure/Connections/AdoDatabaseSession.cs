@@ -55,6 +55,23 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         CancellationToken cancellationToken = default) =>
         QueryAsync((connection, token) => ReadColumnsAsync(connection, database, schema, table, token), cancellationToken);
 
+    public Task<IReadOnlyList<StoredProcedureDescriptor>> ListStoredProceduresAsync(
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken = default) =>
+        QueryAsync(
+            (connection, token) => ReadStoredProceduresAsync(connection, database, schema, token),
+            cancellationToken);
+
+    public Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ListStoredProcedureParametersAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string procedure,
+        CancellationToken cancellationToken = default) =>
+        QueryAsync(
+            (connection, token) => ReadStoredProcedureParametersAsync(connection, database, schema, procedure, token),
+            cancellationToken);
+
     /// <summary>
     /// エディタの文面を実行する。カタログの照会と同じ門を通すので、
     /// ツリーの展開と同時に走っても接続を取り合うことはない。
@@ -101,6 +118,19 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         DatabaseName database,
         SchemaName schema,
         string table,
+        CancellationToken cancellationToken);
+
+    protected abstract Task<IReadOnlyList<StoredProcedureDescriptor>> ReadStoredProceduresAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken);
+
+    protected abstract Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ReadStoredProcedureParametersAsync(
+        DbConnection connection,
+        DatabaseName database,
+        SchemaName schema,
+        string procedure,
         CancellationToken cancellationToken);
 
     /// <summary>

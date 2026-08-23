@@ -40,6 +40,19 @@ public interface IDatabaseSession : IAsyncDisposable
         string table,
         CancellationToken cancellationToken = default);
 
+    /// <summary>指定スキーマ内のストアド プロシージャ一覧。</summary>
+    Task<IReadOnlyList<StoredProcedureDescriptor>> ListStoredProceduresAsync(
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>指定ストアド プロシージャのパラメーター一覧。</summary>
+    Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ListStoredProcedureParametersAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string procedure,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// エディタの文面をこの接続で実行する。文面はそのまま送る（分割も書き換えもしない）。
     ///

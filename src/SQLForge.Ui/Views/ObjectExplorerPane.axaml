@@ -140,6 +140,30 @@
             </Grid>
           </TreeDataTemplate>
 
+          <!-- ストアド プロシージャ（パラメーター数は右端。下に「パラメーター」の見出しを持つ） -->
+          <TreeDataTemplate DataType="explorer:StoredProcedureNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="実行" Command="{Binding ExecuteCommand}"/>
+                  <MenuItem Header="定義を表示" Command="{Binding ViewDefinitionCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconProcedure}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- ストアド プロシージャのパラメーター（葉。入出力の別と型は右端） -->
+          <TreeDataTemplate DataType="explorer:StoredProcedureParameterNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconColumn}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
           <!-- 読み込み中・空・失敗 -->
           <TreeDataTemplate DataType="explorer:MessageNode" ItemsSource="{Binding Children}">
             <TextBlock Classes="nodeDetail"
