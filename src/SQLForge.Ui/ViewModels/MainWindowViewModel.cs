@@ -3,12 +3,13 @@ using CommunityToolkit.Mvvm.Input;
 using SQLForge.Application.Abstractions;
 using SQLForge.Domain.Connections;
 using SQLForge.Ui.ViewModels.Explorer;
+using SQLForge.Ui.ViewModels.Workspace;
 
 namespace SQLForge.Ui.ViewModels;
 
 /// <summary>
-/// 接続後のメインウィンドウ。今あるのはオブジェクトエクスプローラーだけで、
-/// 作業領域（クエリエディタと結果グリッド）はフェーズ 1 の残り。
+/// 接続後のメインウィンドウ。左のオブジェクトエクスプローラーと、
+/// 右の作業領域（クエリエディタと結果グリッド）をまとめる。
 ///
 /// 開いているセッションはこのビューモデルが持ち、ウィンドウが閉じるときに閉じる。
 /// </summary>
@@ -17,14 +18,22 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
     private readonly IDatabaseSession _session;
     private readonly IPlatformProfile _platform;
 
-    public MainWindowViewModel(IDatabaseSession session, IPlatformProfile platform, CatalogContext catalog)
+    public MainWindowViewModel(
+        IDatabaseSession session,
+        IPlatformProfile platform,
+        CatalogContext catalog,
+        QueryEditorViewModel query)
     {
         _session = session;
         _platform = platform;
         Explorer = new ObjectExplorerViewModel(catalog);
+        Query = query;
     }
 
     public ObjectExplorerViewModel Explorer { get; }
+
+    /// <summary>右の作業領域。ツリーから「クエリを実行」を選ぶまでは畳んである。</summary>
+    public QueryEditorViewModel Query { get; }
 
     public event EventHandler? CloseRequested;
 

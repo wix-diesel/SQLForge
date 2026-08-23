@@ -153,6 +153,13 @@ public class AdoDatabaseSessionTests
             SchemaName schema,
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TableDescriptor>>([]);
+
+        // クエリの実行はここでは試さない（門の作法だけを見るテストなので、接続には届かせない）。
+        protected override Task SwitchDatabaseAsync(
+            DbConnection connection,
+            DatabaseName database,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 
     /// <summary>破棄されたかだけを覚えている接続。照会には使わないので他は実装しない。</summary>

@@ -23,5 +23,20 @@ public readonly record struct DatabaseName
 
     public string Value { get; }
 
+    /// <summary>
+    /// 名前として通るときだけ作る。接続情報のように、外から来て空のこともある文字列に使う。
+    /// </summary>
+    public static bool TryCreate(string? value, out DatabaseName name)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Any(char.IsControl))
+        {
+            name = default;
+            return false;
+        }
+
+        name = new DatabaseName(value);
+        return true;
+    }
+
     public override string ToString() => Value;
 }

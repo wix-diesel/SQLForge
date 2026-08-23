@@ -4,10 +4,13 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using SQLForge.Application.Catalog;
+using SQLForge.Application.Query;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Query;
 using SQLForge.Infrastructure.Platform;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Explorer;
+using SQLForge.Ui.ViewModels.Workspace;
 using SQLForge.Ui.Views;
 using Xunit;
 
@@ -60,6 +63,63 @@ public class MainWindowRenderTests
     }
 
     [AvaloniaFact]
+    public void テーブルのクエリを実行すると作業領域にエディタが出る()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        var table = FindOrders(viewModel);
+        var pane = window.GetVisualDescendants().OfType<QueryWorkspacePane>().Single();
+
+        // 作業領域は右クリックで開くまで畳んである。
+        Assert.False(viewModel.Query.IsOpen);
+        Assert.False(pane.IsVisible);
+
+        table.OpenQueryCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(viewModel.Query.IsOpen);
+        Assert.True(pane.IsVisible);
+
+        // 開くのは空のエディタ。決まるのは実行先のデータベースだけ。
+        Assert.Equal("sales_db", viewModel.Query.TargetDatabase);
+        Assert.Equal(string.Empty, viewModel.Query.Sql);
+    }
+
+    [AvaloniaFact]
+    public void 実行した結果がグリッドの行として描かれる()
+    {
+        var session = NewSession();
+        session.NextResult = new QueryResult(
+            [
+                new QueryResultSet(
+                    [new QueryColumn("region", "nvarchar", IsNumeric: false)],
+                    [new string?[] { "北米" }])
+            ],
+            -1,
+            TimeSpan.FromMilliseconds(12));
+
+        var viewModel = NewViewModel(session);
+        var window = new MainWindow { DataContext = viewModel };
+
+        window.ApplyPlatform(new PlatformProfile());
+        _ = viewModel.InitializeAsync();
+        window.Show();
+
+        var table = FindOrders(viewModel);
+        table.OpenQueryCommand.Execute(null);
+
+        viewModel.Query.Sql = "SELECT region FROM dbo.orders";
+        viewModel.Query.RunCommand.Execute(null);
+        WaitFor(() => viewModel.Query.Tabs.Count > 0);
+
+        // ビューモデルだけでなく、グリッドのテンプレートが実際に組み上がることまで見る。
+        // 見出しとセルは別のテンプレートなので、両方が出ることを確かめる。
+        WaitFor(() => Texts(window).Contains("北米"));
+        Assert.Contains("region", Texts(window));
+    }
+
+    [AvaloniaFact]
     public void エクスプローラーは既定幅で並びスプリッターで動かせる()
     {
         var window = CreateWindow(out _);
@@ -70,7 +130,11 @@ public class MainWindowRenderTests
         // 幅は列側が持つ（ペイン側に Width を置くとスプリッターで動かせない）。
         var pane = window.GetVisualDescendants().OfType<ObjectExplorerPane>().Single();
         Assert.Equal(288, (int)pane.Bounds.Width);
-        Assert.Single(window.GetVisualDescendants().OfType<GridSplitter>());
+
+        // 作業領域にも（エディタと結果の間に）スプリッターがあるので、横方向のものだけを数える。
+        Assert.Single(
+            window.GetVisualDescendants().OfType<GridSplitter>(),
+            splitter => splitter.ResizeDirection == GridResizeDirection.Columns);
     }
 
     [AvaloniaFact]
@@ -107,10 +171,21 @@ public class MainWindowRenderTests
         return window;
     }
 
-    private static MainWindowViewModel NewViewModel(FakeDatabaseSession session) =>
-        new(session,
+    private static MainWindowViewModel NewViewModel(FakeDatabaseSession session)
+    {
+        var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+
+        return new MainWindowViewModel(
+            session,
             new PlatformProfile(),
-            new CatalogContext(session, new ListDatabasesUseCase(), new ListSchemasUseCase(), new ListTablesUseCase()));
+            new CatalogContext(
+                session,
+                new ListDatabasesUseCase(),
+                new ListSchemasUseCase(),
+                new ListTablesUseCase(),
+                query),
+            query);
+    }
 
     private static FakeDatabaseSession NewSession()
     {
@@ -123,6 +198,24 @@ public class MainWindowRenderTests
         }
         .WithSchemas("sales_db", new SchemaDescriptor(dbo))
         .WithTables("sales_db", "dbo", new TableDescriptor(dbo, "orders", 8_400_000));
+    }
+
+    /// <summary>今そこに描かれている文字列。テンプレートが組み上がったかを見るのに使う。</summary>
+    private static IReadOnlyList<string?> Texts(Window window) =>
+        window.GetVisualDescendants().OfType<TextBlock>().Select(block => block.Text).ToList();
+
+    /// <summary>画面と同じ手順でツリーを開き、sales_db.dbo.orders のノードを取り出す。</summary>
+    private static TableNode FindOrders(MainWindowViewModel viewModel)
+    {
+        WaitFor(() => viewModel.Explorer.Roots.FirstOrDefault()?.Children.Count > 0);
+
+        var databases = viewModel.Explorer.Roots[0].Children[0];
+        WaitFor(() => databases.Children.OfType<DatabaseNode>().Any());
+
+        var schemas = Expand<SchemaNode>(databases.Children.OfType<DatabaseNode>().First(node => node.Title == "sales_db"));
+
+        return Expand<TableNode>(schemas.First(node => node.Title == "dbo"))
+            .First(node => node.Title == "orders");
     }
 
     /// <summary>ノードとその下の見出しノードを画面と同じ手順で開き、出てきた子を返す。</summary>

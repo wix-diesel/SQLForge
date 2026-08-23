@@ -15,6 +15,21 @@ namespace SQLForge.Infrastructure.SqlServer;
 public sealed class SqlServerSession(ConnectionProfile profile, DbConnection connection, ServerInfo server)
     : AdoDatabaseSession(profile, connection, server)
 {
+    /// <summary>
+    /// USE で切り替える。カタログの照会は 3 部名で読むのでこの状態に依らないが、
+    /// エディタの文面は修飾なしで書かれるのが普通なので、実行の直前に合わせる。
+    /// </summary>
+    protected override async Task SwitchDatabaseAsync(
+        DbConnection connection,
+        DatabaseName database,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"USE {Quote(database.Value)};";
+
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     protected override async Task<IReadOnlyList<DatabaseDescriptor>> ReadDatabasesAsync(
         DbConnection connection,
         CancellationToken cancellationToken)
@@ -86,5 +101,7 @@ public sealed class SqlServerSession(ConnectionProfile profile, DbConnection con
 
     /// <summary>データベース名だけは 3 部名として文面に埋める（識別子はパラメータにできない）。</summary>
     private static string Format(string queryFormat, DatabaseName database) =>
-        string.Format(CultureInfo.InvariantCulture, queryFormat, SqlServerIdentifier.Quote(database.Value));
+        string.Format(CultureInfo.InvariantCulture, queryFormat, Quote(database.Value));
+
+    private static string Quote(string identifier) => SqlServerIdentifier.Quote(identifier);
 }

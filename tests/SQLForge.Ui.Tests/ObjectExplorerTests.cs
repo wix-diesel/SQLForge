@@ -1,6 +1,7 @@
 using SQLForge.Application.Catalog;
 using SQLForge.Domain.Catalog;
 using SQLForge.Ui.ViewModels.Explorer;
+using SQLForge.Ui.ViewModels.Workspace;
 using Xunit;
 
 namespace SQLForge.Ui.Tests;
@@ -126,8 +127,70 @@ public class ObjectExplorerTests
         Assert.Equal("3", ((CatalogFolderNode)explorer.Roots[0].Children[0]).Detail);
     }
 
-    private static ObjectExplorerViewModel NewExplorer(FakeDatabaseSession session) =>
-        new(new CatalogContext(session, new ListDatabasesUseCase(), new ListSchemasUseCase(), new ListTablesUseCase()));
+    [Fact]
+    public async Task 作業領域がつながっていなければクエリのメニューは押せない()
+    {
+        // 押せるのに何も起きないメニューは出さない。ツリーだけを組む構成には行き先が無い。
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var database = Database(explorer, "sales_db");
+        Assert.False(database.OpenQueryCommand.CanExecute(null));
+
+        var schemas = await ExpandAsync(database);
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+
+        Assert.False(tables.Children.OfType<TableNode>().First().OpenQueryCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task 作業領域がつながっていればテーブルからクエリを開ける()
+    {
+        var launcher = new StubLauncher();
+        var explorer = NewExplorer(NewSession(), launcher);
+        await explorer.InitializeAsync();
+
+        var database = Database(explorer, "sales_db");
+        Assert.True(database.OpenQueryCommand.CanExecute(null));
+
+        var schemas = await ExpandAsync(database);
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
+
+        Assert.True(orders.OpenQueryCommand.CanExecute(null));
+        orders.OpenQueryCommand.Execute(null);
+
+        // テーブルが渡すのは、そのテーブルのあるデータベースだけ。
+        Assert.Equal("sales_db", launcher.Opened?.Value);
+    }
+
+    [Fact]
+    public async Task 開けないデータベースではクエリのメニューを押せない()
+    {
+        var explorer = NewExplorer(NewSession(), new StubLauncher());
+        await explorer.InitializeAsync();
+
+        // restoring_db は復元中でアクセスできない見本。
+        Assert.False(Database(explorer, "restoring_db").OpenQueryCommand.CanExecute(null));
+    }
+
+    /// <summary>行き先があることだけを表す差し込み。開かれたデータベースを覚えておく。</summary>
+    private sealed class StubLauncher : IQueryLauncher
+    {
+        public DatabaseName? Opened { get; private set; }
+
+        public void OpenNewQuery(DatabaseName database) => Opened = database;
+    }
+
+    private static ObjectExplorerViewModel NewExplorer(
+        FakeDatabaseSession session,
+        IQueryLauncher? query = null) =>
+        new(new CatalogContext(
+            session,
+            new ListDatabasesUseCase(),
+            new ListSchemasUseCase(),
+            new ListTablesUseCase(),
+            query));
 
     private static DatabaseNode Database(ObjectExplorerViewModel explorer, string name) =>
         explorer.Roots[0].Children[0].Children.OfType<DatabaseNode>().First(node => node.Title == name);

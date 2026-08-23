@@ -1,9 +1,10 @@
+using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
 /// <summary>データベース 1 件。下にスキーマの見出しを持つ。</summary>
-public sealed class DatabaseNode : ObjectExplorerNode
+public sealed partial class DatabaseNode : ObjectExplorerNode
 {
     private readonly CatalogContext _context;
     private readonly DatabaseDescriptor _descriptor;
@@ -24,6 +25,16 @@ public sealed class DatabaseNode : ObjectExplorerNode
     public DatabaseName Name => _descriptor.Name;
 
     public string? Collation => _descriptor.Collation;
+
+    /// <summary>
+    /// 開けないデータベースにはクエリも投げられない。作業領域がつながっていない構成
+    /// （ツリーだけを組むとき）も同じで、押せるのに何も起きないメニューは出さない。
+    /// </summary>
+    public bool CanQuery => _descriptor.IsAccessible && _context.Query is not null;
+
+    /// <summary>右クリックの「新しいクエリ」。このデータベースを実行先にして空のエディタを開く。</summary>
+    [RelayCommand(CanExecute = nameof(CanQuery))]
+    private void OpenQuery() => _context.Query?.OpenNewQuery(_descriptor.Name);
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(

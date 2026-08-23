@@ -368,6 +368,89 @@
     </Style>
   </ControlTheme>
 
+  <!-- ===== ツールバーのボタン（作業領域。24px 高） ===== -->
+  <ControlTheme x:Key="ToolbarButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+    <Setter Property="Height"  Value="{DynamicResource ControlHeightSm}"/>
+    <Setter Property="Padding" Value="9,0"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMd}"/>
+  </ControlTheme>
+
+  <ControlTheme x:Key="ToolbarPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+    <Setter Property="Height"  Value="{DynamicResource ControlHeightSm}"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMd}"/>
+  </ControlTheme>
+
+  <!-- ===== 結果ペインのタブ（下線 2px。design/Main.dc.html の結果タブ帯） ===== -->
+  <ControlTheme x:Key="ResultTabItem" TargetType="ListBoxItem">
+    <Setter Property="Height"                    Value="30"/>
+    <Setter Property="MinHeight"                 Value="0"/>
+    <Setter Property="Padding"                   Value="12,0"/>
+    <Setter Property="Margin"                    Value="0"/>
+    <Setter Property="FontSize"                  Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Foreground"                Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="Background"                Value="Transparent"/>
+    <Setter Property="Cursor"                    Value="Hand"/>
+    <Setter Property="VerticalContentAlignment"  Value="Center"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="Transparent"
+                BorderThickness="0,0,0,2"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    </Style>
+    <Style Selector="^:selected">
+      <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="Background"  Value="{DynamicResource BgSurfaceBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== 結果グリッドの行 =====
+       行の高さはトークン任せ。仮想化を効かせたいので ListBox の器のまま使う。 -->
+  <ControlTheme x:Key="ResultRowItem" TargetType="ListBoxItem">
+    <Setter Property="Height"                      Value="{DynamicResource GridRowHeight}"/>
+    <Setter Property="MinHeight"                   Value="0"/>
+    <Setter Property="Padding"                     Value="0"/>
+    <Setter Property="Margin"                      Value="0"/>
+    <Setter Property="Background"                  Value="Transparent"/>
+    <Setter Property="Foreground"                  Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="HorizontalContentAlignment"  Value="Left"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Left"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource CellSelectedBrush}"/>
+    </Style>
+  </ControlTheme>
+
   <!-- ===== 区切り線 ===== -->
   <ControlTheme x:Key="VerticalDivider" TargetType="Border">
     <Setter Property="Width"             Value="1"/>
@@ -532,6 +615,80 @@
     <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
   </Style>
   <Style Selector="TextBlock.statusHeadline.error">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+
+
+  <!-- ===== 右クリックメニュー ===== -->
+  <Style Selector="ContextMenu">
+    <Setter Property="Background"      Value="{DynamicResource BgPanelBrush}"/>
+    <Setter Property="BorderBrush"     Value="{DynamicResource BorderStrongBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius"    Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="Padding"         Value="4"/>
+  </Style>
+  <Style Selector="MenuItem">
+    <Setter Property="Foreground" Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="FontSize"   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="MinHeight"  Value="26"/>
+  </Style>
+
+  <!-- ===== クエリエディタ =====
+       高さだけは QueryWorkspacePane の後ろで外す（既定スタイルが 1 行ぶんを与えるため）。 -->
+  <Style Selector="TextBox.editor">
+    <Setter Property="MinHeight"                 Value="0"/>
+    <Setter Property="Padding"                   Value="10,8"/>
+    <Setter Property="VerticalAlignment"         Value="Stretch"/>
+    <Setter Property="HorizontalAlignment"       Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment"  Value="Top"/>
+    <Setter Property="Background"                Value="Transparent"/>
+    <Setter Property="BorderThickness"           Value="0"/>
+    <Setter Property="CornerRadius"              Value="0"/>
+    <Setter Property="FontFamily"                Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"                  Value="{DynamicResource FontSizeMono}"/>
+    <Setter Property="TextWrapping"              Value="NoWrap"/>
+  </Style>
+
+  <!-- ===== 結果グリッドのセル =====
+       すべて等幅で出す。行の高さを固定してあるので、日本語がフォントの
+       フォールバックで拾われても行の高さは揺れない。 -->
+  <Style Selector="TextBlock.cell">
+    <Setter Property="FontFamily"        Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeMono}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.cell.nullValue">
+    <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+    <Setter Property="FontStyle"  Value="Italic"/>
+  </Style>
+  <Style Selector="TextBlock.columnName">
+    <Setter Property="FontFamily"        Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeMd}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextHighBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="TextTrimming"      Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="TextBlock.columnType">
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeXs}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextFaintBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- 実行ボタンの中のアイコンは、アクセント面の上に乗るので色を反転させる -->
+  <Style Selector="Path.icon.onAccent">
+    <Setter Property="Stroke" Value="{DynamicResource OnAccentBrush}"/>
+    <Setter Property="Fill"   Value="{DynamicResource OnAccentBrush}"/>
+  </Style>
+
+  <!-- 実行結果の一行（ツールバー右端） -->
+  <Style Selector="TextBlock.runStatus">
+    <Setter Property="FontFamily"        Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeMonoSm}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextDimBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.runStatus.failure">
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
   </Style>
 

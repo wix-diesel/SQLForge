@@ -3,7 +3,11 @@ namespace SQLForge.Domain.Connections;
 /// <summary>接続のアクセス種別。</summary>
 public enum AccessMode
 {
-    /// <summary>INSERT / UPDATE / DELETE / DDL をクライアント側でブロックする。</summary>
+    /// <summary>
+    /// 読み取りだけのつもりで開く接続。一覧とステータスバーに印を出すためのもので、
+    /// 書き込みそのものは止めない。文面から書き込みかどうかを見分ける仕掛けは
+    /// 動的 SQL のような形をどうせ通してしまうので、止めるのはサーバー側の権限の仕事にしてある。
+    /// </summary>
     ReadOnly,
 
     /// <summary>書き込みを許可する。本番接続では明示的な昇格が必要。</summary>

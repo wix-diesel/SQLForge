@@ -1,5 +1,6 @@
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
+using SQLForge.Ui.ViewModels.Workspace;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -11,8 +12,10 @@ namespace SQLForge.Ui.ViewModels.Explorer;
 /// <param name="Databases">データベース一覧のユースケース。</param>
 /// <param name="Schemas">スキーマ一覧のユースケース。</param>
 /// <param name="Tables">テーブル一覧のユースケース。</param>
+/// <param name="Query">右クリックの「クエリを実行」の行き先。ツリーだけを組むときは無くてよい。</param>
 public sealed record CatalogContext(
     IDatabaseSession Session,
     ListDatabasesUseCase Databases,
     ListSchemasUseCase Schemas,
-    ListTablesUseCase Tables);
+    ListTablesUseCase Tables,
+    IQueryLauncher? Query = null);
