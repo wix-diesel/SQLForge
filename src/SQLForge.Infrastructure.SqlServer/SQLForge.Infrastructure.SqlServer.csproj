@@ -8,7 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- SQL Server のドライバーはこのプロジェクトの外へ出ない。 -->
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
   </ItemGroup>
   <ItemGroup>
     <!-- 識別子の引用符付けは外へ出す型ではないので、テストにだけ見せる。 -->
