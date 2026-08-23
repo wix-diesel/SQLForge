@@ -184,6 +184,8 @@ public class MainWindowRenderTests
                 new ListSchemasUseCase(),
                 new ListTablesUseCase(),
                 new ListColumnsUseCase(),
+                new ListStoredProceduresUseCase(),
+                new ListStoredProcedureParametersUseCase(),
                 query),
             query);
     }

@@ -22,7 +22,8 @@ public sealed class SchemaNode : ObjectExplorerNode
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
         [
-            new CatalogFolderNode("テーブル", LoadTablesAsync)
+            new CatalogFolderNode("テーブル", LoadTablesAsync),
+            new CatalogFolderNode("ストアド プロシージャ", LoadStoredProceduresAsync)
         ]);
 
     private async Task<IReadOnlyList<ObjectExplorerNode>> LoadTablesAsync(CancellationToken cancellationToken)
@@ -32,5 +33,14 @@ public sealed class SchemaNode : ObjectExplorerNode
             .ConfigureAwait(true);
 
         return tables.Select(table => new TableNode(_context, _database, table)).ToList();
+    }
+
+    private async Task<IReadOnlyList<ObjectExplorerNode>> LoadStoredProceduresAsync(CancellationToken cancellationToken)
+    {
+        var procedures = await _context.StoredProcedures
+            .ExecuteAsync(_context.Session, _database, _descriptor.Name, cancellationToken)
+            .ConfigureAwait(true);
+
+        return procedures.Select(procedure => new StoredProcedureNode(_context, _database, procedure)).ToList();
     }
 }

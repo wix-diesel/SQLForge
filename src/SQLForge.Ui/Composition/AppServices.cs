@@ -60,6 +60,8 @@ public static class AppServices
         services.AddSingleton<ListSchemasUseCase>();
         services.AddSingleton<ListTablesUseCase>();
         services.AddSingleton<ListColumnsUseCase>();
+        services.AddSingleton<ListStoredProceduresUseCase>();
+        services.AddSingleton<ListStoredProcedureParametersUseCase>();
         services.AddSingleton<ExecuteQueryUseCase>();
     }
 

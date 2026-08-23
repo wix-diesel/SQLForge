@@ -19,4 +19,8 @@ internal static class CatalogOrdering
 
     public static IOrderedEnumerable<TableDescriptor> ByName(IEnumerable<TableDescriptor> tables) =>
         tables.OrderBy(table => table.Name, StringComparer.OrdinalIgnoreCase);
+
+    public static IOrderedEnumerable<StoredProcedureDescriptor> ByName(
+        IEnumerable<StoredProcedureDescriptor> procedures) =>
+        procedures.OrderBy(procedure => procedure.Name, StringComparer.OrdinalIgnoreCase);
 }

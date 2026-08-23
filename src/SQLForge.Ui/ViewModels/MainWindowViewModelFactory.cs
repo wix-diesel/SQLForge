@@ -16,6 +16,8 @@ public sealed class MainWindowViewModelFactory(
     ListSchemasUseCase schemas,
     ListTablesUseCase tables,
     ListColumnsUseCase columns,
+    ListStoredProceduresUseCase storedProcedures,
+    ListStoredProcedureParametersUseCase storedProcedureParameters,
     ExecuteQueryUseCase queries)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
@@ -29,7 +31,7 @@ public sealed class MainWindowViewModelFactory(
         return new MainWindowViewModel(
             session,
             platform,
-            new CatalogContext(session, databases, schemas, tables, columns, query),
+            new CatalogContext(session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query),
             query);
     }
 }

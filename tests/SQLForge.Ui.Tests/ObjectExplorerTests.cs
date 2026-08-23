@@ -40,7 +40,7 @@ public class ObjectExplorerTests
 
         var schemas = await ExpandAsync(database);
         var schema = Assert.IsType<SchemaNode>(schemas.Children.First(node => node.Title == "dbo"));
-        var tables = await ExpandAsync(schema);
+        var tables = await ExpandAsync(schema, "テーブル");
 
         Assert.Equal("テーブル", tables.Title);
         Assert.Equal("3", tables.Detail);
@@ -54,7 +54,7 @@ public class ObjectExplorerTests
         await explorer.InitializeAsync();
 
         var schemas = await ExpandAsync(Database(explorer, "sales_db"));
-        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
 
         Assert.Equal("8.4M 行", tables.Children.First(node => node.Title == "orders").Detail);
         Assert.Equal("120 行", tables.Children.First(node => node.Title == "customers").Detail);
@@ -138,7 +138,7 @@ public class ObjectExplorerTests
         Assert.False(database.OpenQueryCommand.CanExecute(null));
 
         var schemas = await ExpandAsync(database);
-        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
 
         Assert.False(tables.Children.OfType<TableNode>().First().OpenQueryCommand.CanExecute(null));
     }
@@ -154,7 +154,7 @@ public class ObjectExplorerTests
         Assert.True(database.OpenQueryCommand.CanExecute(null));
 
         var schemas = await ExpandAsync(database);
-        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
         var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
 
         Assert.True(orders.OpenQueryCommand.CanExecute(null));
@@ -183,7 +183,7 @@ public class ObjectExplorerTests
 
         var database = Database(explorer, "sales_db");
         var schemas = await ExpandAsync(database);
-        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
         var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
 
         Assert.True(orders.ShowTopRowsCommand.CanExecute(null));
@@ -200,7 +200,7 @@ public class ObjectExplorerTests
         await explorer.InitializeAsync();
 
         var schemas = await ExpandAsync(Database(explorer, "sales_db"));
-        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
         var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
 
         var columns = await ExpandAsync(orders);
@@ -215,6 +215,112 @@ public class ObjectExplorerTests
         var customerId = Assert.IsType<ColumnNode>(columns.Children.First(node => node.Title == "customer_id"));
         Assert.False(customerId.IsPrimaryKey);
         Assert.Equal("int, null", customerId.Detail);
+    }
+
+    [Fact]
+    public async Task スキーマを開くとテーブルとストアドプロシージャが並ぶ()
+    {
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var schema = Assert.IsType<SchemaNode>(schemas.Children.First(node => node.Title == "dbo"));
+        await schema.EnsureChildrenAsync();
+
+        Assert.Equal(["テーブル", "ストアド プロシージャ"], schema.Children.Select(node => node.Title));
+
+        var procedures = schema.Children.First(node => node.Title == "ストアド プロシージャ");
+        await procedures.EnsureChildrenAsync();
+
+        Assert.Equal(["usp_cancel_order", "usp_place_order"], procedures.Children.Select(node => node.Title));
+    }
+
+    [Fact]
+    public async Task ストアドプロシージャを開くとパラメーターの見出しの下に並ぶ()
+    {
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var procedures = await ExpandAsync(
+            schemas.Children.First(node => node.Title == "dbo"), "ストアド プロシージャ");
+        var placeOrder = Assert.IsType<StoredProcedureNode>(
+            procedures.Children.First(node => node.Title == "usp_place_order"));
+
+        Assert.Equal("パラメーター 2", placeOrder.Detail);
+
+        var parameters = await ExpandAsync(placeOrder);
+
+        Assert.Equal("パラメーター", parameters.Title);
+        Assert.Equal(["@customer_id", "@order_id"], parameters.Children.Select(node => node.Title));
+
+        var orderId = Assert.IsType<StoredProcedureParameterNode>(
+            parameters.Children.First(node => node.Title == "@order_id"));
+        Assert.True(orderId.IsOutput);
+        Assert.Equal("int, OUTPUT", orderId.Detail);
+    }
+
+    [Fact]
+    public async Task 実行すると角括弧で囲んだEXECの文面が実行される()
+    {
+        var launcher = new StubLauncher();
+        var explorer = NewExplorer(NewSession(), launcher);
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var procedures = await ExpandAsync(
+            schemas.Children.First(node => node.Title == "dbo"), "ストアド プロシージャ");
+        var placeOrder = procedures.Children.OfType<StoredProcedureNode>().First(node => node.Title == "usp_place_order");
+
+        Assert.True(placeOrder.ExecuteCommand.CanExecute(null));
+        placeOrder.ExecuteCommand.Execute(null);
+
+        Assert.Equal("sales_db", launcher.RanFor?.Value);
+        Assert.Equal("EXEC [dbo].[usp_place_order];", launcher.RanSql);
+    }
+
+    [Fact]
+    public void 定義を表示すると文字列リテラル内の引用符を二重化する()
+    {
+        // 区切り識別子はスキーマ名・プロシージャ名に ' を含められる。角括弧の引用符付けとは
+        // 別に、文字列リテラルへ埋め込むところでも二重化しないと文が途中で終わってしまう。
+        var launcher = new StubLauncher();
+        var context = new CatalogContext(
+            new FakeDatabaseSession(),
+            new ListDatabasesUseCase(),
+            new ListSchemasUseCase(),
+            new ListTablesUseCase(),
+            new ListColumnsUseCase(),
+            new ListStoredProceduresUseCase(),
+            new ListStoredProcedureParametersUseCase(),
+            launcher);
+
+        var node = new StoredProcedureNode(
+            context,
+            new DatabaseName("sales_db"),
+            new StoredProcedureDescriptor(new SchemaName("weird's"), "usp_o'rder"));
+
+        node.ViewDefinitionCommand.Execute(null);
+
+        Assert.Equal("sales_db", launcher.RanFor?.Value);
+        Assert.Equal(
+            "SELECT OBJECT_DEFINITION(OBJECT_ID(N'[weird''s].[usp_o''rder]')) AS definition;",
+            launcher.RanSql);
+    }
+
+    [Fact]
+    public async Task 作業領域がつながっていなければストアドプロシージャのメニューは押せない()
+    {
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var procedures = await ExpandAsync(
+            schemas.Children.First(node => node.Title == "dbo"), "ストアド プロシージャ");
+        var placeOrder = procedures.Children.OfType<StoredProcedureNode>().First(node => node.Title == "usp_place_order");
+
+        Assert.False(placeOrder.ExecuteCommand.CanExecute(null));
+        Assert.False(placeOrder.ViewDefinitionCommand.CanExecute(null));
     }
 
     /// <summary>行き先があることだけを表す差し込み。開かれたデータベースを覚えておく。</summary>
@@ -242,16 +348,22 @@ public class ObjectExplorerTests
             new ListSchemasUseCase(),
             new ListTablesUseCase(),
             new ListColumnsUseCase(),
+            new ListStoredProceduresUseCase(),
+            new ListStoredProcedureParametersUseCase(),
             query));
 
     private static DatabaseNode Database(ObjectExplorerViewModel explorer, string name) =>
         explorer.Roots[0].Children[0].Children.OfType<DatabaseNode>().First(node => node.Title == name);
 
-    /// <summary>ノードを展開し、その下の見出しノードを開いて返す。</summary>
-    private static async Task<ObjectExplorerNode> ExpandAsync(ObjectExplorerNode node)
+    /// <summary>
+    /// ノードを展開し、その下の見出しノードを開いて返す。子の見出しが 1 つしかないなら
+    /// <paramref name="folderTitle"/> は省いてよい（スキーマは「テーブル」「ストアド プロシージャ」の
+    /// 2 つを持つので、そこだけは名指しで選ぶ）。
+    /// </summary>
+    private static async Task<ObjectExplorerNode> ExpandAsync(ObjectExplorerNode node, string? folderTitle = null)
     {
         await node.EnsureChildrenAsync();
-        var folder = node.Children.Single();
+        var folder = folderTitle is null ? node.Children.Single() : node.Children.First(child => child.Title == folderTitle);
         await folder.EnsureChildrenAsync();
 
         return folder;
@@ -279,6 +391,12 @@ public class ObjectExplorerTests
             new TableDescriptor(dbo, "Invoices", 0))
         .WithColumns("sales_db", "dbo", "orders",
             new ColumnDescriptor("id", 1, "int", IsNullable: false, IsIdentity: true, IsPrimaryKey: true),
-            new ColumnDescriptor("customer_id", 2, "int", IsNullable: true, IsIdentity: false, IsPrimaryKey: false));
+            new ColumnDescriptor("customer_id", 2, "int", IsNullable: true, IsIdentity: false, IsPrimaryKey: false))
+        .WithStoredProcedures("sales_db", "dbo",
+            new StoredProcedureDescriptor(dbo, "usp_place_order", 2),
+            new StoredProcedureDescriptor(dbo, "usp_cancel_order", 0))
+        .WithStoredProcedureParameters("sales_db", "dbo", "usp_place_order",
+            new StoredProcedureParameterDescriptor("@customer_id", 1, "int", IsOutput: false, HasDefaultValue: false),
+            new StoredProcedureParameterDescriptor("@order_id", 2, "int", IsOutput: true, HasDefaultValue: false));
     }
 }
