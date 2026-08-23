@@ -186,6 +186,28 @@ public class QueryEditorViewModelTests
     }
 
     [Fact]
+    public async Task ツリーから文面付きで開くと開くと同時に実行される()
+    {
+        var session = ReadWriteSession();
+        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
+
+        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        editor.OpenAndRunQuery(SalesDb, "SELECT TOP (1000) * FROM [dbo].[orders];");
+
+        // 実行は非同期に始まる。実行中を経て終わるまで待つ。
+        while (editor.IsRunning)
+        {
+            await Task.Yield();
+        }
+
+        Assert.True(editor.IsOpen);
+        Assert.Equal("sales_db", editor.TargetDatabase);
+        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", editor.Sql);
+        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", session.ExecutedSql);
+        Assert.Equal(["結果 1", "メッセージ"], editor.Tabs.Select(tab => tab.Title));
+    }
+
+    [Fact]
     public void 空の文面では実行ボタンが押せない()
     {
         var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());

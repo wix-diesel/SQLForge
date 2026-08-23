@@ -119,6 +119,7 @@
               <Grid.ContextMenu>
                 <ContextMenu>
                   <MenuItem Header="クエリを実行" Command="{Binding OpenQueryCommand}"/>
+                  <MenuItem Header="先頭 1000 件を表示" Command="{Binding ShowTopRowsCommand}"/>
                 </ContextMenu>
               </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconTable}" VerticalAlignment="Center"/>
