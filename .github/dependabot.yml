@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    # Directory.Packages.props で一元管理しているため、同時に更新可能なパッケージ数が
+    # 多くなり得る。デフォルトの上限(5)だと一部のPRが作成されない恐れがあるため広めに設定する。
+    open-pull-requests-limit: 20
+    groups:
+      # マイナー・パッチバージョンアップはまとめて1つのPRにする。
+      # メジャーバージョンアップはグループ対象外のため、Dependabotの既定動作により
+      # ライブラリごとに個別のPRが作成される。
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
