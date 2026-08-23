@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SQLForge.Infrastructure.Linux</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 共通の足回り（PlatformProfileBase）を借りる。 -->
+    <ProjectReference Include="..\SQLForge.Infrastructure\SQLForge.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

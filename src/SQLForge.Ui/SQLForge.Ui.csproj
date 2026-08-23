@@ -23,6 +23,10 @@
     <ProjectReference Include="..\SQLForge.Infrastructure\SQLForge.Infrastructure.csproj" />
     <!-- 合成ルートだけがドライバーの実装を知る。DBMS を増やすときはここへ 1 行足す。 -->
     <ProjectReference Include="..\SQLForge.Infrastructure.SqlServer\SQLForge.Infrastructure.SqlServer.csproj" />
+    <!-- OS 依存も同じく合成ルートだけが知る。OS を増やすときはここへ 1 行足す。 -->
+    <ProjectReference Include="..\SQLForge.Infrastructure.Linux\SQLForge.Infrastructure.Linux.csproj" />
+    <ProjectReference Include="..\SQLForge.Infrastructure.Windows\SQLForge.Infrastructure.Windows.csproj" />
+    <ProjectReference Include="..\SQLForge.Infrastructure.MacOs\SQLForge.Infrastructure.MacOs.csproj" />
   </ItemGroup>
 
   <ItemGroup>

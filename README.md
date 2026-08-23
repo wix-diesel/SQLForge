@@ -113,19 +113,24 @@ SQLForge.Application     ユースケースとポート（IDatabaseConnector / I
                          IConnectionProfileRepository / IConnectionProbe / ISecretStore /
                          IPlatformProfile）。入力は ConnectionDraft で受ける
       ↑
-SQLForge.Infrastructure  ポートの実装のうち、DBMS に依らないもの。
+SQLForge.Infrastructure  ポートの実装のうち、DBMS にも OS にも依らないもの。
       |                  接続の台帳・接続テスト・ADO.NET 共通の足回り（AdoDatabaseSession）と、
-      |                  保存済み接続・キーリング・OS 判定
+      |                  保存済み接続・キーリングと、OS ごとの体裁の共通部分
+      |                  （PlatformProfileBase・HostPlatform・PlatformProfileRegistry）
       ↑
 SQLForge.Infrastructure.SqlServer
-                         SQL Server ドライバー。Microsoft.Data.SqlClient を抱えるのはここだけ
+      |                  SQL Server ドライバー。Microsoft.Data.SqlClient を抱えるのはここだけ
+      |
+SQLForge.Infrastructure.Linux / .Windows / .MacOs
+                         OS ごとの体裁。OS 依存を抱えるのはここだけ
       ↑
 SQLForge.Ui              Avalonia のビューとビューモデル。合成ルートは Composition/AppServices
 ```
 
-**ドライバーは DBMS ごとに別プロジェクト**にしてある。1 つの Infrastructure に全部入れると、
-DBMS を 1 つ足すたびに全利用者がその依存（SqlClient・Npgsql・…）を引き込むことになるため。
-この境目は口約束ではなく `LayerDependencyTests` が組み上がったアセンブリの参照から見張っている。
+**ドライバーは DBMS ごとに、体裁は OS ごとに別プロジェクト**にしてある。1 つの Infrastructure に
+全部入れると、DBMS や OS を 1 つ足すたびに全利用者がその依存（SqlClient・Npgsql・…）や
+分岐を引き込むことになるため。どちらの境目も口約束ではなく `LayerDependencyTests` が
+組み上がったアセンブリの参照から見張っている。
 
 エンティティ（`ConnectionProfile`）は常に妥当である前提なので、編集中の値は
 `ConnectionDraft` で持ち、検証を通ってからエンティティへ変換する。
@@ -183,9 +188,33 @@ JetBrains Mono を埋め込む。
 ## OS の想定
 
 初期版の対象は Linux だが、Windows と macOS でもそのまま起動できるようにしてある。
-OS 依存は `IPlatformProfile`（Infrastructure の `PlatformProfile`）に閉じ込めてあり、
-現状の分岐はウィンドウ装飾だけ — Linux / Windows はモックアップどおりの自前タイトルバー、
-macOS は信号機ボタンがあるので OS 標準の装飾を使う。
+OS 依存は `IPlatformProfile` に閉じ込めてあり、その実装は **OS ごとに別プロジェクト**
+（`SQLForge.Infrastructure.Linux` / `.Windows` / `.MacOs`）に置いてある。
+現状の分岐はウィンドウ装飾と表示系の名前だけ — Linux / Windows はモックアップどおりの
+自前タイトルバー、macOS は信号機ボタンがあるので OS 標準の装飾を使う。
+
+分岐が少ないうちに分けてあるのは、OS 依存はあとから増えるものだからで（資格情報の保管先、
+ファイルの関連付け、単一インスタンス化など）、増えたときに置き場所を探さなくて済むようにするため。
+
+OS の見分け（`HostPlatform`）と体裁の共通部分（`PlatformProfileBase`）は OS に依らないので
+共通の `SQLForge.Infrastructure` に置き、選び分けは `PlatformProfileRegistry` が引き受ける。
+見分けのつかない OS では `UnknownPlatformProfile` が受けるので、起動はできる。
+
+どの OS のプロジェクトも `net10.0` のままにしてある。`net10.0-windows` のような OS 付きの
+TFM にすると、3 つとも参照する合成ルートが他の OS では組めなくなるため。OS 固有の API を
+呼ぶときは、TFM ではなく呼び出し側に `[SupportedOSPlatform]` を付ける。
 
 OS 統合認証（Windows 認証）は Linux では Kerberos の設定が要る。整っていない環境では
 接続時に SqlClient がその理由を返すので、ダイアログのフッターにそのまま出る。
+
+### OS を増やすとき
+
+触るのは **新しい OS のプロジェクトと合成ルートの 1 行だけ**で、Domain・Application・UI と
+既存の OS のプロジェクトは変わらない。
+
+1. `PlatformKind` に OS を足す
+2. `src/SQLForge.Infrastructure.<OS>` を作り、`SQLForge.Infrastructure` を参照する
+3. `PlatformProfileBase` を継承して、既定と違うところだけ上書きする
+4. `SQLForge.Ui` から新しいプロジェクトを参照し、`Composition/PlatformProfiles` の並びへ 1 行足す
+5. `LayerDependencyTests.PlatformAssemblies` に新しいアセンブリ名を足す
+   （共通の Infrastructure や他の OS へ混ざり込んだら落ちるようにするため）
