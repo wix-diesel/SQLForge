@@ -16,4 +16,10 @@ public sealed class CatalogFolderNode(
     /// <summary>読み終えたら件数を見出しの右に出す（モックアップの「テーブル 48」）。</summary>
     protected override void OnChildrenLoaded(IReadOnlyList<ObjectExplorerNode> children) =>
         Detail = children.Count.ToString();
+
+    /// <summary>
+    /// 失敗したら件数を消す。子が失敗の 1 行だけになっているのに前回の件数が残ると、
+    /// 「3 件あるのに 1 行しか出ていない」という嘘の表示になる。
+    /// </summary>
+    protected override void OnChildrenFailed() => Detail = null;
 }

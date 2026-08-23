@@ -77,6 +77,14 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         }
     }
 
+    /// <summary>
+    /// 実行中の照会が門を返すのを待ってから接続を閉じる。待たずに閉じると、
+    /// 読み取り中の <see cref="DbDataReader"/> の足元で接続が消える。
+    ///
+    /// 門 (<see cref="SemaphoreSlim"/>) 自体は破棄しない。破棄すると、実行中の照会が
+    /// finally で Release() したときに <see cref="ObjectDisposedException"/> になる。
+    /// SemaphoreSlim の破棄が要るのは AvailableWaitHandle を触った場合だけで、ここでは触っていない。
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -84,9 +92,20 @@ public abstract class AdoDatabaseSession : IDatabaseSession
             return;
         }
 
+        // 先に閉じたことにして、以降の照会は門を待たずに弾く。
         _disposed = true;
-        await _connection.DisposeAsync().ConfigureAwait(false);
-        _gate.Dispose();
+
+        // 実行中の照会はコマンドのタイムアウトで必ず終わるので、ここで止まり続けることはない。
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+
         GC.SuppressFinalize(this);
     }
 }

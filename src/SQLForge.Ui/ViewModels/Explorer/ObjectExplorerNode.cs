@@ -86,6 +86,7 @@ public abstract partial class ObjectExplorerNode : ObservableObject
             Error = exception.Message;
             Replace([MessageNode.Failed(exception.Message)]);
             _childrenLoaded = false;
+            OnChildrenFailed();
         }
         finally
         {
@@ -98,6 +99,14 @@ public abstract partial class ObjectExplorerNode : ObservableObject
 
     /// <summary>読み終えた直後に呼ばれる。件数の表示などに使う。</summary>
     protected virtual void OnChildrenLoaded(IReadOnlyList<ObjectExplorerNode> children)
+    {
+    }
+
+    /// <summary>
+    /// 読み込みに失敗した直後に呼ばれる。<see cref="OnChildrenLoaded"/> で出した表示が
+    /// 実際の子と食い違ったまま残らないよう、対になるものはここで戻す。
+    /// </summary>
+    protected virtual void OnChildrenFailed()
     {
     }
 

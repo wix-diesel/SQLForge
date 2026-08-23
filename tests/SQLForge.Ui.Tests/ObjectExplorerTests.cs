@@ -94,6 +94,24 @@ public class ObjectExplorerTests
     }
 
     [Fact]
+    public async Task 読み直しに失敗したら件数表示を消す()
+    {
+        var session = NewSession();
+        var explorer = NewExplorer(session);
+        await explorer.InitializeAsync();
+
+        var databases = (CatalogFolderNode)explorer.Roots[0].Children[0];
+        Assert.Equal("3", databases.Detail);
+
+        session.Failure = new InvalidOperationException("権限がありません。");
+        await databases.ReloadAsync();
+
+        // 子が失敗の 1 行だけになったのに「3」が残ると、件数と中身が食い違って見える。
+        Assert.Null(databases.Detail);
+        Assert.IsType<MessageNode>(Assert.Single(databases.Children));
+    }
+
+    [Fact]
     public async Task 読み直すとツリーを組み立て直す()
     {
         var session = NewSession();
