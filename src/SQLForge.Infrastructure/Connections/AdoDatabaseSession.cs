@@ -1,7 +1,9 @@
 using System.Data.Common;
+using System.Diagnostics;
 using SQLForge.Application.Abstractions;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Domain.Query;
 
 namespace SQLForge.Infrastructure.Connections;
 
@@ -9,8 +11,9 @@ namespace SQLForge.Infrastructure.Connections;
 /// ADO.NET を使うセッションで共通の部分。接続の寿命と、
 /// 同時に投げられたカタログ照会の直列化だけを引き受ける。
 ///
-/// エンジンごとに違うのはカタログの読み方だけなので、派生クラスは Read*Async を
-/// 3 つ埋めればよい。ツリーは複数のノードを同時に展開できるが、
+/// エンジンごとに違うのはカタログの読み方と、実行先データベースの切り替え方と、
+/// テーブルをのぞく文面の組み立て方だけ。結果の読み取りは ADO.NET の作法だけで
+/// 書けるので、どのドライバーでもここのものを使う。ツリーは複数のノードを同時に展開できるが、
 /// <see cref="DbConnection"/> は 1 本で複数の照会を同時に走らせられないため、
 /// ここで門を 1 つに絞っている。
 /// </summary>
@@ -45,6 +48,34 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         CancellationToken cancellationToken = default) =>
         QueryAsync((connection, token) => ReadTablesAsync(connection, database, schema, token), cancellationToken);
 
+    /// <summary>
+    /// エディタの文面を実行する。カタログの照会と同じ門を通すので、
+    /// ツリーの展開と同時に走っても接続を取り合うことはない。
+    /// </summary>
+    public Task<QueryResult> ExecuteQueryAsync(
+        DatabaseName database,
+        string sql,
+        int maxRows,
+        CancellationToken cancellationToken = default) =>
+        QueryAsync(
+            async (connection, token) =>
+            {
+                await SwitchDatabaseAsync(connection, database, token).ConfigureAwait(false);
+                return await ReadResultAsync(connection, sql, maxRows, token).ConfigureAwait(false);
+            },
+            cancellationToken);
+
+    public abstract string BuildTableQuery(DatabaseName database, SchemaName schema, string table, int maxRows);
+
+    /// <summary>
+    /// 実行先のデータベースへ切り替える。SQL Server のように 1 本の接続で切り替えられる
+    /// エンジンもあれば、PostgreSQL のように接続を張り直すしかないエンジンもある。
+    /// </summary>
+    protected abstract Task SwitchDatabaseAsync(
+        DbConnection connection,
+        DatabaseName database,
+        CancellationToken cancellationToken);
+
     protected abstract Task<IReadOnlyList<DatabaseDescriptor>> ReadDatabasesAsync(
         DbConnection connection,
         CancellationToken cancellationToken);
@@ -59,6 +90,83 @@ public abstract class AdoDatabaseSession : IDatabaseSession
         DatabaseName database,
         SchemaName schema,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// 文面を投げて結果を読む。ここは ADO.NET の作法だけで書けるので、
+    /// どのドライバーでも同じものを使う。
+    /// </summary>
+    private static async Task<QueryResult> ReadResultAsync(
+        DbConnection connection,
+        string sql,
+        int maxRows,
+        CancellationToken cancellationToken)
+    {
+        var started = Stopwatch.GetTimestamp();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+
+        var sets = new List<QueryResultSet>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+        do
+        {
+            // 行を返さない文（UPDATE や DDL）は列を持たない。結果セットとしては数えず、次へ進む。
+            if (reader.FieldCount > 0)
+            {
+                sets.Add(await ReadSetAsync(reader, maxRows, cancellationToken).ConfigureAwait(false));
+            }
+        }
+        while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false));
+
+        // 影響行数が確定するのはリーダーを閉じたあと。開いたまま読むと 0 や -1 が返る。
+        await reader.CloseAsync().ConfigureAwait(false);
+
+        return new QueryResult(sets, reader.RecordsAffected, Stopwatch.GetElapsedTime(started));
+    }
+
+    private static async Task<QueryResultSet> ReadSetAsync(
+        DbDataReader reader,
+        int maxRows,
+        CancellationToken cancellationToken)
+    {
+        var columns = new List<QueryColumn>(reader.FieldCount);
+
+        for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
+        {
+            var name = reader.GetName(ordinal);
+
+            columns.Add(new QueryColumn(
+                // 名前のない式（SELECT count(*)）にも見出しは要る。位置で呼ぶ。
+                string.IsNullOrEmpty(name) ? $"(列 {ordinal + 1})" : name,
+                reader.GetDataTypeName(ordinal),
+                AdoValueText.IsNumeric(reader.GetFieldType(ordinal))));
+        }
+
+        var rows = new List<IReadOnlyList<string?>>();
+        var isTruncated = false;
+
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            // 上限まで読んだら、残りは読まずに置いていく（NextResult が読み飛ばす）。
+            if (rows.Count >= maxRows)
+            {
+                isTruncated = true;
+                break;
+            }
+
+            var values = new string?[columns.Count];
+
+            for (var ordinal = 0; ordinal < values.Length; ordinal++)
+            {
+                values[ordinal] = reader.IsDBNull(ordinal) ? null : AdoValueText.From(reader.GetValue(ordinal));
+            }
+
+            rows.Add(values);
+        }
+
+        return new QueryResultSet(columns, rows, isTruncated);
+    }
 
     private async Task<T> QueryAsync<T>(
         Func<DbConnection, CancellationToken, Task<T>> read,

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Connections;
+using SQLForge.Application.Query;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.Platform;
 using SQLForge.Infrastructure.Security;
@@ -58,6 +59,7 @@ public static class AppServices
         services.AddSingleton<ListDatabasesUseCase>();
         services.AddSingleton<ListSchemasUseCase>();
         services.AddSingleton<ListTablesUseCase>();
+        services.AddSingleton<ExecuteQueryUseCase>();
     }
 
     private static void AddViewModels(IServiceCollection services)

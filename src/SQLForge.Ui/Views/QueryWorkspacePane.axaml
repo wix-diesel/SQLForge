@@ -1,0 +1,285 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             xmlns:workspace="using:SQLForge.Ui.ViewModels.Workspace"
+             x:Class="SQLForge.Ui.Views.QueryWorkspacePane"
+             x:DataType="vm:MainWindowViewModel">
+
+  <!-- メインウィンドウ右の作業領域: ツールバー / エディタ / 結果ペイン
+       design/Main.dc.html の中央カラムにあたる。 -->
+
+  <UserControl.KeyBindings>
+    <!-- SSMS と同じで F5。エディタに入力しているときも効くように、ペイン側で受ける。 -->
+    <KeyBinding Gesture="F5" Command="{Binding Query.RunCommand}"/>
+    <KeyBinding Gesture="Ctrl+Return" Command="{Binding Query.RunCommand}"/>
+  </UserControl.KeyBindings>
+
+  <Grid RowDefinitions="Auto,2*,6,3*" Background="{DynamicResource BgAppBrush}">
+
+    <!-- ===== ツールバー ===== -->
+    <Border Grid.Row="0"
+            Height="{DynamicResource ToolBarHeight}"
+            Padding="10,0"
+            Background="{DynamicResource BgPanelBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+
+        <!-- 実行先のデータベース -->
+        <Border Grid.Column="0"
+                Height="{DynamicResource ControlHeightSm}"
+                Padding="9,0"
+                Background="{DynamicResource BgSurfaceBrush}"
+                BorderBrush="{DynamicResource BorderStrongBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                ToolTip.Tip="このクエリを実行するデータベース">
+          <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+            <Path Classes="icon accent" Data="{StaticResource IconCatalog}" VerticalAlignment="Center"/>
+            <TextBlock Classes="mono"
+                       Text="{Binding Query.TargetDatabase}"
+                       Foreground="{DynamicResource TextHighBrush}"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1" Theme="{StaticResource VerticalDivider}"/>
+
+        <!-- 実行 -->
+        <Button Grid.Column="2"
+                Theme="{StaticResource ToolbarPrimaryButton}"
+                Command="{Binding Query.RunCommand}"
+                ToolTip.Tip="クエリを実行（F5 / Ctrl+Enter）">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon onAccent" Data="{StaticResource IconPlay}" VerticalAlignment="Center"/>
+            <TextBlock Text="実行" VerticalAlignment="Center"/>
+            <TextBlock Text="F5"
+                       FontSize="{DynamicResource FontSizeXs}"
+                       Opacity="0.65"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- 停止（実行中だけ出す） -->
+        <Button Grid.Column="3"
+                Theme="{StaticResource ToolbarButton}"
+                Command="{Binding Query.RunCancelCommand}"
+                IsVisible="{Binding Query.IsRunning}"
+                ToolTip.Tip="実行を取り消す">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon danger" Data="{StaticResource IconStop}" VerticalAlignment="Center"/>
+            <TextBlock Text="停止" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <Border Grid.Column="4" Theme="{StaticResource VerticalDivider}"/>
+
+        <!-- 取得上限。まだ変えられないので、値だけを見せる。 -->
+        <TextBlock Grid.Column="5"
+                   Classes="label"
+                   Text="{Binding Query.MaxRowsLabel}"
+                   VerticalAlignment="Center"
+                   ToolTip.Tip="結果セットごとに読む行数の上限（変更は未実装）"/>
+
+        <!-- 実行結果の一行 -->
+        <TextBlock Grid.Column="7"
+                   Classes="runStatus"
+                   Classes.failure="{Binding Query.HasFailed}"
+                   Text="{Binding Query.Status}"/>
+
+        <Button Grid.Column="8"
+                Theme="{StaticResource IconButton}"
+                Command="{Binding Query.CloseCommand}"
+                ToolTip.Tip="クエリを閉じる">
+          <Path Classes="icon" Data="{StaticResource IconClose}"/>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ===== エディタ =====
+         AvaloniaEdit ではなく素の TextBox。構文の色分けと補完はフェーズ 1 の残り。 -->
+    <Border Grid.Row="1" Background="{DynamicResource BgSurfaceBrush}">
+      <TextBox Name="Editor"
+               Classes="editor"
+               Text="{Binding Query.Sql, Mode=TwoWay}"
+               AcceptsReturn="True"
+               AcceptsTab="True"
+               Watermark="SELECT ... と入力して 実行（F5）を押す"
+               ScrollViewer.HorizontalScrollBarVisibility="Auto"
+               ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    </Border>
+
+    <!-- エディタと結果の境目 -->
+    <GridSplitter Grid.Row="2"
+                  ResizeDirection="Rows"
+                  Background="{DynamicResource BgAppBrush}"/>
+
+    <!-- ===== 結果ペイン ===== -->
+    <Grid Grid.Row="3" RowDefinitions="Auto,*" Background="{DynamicResource BgSurfaceBrush}">
+
+      <!-- タブ帯（結果 1 / 結果 2 / メッセージ） -->
+      <Border Grid.Row="0"
+              Height="30"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,1,0,1">
+        <ListBox ItemsSource="{Binding Query.Tabs}"
+                 SelectedItem="{Binding Query.SelectedTab, Mode=TwoWay}"
+                 ItemContainerTheme="{StaticResource ResultTabItem}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="workspace:QueryTabViewModel">
+              <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                <Border IsVisible="{Binding HasBadge}"
+                        Background="{DynamicResource BgRaisedBrush}"
+                        CornerRadius="3"
+                        Padding="5,1"
+                        VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Badge}"
+                             FontFamily="{DynamicResource FontFamilyMono}"
+                             FontSize="{DynamicResource FontSizeMonoSm}"
+                             Foreground="{DynamicResource TextDimBrush}"/>
+                </Border>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+
+      <Panel Grid.Row="1">
+
+        <!-- まだ実行していないとき -->
+        <TextBlock Text="実行するとここに結果が出ます。"
+                   Foreground="{DynamicResource TextFaintBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding Query.SelectedTab, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+        <ContentControl Content="{Binding Query.SelectedTab}">
+          <ContentControl.ContentTemplate>
+            <DataTemplate x:DataType="workspace:QueryTabViewModel">
+              <Panel>
+
+                <!-- グリッド。横は外側の器でまとめて送り、縦は行の並びに任せて仮想化させる。 -->
+                <ScrollViewer IsVisible="{Binding IsGrid}"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+                  <Grid RowDefinitions="Auto,*">
+
+                    <!-- 見出し -->
+                    <Border Grid.Row="0"
+                            Height="{DynamicResource GridHeaderHeight}"
+                            Background="{DynamicResource BgRaisedBrush}"
+                            BorderBrush="{DynamicResource BorderStrongBrush}"
+                            BorderThickness="0,0,0,1">
+                      <StackPanel Orientation="Horizontal">
+                        <!-- 行番号の桁ぶん。データ側の左端と同じ幅にして列を揃える。 -->
+                        <Border Width="{DynamicResource GridGutterWidth}"
+                                BorderBrush="{DynamicResource BorderStrongBrush}"
+                                BorderThickness="0,0,1,0"/>
+                        <ItemsControl ItemsSource="{Binding ResultSet.Columns}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="workspace:ResultColumnViewModel">
+                              <Border Width="{Binding Width}"
+                                      Padding="10,0"
+                                      BorderBrush="{DynamicResource BorderStrongBrush}"
+                                      BorderThickness="0,0,1,0">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                  <TextBlock Classes="columnName" Text="{Binding Name}"/>
+                                  <TextBlock Classes="columnType" Text="{Binding TypeName}"/>
+                                </StackPanel>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </Border>
+
+                    <!-- 行 -->
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ResultSet.Rows}"
+                             ItemContainerTheme="{StaticResource ResultRowItem}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="workspace:ResultRowViewModel">
+                          <StackPanel Orientation="Horizontal">
+                            <Border Width="{DynamicResource GridGutterWidth}"
+                                    Padding="0,0,8,0"
+                                    Background="{DynamicResource BgPanelBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="0,0,1,0">
+                              <TextBlock Text="{Binding Number}"
+                                         FontFamily="{DynamicResource FontFamilyMono}"
+                                         FontSize="{DynamicResource FontSizeMonoSm}"
+                                         Foreground="{DynamicResource TextFaintBrush}"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding Cells}">
+                              <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                  <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                              </ItemsControl.ItemsPanel>
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="workspace:ResultCellViewModel">
+                                  <Border Width="{Binding Column.Width}"
+                                          Padding="10,0"
+                                          BorderBrush="{DynamicResource BorderBrush}"
+                                          BorderThickness="0,0,1,0">
+                                    <TextBlock Classes="cell"
+                                               Classes.nullValue="{Binding IsNull}"
+                                               Text="{Binding Text}"
+                                               TextAlignment="{Binding Column.Alignment}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding Text}"/>
+                                  </Border>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </StackPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </Grid>
+                </ScrollViewer>
+
+                <!-- メッセージ。エラー本文もここに出るので、選んでコピーできるようにする。 -->
+                <ScrollViewer IsVisible="{Binding !IsGrid}"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                  <SelectableTextBlock Text="{Binding Text}"
+                                       FontFamily="{DynamicResource FontFamilyMono}"
+                                       FontSize="{DynamicResource FontSizeMono}"
+                                       Foreground="{DynamicResource TextBaseBrush}"
+                                       Margin="12,10"
+                                       TextWrapping="Wrap"/>
+                </ScrollViewer>
+
+              </Panel>
+            </DataTemplate>
+          </ContentControl.ContentTemplate>
+        </ContentControl>
+
+      </Panel>
+    </Grid>
+  </Grid>
+</UserControl>

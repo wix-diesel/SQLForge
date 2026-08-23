@@ -31,6 +31,6 @@ public sealed class SchemaNode : ObjectExplorerNode
             .ExecuteAsync(_context.Session, _database, _descriptor.Name, cancellationToken)
             .ConfigureAwait(true);
 
-        return tables.Select(table => new TableNode(table)).ToList();
+        return tables.Select(table => new TableNode(_context, _database, table)).ToList();
     }
 }

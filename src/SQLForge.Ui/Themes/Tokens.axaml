@@ -188,6 +188,8 @@
   <x:Double x:Key="TreeRowHeight">24</x:Double>
   <x:Double x:Key="GridRowHeight">26</x:Double>
   <x:Double x:Key="GridHeaderHeight">28</x:Double>
+  <!-- 結果グリッド左端の行番号欄。見出しと行の両方が同じ値を引いて列を揃える。 -->
+  <x:Double x:Key="GridGutterWidth">44</x:Double>
   <x:Double x:Key="EditorLineHeight">19</x:Double>
   <x:Double x:Key="ControlHeightSm">24</x:Double>
   <x:Double x:Key="ControlHeightMd">30</x:Double>
