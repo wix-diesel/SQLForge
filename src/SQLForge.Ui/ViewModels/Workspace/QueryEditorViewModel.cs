@@ -76,6 +76,11 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
     /// </summary>
     public void OpenAndRunQuery(DatabaseName database, string sql)
     {
+        if (string.IsNullOrWhiteSpace(sql))
+        {
+            throw new ArgumentException("実行する文面は空にできません。", nameof(sql));
+        }
+
         SetTarget(database);
         Sql = sql;
         Open();

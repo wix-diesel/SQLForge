@@ -186,7 +186,7 @@ public class QueryEditorViewModelTests
     }
 
     [Fact]
-    public async Task ツリーから文面付きで開くと開くと同時に実行される()
+    public async Task ツリーから文面付きで開くと即座に実行される()
     {
         var session = ReadWriteSession();
         session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
@@ -205,6 +205,14 @@ public class QueryEditorViewModelTests
         Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", editor.Sql);
         Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", session.ExecutedSql);
         Assert.Equal(["結果 1", "メッセージ"], editor.Tabs.Select(tab => tab.Title));
+    }
+
+    [Fact]
+    public void 空の文面で開いて実行しようとすると例外になる()
+    {
+        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
+
+        Assert.Throws<ArgumentException>(() => editor.OpenAndRunQuery(SalesDb, "   "));
     }
 
     [Fact]
