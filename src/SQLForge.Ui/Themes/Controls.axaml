@@ -5,8 +5,12 @@
   Application.Styles にインクルードする。参照は DynamicResource で統一する。
 -->
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:presentation="using:SQLForge.Ui.Presentation">
   <Styles.Resources>
+
+  <!-- ツリーの字下げ。Fluent の既定に頼らず、モックアップの 13px 刻みで自前に持つ。 -->
+  <presentation:TreeIndentConverter x:Key="TreeIndent" Step="13"/>
 
   <!-- ===== 主ボタン（接続・実行・適用） ===== -->
   <ControlTheme x:Key="PrimaryButton" TargetType="Button">
@@ -283,6 +287,87 @@
     </Style>
   </ControlTheme>
 
+
+  <!-- ===== オブジェクトエクスプローラーの折りたたみ矢印 ===== -->
+  <ControlTheme x:Key="ExplorerChevron" TargetType="ToggleButton">
+    <Setter Property="Width"      Value="16"/>
+    <Setter Property="Height"     Value="16"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Cursor"     Value="Hand"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="Transparent">
+          <Path Name="PART_Glyph"
+                Data="{StaticResource IconChevronRight}"
+                Stroke="{DynamicResource TextDimBrush}"
+                StrokeThickness="1.7"
+                StrokeLineCap="Round"
+                StrokeJoin="Round"
+                Stretch="None"
+                Width="16" Height="16"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:checked /template/ Path#PART_Glyph">
+      <Setter Property="Data" Value="{StaticResource IconChevronDown}"/>
+    </Style>
+    <Style Selector="^:pointerover /template/ Path#PART_Glyph">
+      <Setter Property="Stroke" Value="{DynamicResource TextHighBrush}"/>
+    </Style>
+  </ControlTheme>
+
+  <!-- ===== オブジェクトエクスプローラーの 1 行 =====
+       字下げは TreeViewItem.Level を余白へ写して出す。
+       IsExpanded をノード側と双方向に結び、展開のたびに子を読ませる。 -->
+  <ControlTheme x:Key="ExplorerTreeItem" TargetType="TreeViewItem">
+    <Setter Property="Padding"                    Value="0"/>
+    <Setter Property="Margin"                     Value="0"/>
+    <Setter Property="MinHeight"                  Value="0"/>
+    <Setter Property="Background"                 Value="Transparent"/>
+    <Setter Property="FontSize"                   Value="{DynamicResource FontSizeBase}"/>
+    <Setter Property="Foreground"                 Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="IsExpanded"                 Value="{ReflectionBinding IsExpanded, Mode=TwoWay}"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <StackPanel>
+          <Border Name="PART_Root"
+                  Height="{DynamicResource TreeRowHeight}"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="Transparent"
+                  BorderThickness="2,0,0,0">
+            <Grid ColumnDefinitions="Auto,*"
+                  Margin="{TemplateBinding Level, Converter={StaticResource TreeIndent}}">
+              <!-- 葉でも幅を空けておく（矢印の有無で名前の位置がずれないように） -->
+              <Panel Grid.Column="0" Width="16" Margin="8,0,0,0">
+                <ToggleButton Name="PART_ExpandCollapseChevron"
+                              Theme="{StaticResource ExplorerChevron}"
+                              IsVisible="{ReflectionBinding CanExpand}"
+                              IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"/>
+              </Panel>
+              <ContentPresenter Name="PART_HeaderPresenter"
+                                Grid.Column="1"
+                                Content="{TemplateBinding Header}"
+                                ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+          <ItemsPresenter Name="PART_ItemsPresenter" IsVisible="{TemplateBinding IsExpanded}"/>
+        </StackPanel>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+    </Style>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="Background"  Value="{DynamicResource TreeSelectedBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="^:selected">
+      <Setter Property="Foreground" Value="{DynamicResource TextHighBrush}"/>
+    </Style>
+  </ControlTheme>
+
   <!-- ===== 区切り線 ===== -->
   <ControlTheme x:Key="VerticalDivider" TargetType="Border">
     <Setter Property="Width"             Value="1"/>
@@ -385,6 +470,29 @@
     <Setter Property="FontSize"   Value="{DynamicResource FontSizeMono}"/>
   </Style>
 
+
+
+  <!-- ===== オブジェクトエクスプローラーの行の中身 ===== -->
+  <Style Selector="TreeView">
+    <Setter Property="Background"      Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding"         Value="0"/>
+  </Style>
+  <Style Selector="TextBlock.nodeName">
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="TextTrimming"      Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="TextBlock.nodeName.system">
+    <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.nodeDetail">
+    <Setter Property="FontSize"          Value="{DynamicResource FontSizeSm}"/>
+    <Setter Property="Foreground"        Value="{DynamicResource TextFaintBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.nodeDetail.failure">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+  </Style>
 
   <!-- ===== 環境タグの色（危険度で決まる） ===== -->
   <Style Selector="Border.envColor">

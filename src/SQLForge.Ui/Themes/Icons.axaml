@@ -41,4 +41,28 @@
   <!-- 読み取り専用（盾） -->
   <StreamGeometry x:Key="IconShield">M8,2.2 L13,4.2 V8 C13,11.2 10.8,13.2 8,14 C5.2,13.2 3,11.2 3,8 V4.2 Z</StreamGeometry>
 
+  <!-- ===== オブジェクトエクスプローラー (design/Main.dc.html) ===== -->
+
+  <!-- データベース（ツリー内の 1 データベース。円筒） -->
+  <StreamGeometry x:Key="IconCatalog">M3.4,4.3 A4.6,1.9 0 1 0 12.6,4.3 A4.6,1.9 0 1 0 3.4,4.3 M3.4,4.3 V11.7 C3.4,12.75 5.46,13.6 8,13.6 C10.54,13.6 12.6,12.75 12.6,11.7 V4.3 M3.4,8 C3.4,9.05 5.46,9.9 8,9.9 C10.54,9.9 12.6,9.05 12.6,8</StreamGeometry>
+
+  <!-- 見出し（データベース / スキーマ / テーブル のまとまり） -->
+  <StreamGeometry x:Key="IconFolder">M2.2,4.6 H6.2 L7.4,6.2 H13.8 V13.4 H2.2 Z</StreamGeometry>
+
+  <!-- スキーマ -->
+  <StreamGeometry x:Key="IconSchema">M2.6,5.2 H13.4 V12.8 H2.6 Z M2.6,5.2 L5.2,2.8 H13.4 V5.2</StreamGeometry>
+
+  <!-- テーブル -->
+  <StreamGeometry x:Key="IconTable">M3.6,3.2 H12.4 A1.2,1.2 0 0 1 13.6,4.4 V11.6 A1.2,1.2 0 0 1 12.4,12.8 H3.6 A1.2,1.2 0 0 1 2.4,11.6 V4.4 A1.2,1.2 0 0 1 3.6,3.2 Z M2.4,6.4 H13.6 M6.2,6.4 V12.8</StreamGeometry>
+
+  <!-- 読み直し -->
+  <StreamGeometry x:Key="IconRefresh">M13,8 A5,5 0 1 1 11.4,4.3 M13.2,2.6 V5.2 H10.6</StreamGeometry>
+
+  <!-- ウィンドウ操作（最小化 / 最大化） -->
+  <StreamGeometry x:Key="IconMinimize">M4,8 H12</StreamGeometry>
+  <StreamGeometry x:Key="IconMaximize">M4.4,4.4 H11.6 V11.6 H4.4 Z</StreamGeometry>
+
+  <!-- 右向きシェブロン（ツリーの折りたたみ） -->
+  <StreamGeometry x:Key="IconChevronRight">M6.5,4 L10.5,8 L6.5,12</StreamGeometry>
+
 </ResourceDictionary>

@@ -198,8 +198,12 @@
   <x:Double x:Key="TabHeight">32</x:Double>
   <x:Double x:Key="StatusBarHeight">24</x:Double>
   <x:Double x:Key="SidebarWidth">288</x:Double>
+  <!-- 上と同じ幅。Grid の列に直接与えるため GridLength でも持つ（スプリッターで動かせるように、
+       列の幅として持たせる。ペイン側に Width を置くと動かせなくなる）。 -->
+  <GridLength x:Key="SidebarColumnWidth">288</GridLength>
   <x:Double x:Key="InspectorWidth">300</x:Double>
   <x:Double x:Key="SplitterThickness">6</x:Double>
+  <GridLength x:Key="SplitterColumnWidth">6</GridLength>
   <x:Double x:Key="PaneMinWidth">180</x:Double>
 
   <!-- ===== 接続ダイアログの寸法（design/Connect.dc.html） ===== -->
