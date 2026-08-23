@@ -7,7 +7,10 @@ namespace SQLForge.Ui.ViewModels;
 
 /// <summary>
 /// 起動時に出る接続ダイアログ全体。左ペイン・入力欄・フッターをまとめ、
-/// 各操作をユースケースへ渡す。DB へは繋がない（プローブは疑似実装）。
+/// 各操作をユースケースへ渡す。
+///
+/// 「接続」が通ると開いたセッションを <see cref="ConnectionEstablished"/> で渡し、
+/// 受け取った側（App）がメインウィンドウへ引き継ぐ。
 /// </summary>
 public sealed partial class ConnectDialogViewModel : ObservableObject
 {
@@ -60,6 +63,9 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     /// <summary>閉じる・キャンセルが押されたことをウィンドウへ伝える。</summary>
     public event EventHandler? CloseRequested;
 
+    /// <summary>接続が開いたことを伝える。セッションの後始末は受け取った側の責任。</summary>
+    public event EventHandler<IDatabaseSession>? ConnectionEstablished;
+
     /// <summary>起動直後の読み込み。呼び出し側が待たないので、例外はここで受け止める。</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -83,7 +89,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     {
         await RunAsync(async () =>
         {
-            var result = await _testConnection.ExecuteAsync(Form.ToDraft(), cancellationToken).ConfigureAwait(true);
+            var result = await _testConnection.ExecuteAsync(Form.ToDraft(), Form.Password, cancellationToken).ConfigureAwait(true);
             Form.Validation = ConnectionValidator.Validate(Form.ToDraft());
             SetStatus(result.Succeeded, result.Headline, result.Detail);
         }).ConfigureAwait(true);
@@ -114,9 +120,14 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     {
         await RunAsync(async () =>
         {
-            var result = await _openConnection.ExecuteAsync(Form.ToDraft(), cancellationToken).ConfigureAwait(true);
+            var result = await _openConnection.ExecuteAsync(Form.ToDraft(), Form.Password, cancellationToken).ConfigureAwait(true);
             Form.Validation = result.Validation;
             SetStatus(result.Succeeded, result.Headline, result.Detail);
+
+            if (result.Session is { } session)
+            {
+                ConnectionEstablished?.Invoke(this, session);
+            }
         }).ConfigureAwait(true);
     }
 

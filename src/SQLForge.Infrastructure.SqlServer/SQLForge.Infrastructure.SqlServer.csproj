@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SQLForge.Infrastructure.SqlServer</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 共通の足回り（AdoDatabaseSession・台帳・プローブ）を借りる。 -->
+    <ProjectReference Include="..\SQLForge.Infrastructure\SQLForge.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- SQL Server のドライバーはこのプロジェクトの外へ出ない。 -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 識別子の引用符付けは外へ出す型ではないので、テストにだけ見せる。 -->
+    <InternalsVisibleTo Include="SQLForge.Ui.Tests" />
+  </ItemGroup>
+</Project>

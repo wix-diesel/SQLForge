@@ -1,14 +1,14 @@
-using SQLForge.Domain.Connections;
+using SQLForge.Application.Connections;
 
 namespace SQLForge.Application.Abstractions;
 
 /// <summary>
 /// 接続の到達確認ポート（ダイアログの「接続をテスト」）。
-/// この版では実際の DB へは繋がず、Infrastructure 側の疑似実装が応答する。
+/// 実装は実際に接続を開いて素性を読み、すぐ閉じる。
 /// </summary>
 public interface IConnectionProbe
 {
-    Task<ConnectionProbeResult> ProbeAsync(ConnectionProfile profile, CancellationToken cancellationToken = default);
+    Task<ConnectionProbeResult> ProbeAsync(ConnectionRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>接続テストの結果。ダイアログのフッターにそのまま出す。</summary>

@@ -1,28 +1,38 @@
+using System.Data.Common;
 using SQLForge.Application.Abstractions;
 
 namespace SQLForge.Application.Connections;
 
-/// <summary>接続を開く操作の結果。</summary>
+/// <summary>
+/// 接続を開く操作の結果。成功したときだけ <see cref="Session"/> が入る。
+/// セッションの後始末は受け取った側（メインウィンドウ）の責任。
+/// </summary>
 public sealed record OpenConnectionResult(
     bool Succeeded,
     string Headline,
     string Detail,
-    ConnectionValidationResult Validation)
+    ConnectionValidationResult Validation,
+    IDatabaseSession? Session = null)
 {
     public static OpenConnectionResult Invalid(ConnectionValidationResult validation) =>
         new(false, "接続できません", validation.FirstError ?? "入力を確認してください。", validation);
+
+    public static OpenConnectionResult Failure(string detail) =>
+        new(false, "接続に失敗", detail, ConnectionValidationResult.Valid);
 }
 
 /// <summary>
-/// ダイアログの「接続」。入力を検証し、到達確認まで行う。
-/// セッションを開いてメインウィンドウへ引き渡す部分は、DB ドライバーを入れる段階で足す。
+/// ダイアログの「接続」。入力を検証し、資格情報を解決し、ドライバーでセッションを開く。
+/// 開いたセッションはそのまま呼び出し側へ渡す（メインウィンドウが受け取って使い、閉じる）。
 /// </summary>
-public sealed class OpenConnectionUseCase(IConnectionProbe probe)
+public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, ConnectionSecretResolver secrets)
 {
-    private readonly IConnectionProbe _probe = probe;
+    private readonly IDatabaseConnectorRegistry _registry = registry;
+    private readonly ConnectionSecretResolver _secrets = secrets;
 
     public async Task<OpenConnectionResult> ExecuteAsync(
         ConnectionDraft draft,
+        string? typedSecret = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(draft);
@@ -33,12 +43,32 @@ public sealed class OpenConnectionUseCase(IConnectionProbe probe)
             return OpenConnectionResult.Invalid(validation);
         }
 
-        var probeResult = await _probe.ProbeAsync(draft.ToProfile(), cancellationToken).ConfigureAwait(false);
+        if (!_registry.TryResolve(draft.Driver, out var connector))
+        {
+            return OpenConnectionResult.Failure(UnsupportedDriverMessage.For(draft.Driver, _registry.SupportedDrivers));
+        }
 
-        return new OpenConnectionResult(
-            probeResult.Succeeded,
-            probeResult.Succeeded ? "接続しました" : probeResult.Headline,
-            probeResult.Succeeded ? $"{probeResult.Detail} · セッションの引き渡しは未実装" : probeResult.Detail,
-            validation);
+        var request = await _secrets.ResolveAsync(draft.ToProfile(), typedSecret, cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            var session = await connector.ConnectAsync(request, cancellationToken).ConfigureAwait(false);
+
+            return new OpenConnectionResult(
+                true,
+                "接続しました",
+                $"{session.Server.Description} · {request.Profile.Target.Database}",
+                validation,
+                session);
+        }
+        catch (DbException exception)
+        {
+            return OpenConnectionResult.Failure(exception.Message);
+        }
+        catch (NotSupportedException exception)
+        {
+            // 接続文字列を組む段でドライバーが受け付けないと分かったもの（証明書認証など）。
+            return OpenConnectionResult.Failure(exception.Message);
+        }
     }
 }

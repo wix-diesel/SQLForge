@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SQLForge.Ui.ViewModels"
+        xmlns:views="using:SQLForge.Ui.Views"
+        x:Class="SQLForge.Ui.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="1280" Height="820"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgAppBrush}"
+        Foreground="{DynamicResource TextBaseBrush}"
+        FontFamily="{DynamicResource FontFamilyUi}"
+        FontSize="{DynamicResource FontSizeBase}">
+
+  <!-- 接続後のメインウィンドウ。design/Main.dc.html の 3 ペインのうち、
+       今あるのは左のオブジェクトエクスプローラーだけ。 -->
+  <Border BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- タイトルバー -->
+      <Border Name="TitleBar"
+              Grid.Row="0"
+              Height="{DynamicResource TitleBarHeight}"
+              Padding="12,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,0,0,1"
+              PointerPressed="OnTitleBarPressed">
+        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="9">
+          <Path Grid.Column="0" Classes="icon accent" Data="{StaticResource IconDatabase}"/>
+
+          <TextBlock Grid.Column="1"
+                     Text="{Binding ConnectionName}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextHighBrush}"
+                     VerticalAlignment="Center"/>
+
+          <!-- 環境タグ。design の安全機構どおり常時出す。 -->
+          <Border Grid.Column="2"
+                  Padding="7,1"
+                  CornerRadius="{DynamicResource RadiusSm}"
+                  VerticalAlignment="Center"
+                  Background="{DynamicResource BgRaisedBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Border Classes="envColor"
+                      Classes.critical="{Binding IsCritical}"
+                      Classes.elevated="{Binding IsElevated}"
+                      Classes.normal="{Binding IsNormal}"
+                      Classes.neutral="{Binding IsNeutral}"
+                      Width="7" Height="7" CornerRadius="2"
+                      VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding EnvironmentName}"
+                         FontSize="{DynamicResource FontSizeSm}"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="2">
+            <Button Name="MinimizeButton"
+                    Theme="{StaticResource IconButton}"
+                    Click="OnMinimize"
+                    ToolTip.Tip="最小化">
+              <Path Classes="icon" Data="{StaticResource IconMinimize}"/>
+            </Button>
+            <Button Name="MaximizeButton"
+                    Theme="{StaticResource IconButton}"
+                    Click="OnToggleMaximize"
+                    ToolTip.Tip="最大化 / 元に戻す">
+              <Path Classes="icon" Data="{StaticResource IconMaximize}"/>
+            </Button>
+            <Button Name="CloseButton"
+                    Theme="{StaticResource IconButton}"
+                    Command="{Binding CloseCommand}"
+                    ToolTip.Tip="閉じる">
+              <Path Classes="icon" Data="{StaticResource IconClose}"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- 本体: エクスプローラー | 作業領域 -->
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="{DynamicResource SidebarColumnWidth}"
+                            MinWidth="{DynamicResource PaneMinWidth}"/>
+          <ColumnDefinition Width="{DynamicResource SplitterColumnWidth}"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <views:ObjectExplorerPane Grid.Column="0"/>
+
+        <GridSplitter Grid.Column="1"
+                      Background="Transparent"
+                      ResizeDirection="Columns"/>
+
+        <!-- 作業領域。クエリエディタと結果グリッドはフェーズ 1 の残り。 -->
+        <Border Grid.Column="2" Background="{DynamicResource BgSurfaceBrush}">
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" MaxWidth="420">
+            <TextBlock Text="{Binding Explorer.SelectedNode.Title}"
+                       FontSize="{DynamicResource FontSizeXl}"
+                       Foreground="{DynamicResource TextHighBrush}"
+                       TextAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       IsVisible="{Binding Explorer.SelectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            <TextBlock Text="{Binding Explorer.SelectedNode.Detail}"
+                       Classes="mono"
+                       Foreground="{DynamicResource TextDimBrush}"
+                       TextAlignment="Center"
+                       IsVisible="{Binding Explorer.SelectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            <TextBlock Text="クエリエディタと結果グリッドは未実装です。左のツリーでデータベースとテーブルを辿れます。"
+                       Foreground="{DynamicResource TextFaintBrush}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="0,10,0,0"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- ステータスバー -->
+      <Border Grid.Row="2"
+              Height="{DynamicResource StatusBarHeight}"
+              Padding="12,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
+          <Border Grid.Column="0" Classes="envColor"
+                  Classes.critical="{Binding IsCritical}"
+                  Classes.elevated="{Binding IsElevated}"
+                  Classes.normal="{Binding IsNormal}"
+                  Classes.neutral="{Binding IsNeutral}"
+                  Width="7" Height="7" CornerRadius="2"
+                  VerticalAlignment="Center"/>
+
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <TextBlock Text="{Binding EnvironmentName}"
+                       FontSize="{DynamicResource FontSizeSm}"
+                       Foreground="{DynamicResource TextDimBrush}"/>
+            <TextBlock Text="·" FontSize="{DynamicResource FontSizeSm}"
+                       Foreground="{DynamicResource TextFaintBrush}"/>
+            <TextBlock Text="{Binding ServerDescription}"
+                       FontSize="{DynamicResource FontSizeSm}"
+                       Foreground="{DynamicResource TextDimBrush}"/>
+            <TextBlock Text="·" FontSize="{DynamicResource FontSizeSm}"
+                       Foreground="{DynamicResource TextFaintBrush}"/>
+            <TextBlock Classes="mono"
+                       Text="{Binding DatabaseName}"
+                       FontSize="{DynamicResource FontSizeMonoSm}"
+                       Foreground="{DynamicResource TextDimBrush}"
+                       ToolTip.Tip="接続時に開いたデータベース"/>
+          </StackPanel>
+
+          <StackPanel Grid.Column="2"
+                      Orientation="Horizontal"
+                      Spacing="5"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding IsReadOnly}"
+                      ToolTip.Tip="読み取り専用で開いている接続">
+            <Path Classes="icon faint" Data="{StaticResource IconShield}"/>
+            <TextBlock Text="読み取り専用"
+                       FontSize="{DynamicResource FontSizeSm}"
+                       Foreground="{DynamicResource TextFaintBrush}"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <TextBlock Grid.Column="4"
+                     Classes="mono"
+                     Text="{Binding TargetSummary}"
+                     FontSize="{DynamicResource FontSizeMonoSm}"
+                     Foreground="{DynamicResource TextFaintBrush}"
+                     VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+
+    </Grid>
+  </Border>
+</Window>

@@ -1,0 +1,134 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             xmlns:explorer="using:SQLForge.Ui.ViewModels.Explorer"
+             x:Class="SQLForge.Ui.Views.ObjectExplorerPane"
+             x:DataType="vm:MainWindowViewModel">
+
+  <!-- メインウィンドウ左ペイン: 接続 → データベース → スキーマ → テーブル -->
+  <Border Background="{DynamicResource BgPanelBrush}"
+          BorderBrush="{DynamicResource BorderBrush}"
+          BorderThickness="0,0,1,0">
+    <Grid RowDefinitions="Auto,Auto,*">
+
+      <!-- 見出しと読み直し -->
+      <Border Grid.Row="0"
+              Height="28"
+              Padding="10,0"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0"
+                     Classes="groupHeader"
+                     Text="オブジェクトエクスプローラー"/>
+          <Button Grid.Column="1"
+                  Theme="{StaticResource IconButton}"
+                  Command="{Binding Explorer.RefreshCommand}"
+                  ToolTip.Tip="読み直す">
+            <Path Classes="icon" Data="{StaticResource IconRefresh}"/>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- 絞り込み（未実装） -->
+      <Border Grid.Row="1"
+              Height="{DynamicResource ControlHeightSm}"
+              Margin="8,6"
+              Padding="8,0"
+              Background="{DynamicResource InputBackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RadiusMd}"
+              IsEnabled="False"
+              ToolTip.Tip="ツリーの絞り込みは未実装">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="7">
+          <Path Grid.Column="0" Classes="icon faint"
+                Data="{StaticResource IconSearch}"
+                VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="1"
+                     Text="フィルター（未実装）"
+                     FontSize="{DynamicResource FontSizeMd}"
+                     Foreground="{DynamicResource TextFaintBrush}"
+                     VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+
+      <!-- ツリー本体 -->
+      <TreeView Grid.Row="2"
+                ItemsSource="{Binding Explorer.Roots}"
+                SelectedItem="{Binding Explorer.SelectedNode, Mode=TwoWay}"
+                ItemContainerTheme="{StaticResource ExplorerTreeItem}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <TreeView.DataTemplates>
+
+          <!-- 接続（根） -->
+          <TreeDataTemplate DataType="explorer:ServerNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon success"
+                    Data="{StaticResource IconDatabase}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Text="{Binding Title}"
+                         FontWeight="Medium"
+                         Foreground="{DynamicResource TextHighBrush}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- 見出し（データベース / スキーマ / テーブル） -->
+          <TreeDataTemplate DataType="explorer:CatalogFolderNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconFolder}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- データベース -->
+          <TreeDataTemplate DataType="explorer:DatabaseNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon accent" Data="{StaticResource IconCatalog}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- スキーマ -->
+          <TreeDataTemplate DataType="explorer:SchemaNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon"
+                    Stroke="{DynamicResource TealBrush}"
+                    Data="{StaticResource IconSchema}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- テーブル（葉。行数は右端） -->
+          <TreeDataTemplate DataType="explorer:TableNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0">
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconTable}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- 読み込み中・空・失敗 -->
+          <TreeDataTemplate DataType="explorer:MessageNode" ItemsSource="{Binding Children}">
+            <TextBlock Classes="nodeDetail"
+                       Classes.failure="{Binding IsFailure}"
+                       Text="{Binding Title}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding Title}"
+                       Margin="0,0,8,0"/>
+          </TreeDataTemplate>
+
+        </TreeView.DataTemplates>
+      </TreeView>
+
+    </Grid>
+  </Border>
+</UserControl>
