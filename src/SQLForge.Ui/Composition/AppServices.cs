@@ -4,7 +4,6 @@ using SQLForge.Application.Catalog;
 using SQLForge.Application.Connections;
 using SQLForge.Application.Query;
 using SQLForge.Infrastructure.Connections;
-using SQLForge.Infrastructure.Platform;
 using SQLForge.Infrastructure.Security;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
@@ -15,8 +14,8 @@ namespace SQLForge.Ui.Composition;
 /// 合成ルート。オニオンアーキテクチャで外側の実装（Infrastructure）を
 /// 内側のポート（Application）へ差し込むのはここだけ。
 ///
-/// ドライバーの具体型を知ってよいのもここだけで、その代わりに
-/// SQLForge.Ui はドライバーのプロジェクトを参照する。
+/// ドライバーと OS の具体型を知ってよいのもここだけで、その代わりに
+/// SQLForge.Ui は DBMS ごと・OS ごとのプロジェクトを参照する。
 /// </summary>
 public static class AppServices
 {
@@ -45,7 +44,10 @@ public static class AppServices
         // 保存済み接続とキーリングは、まだ差し替え前提の実装。
         services.AddSingleton<IConnectionProfileRepository, InMemoryConnectionProfileRepository>();
         services.AddSingleton<ISecretStore, InMemorySecretStore>();
-        services.AddSingleton<IPlatformProfile, PlatformProfile>();
+
+        // OS ごとの体裁も OS ごとに別プロジェクト（SQLForge.Infrastructure.<OS>）へ置き、
+        // 実行中の OS のものだけをここで差し込む。並びは PlatformProfiles にある。
+        services.AddSingleton(_ => PlatformProfiles.ForCurrentHost());
     }
 
     private static void AddUseCases(IServiceCollection services)

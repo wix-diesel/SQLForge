@@ -7,7 +7,7 @@ using SQLForge.Application.Catalog;
 using SQLForge.Application.Query;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Query;
-using SQLForge.Infrastructure.Platform;
+using SQLForge.Ui.Composition;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Explorer;
 using SQLForge.Ui.ViewModels.Workspace;
@@ -102,7 +102,7 @@ public class MainWindowRenderTests
         var viewModel = NewViewModel(session);
         var window = new MainWindow { DataContext = viewModel };
 
-        window.ApplyPlatform(new PlatformProfile());
+        window.ApplyPlatform(PlatformProfiles.ForCurrentHost());
         _ = viewModel.InitializeAsync();
         window.Show();
 
@@ -165,7 +165,7 @@ public class MainWindowRenderTests
         viewModel = NewViewModel(NewSession());
         var window = new MainWindow { DataContext = viewModel };
 
-        window.ApplyPlatform(new PlatformProfile());
+        window.ApplyPlatform(PlatformProfiles.ForCurrentHost());
         _ = viewModel.InitializeAsync();
 
         return window;
@@ -177,7 +177,7 @@ public class MainWindowRenderTests
 
         return new MainWindowViewModel(
             session,
-            new PlatformProfile(),
+            PlatformProfiles.ForCurrentHost(),
             new CatalogContext(
                 session,
                 new ListDatabasesUseCase(),
