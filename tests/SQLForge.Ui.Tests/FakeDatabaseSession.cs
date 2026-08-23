@@ -93,9 +93,6 @@ public sealed class FakeDatabaseSession : IDatabaseSession
             : Task.FromResult(NextResult ?? new QueryResult([], -1, TimeSpan.Zero));
     }
 
-    public string BuildTableQuery(DatabaseName database, SchemaName schema, string table, int maxRows) =>
-        $"SELECT TOP ({maxRows}) *\nFROM [{database.Value}].[{schema.Value}].[{table}];";
-
     public ValueTask DisposeAsync()
     {
         IsDisposed = true;

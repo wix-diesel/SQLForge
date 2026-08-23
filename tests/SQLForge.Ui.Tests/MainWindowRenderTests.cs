@@ -80,8 +80,10 @@ public class MainWindowRenderTests
 
         Assert.True(viewModel.Query.IsOpen);
         Assert.True(pane.IsVisible);
+
+        // 開くのは空のエディタ。決まるのは実行先のデータベースだけ。
         Assert.Equal("sales_db", viewModel.Query.TargetDatabase);
-        Assert.Contains("orders", viewModel.Query.Sql, StringComparison.Ordinal);
+        Assert.Equal(string.Empty, viewModel.Query.Sql);
     }
 
     [AvaloniaFact]
@@ -107,6 +109,7 @@ public class MainWindowRenderTests
         var table = FindOrders(viewModel);
         table.OpenQueryCommand.Execute(null);
 
+        viewModel.Query.Sql = "SELECT region FROM dbo.orders";
         viewModel.Query.RunCommand.Execute(null);
         WaitFor(() => viewModel.Query.Tabs.Count > 0);
 

@@ -28,10 +28,9 @@ public sealed partial class TableNode : ObjectExplorerNode
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>([]);
 
     /// <summary>
-    /// 右クリックの「クエリを実行」。作業領域にエディタを開き、このテーブルを見る文面を用意する。
-    /// 実行はしない（何が走るか読んでから押せるように）。
+    /// 右クリックの「クエリを実行」。このテーブルのあるデータベースを実行先にして、
+    /// 空のエディタを開く。
     /// </summary>
     [RelayCommand]
-    private void OpenQuery() =>
-        _context.Query?.OpenTableQuery(_database, _descriptor.Schema, _descriptor.Name);
+    private void OpenQuery() => _context.Query?.OpenNewQuery(_database);
 }

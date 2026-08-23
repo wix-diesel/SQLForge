@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SQLForge.Ui.Tests;
 
-/// <summary>実行の前に通す関門（空文・読み取り専用・取得上限）。</summary>
+/// <summary>実行の前に通す関門（空文と取得上限）。文面そのものには手を入れない。</summary>
 public class ExecuteQueryUseCaseTests
 {
     private static readonly DatabaseName SalesDb = new("sales_db");
@@ -37,24 +37,9 @@ public class ExecuteQueryUseCaseTests
     }
 
     [Fact]
-    public async Task 読み取り専用の接続では書き込みを送らない()
+    public async Task 書き込みの文面も書き換えずに送る()
     {
-        // 見本データの先頭は本番タグの読み取り専用接続。
-        var session = new FakeDatabaseSession();
-        Assert.True(session.Profile.IsReadOnly);
-
-        var rejected = await Assert.ThrowsAsync<QueryRejectedException>(
-            () => new ExecuteQueryUseCase().ExecuteAsync(
-                session,
-                new QueryRequest(SalesDb, "DELETE FROM dbo.orders")));
-
-        Assert.Contains("DELETE", rejected.Message, StringComparison.Ordinal);
-        Assert.Null(session.ExecutedSql);
-    }
-
-    [Fact]
-    public async Task 読み書きの接続では書き込みを通す()
-    {
+        // 読み書きの別はサーバー側の権限が決める。クライアントでは見分けようとしない。
         var session = ReadWriteSession();
 
         await new ExecuteQueryUseCase().ExecuteAsync(
@@ -62,6 +47,20 @@ public class ExecuteQueryUseCaseTests
             new QueryRequest(SalesDb, "DELETE FROM dbo.orders"));
 
         Assert.Equal("DELETE FROM dbo.orders", session.ExecutedSql);
+    }
+
+    [Fact]
+    public async Task 読み取り専用で開いた接続でも止めない()
+    {
+        // 見本データの先頭は本番タグの読み取り専用接続。印を出すだけで、文面は素通しする。
+        var session = new FakeDatabaseSession();
+        Assert.True(session.Profile.IsReadOnly);
+
+        await new ExecuteQueryUseCase().ExecuteAsync(
+            session,
+            new QueryRequest(SalesDb, "UPDATE dbo.orders SET status = 'paid'"));
+
+        Assert.Equal("UPDATE dbo.orders SET status = 'paid'", session.ExecutedSql);
     }
 
     [Fact]

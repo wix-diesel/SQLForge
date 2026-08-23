@@ -117,12 +117,13 @@
     <!-- ===== 結果ペイン ===== -->
     <Grid Grid.Row="3" RowDefinitions="Auto,*" Background="{DynamicResource BgSurfaceBrush}">
 
-      <!-- タブ帯（結果 1 / 結果 2 / メッセージ） -->
+      <!-- タブ帯（結果 1 / 結果 2 / メッセージ）。一度も実行していない間は空の帯を出さない。 -->
       <Border Grid.Row="0"
               Height="30"
               Background="{DynamicResource BgPanelBrush}"
               BorderBrush="{DynamicResource BorderBrush}"
-              BorderThickness="0,1,0,1">
+              BorderThickness="0,1,0,1"
+              IsVisible="{Binding Query.SelectedTab, Converter={x:Static ObjectConverters.IsNotNull}}">
         <ListBox ItemsSource="{Binding Query.Tabs}"
                  SelectedItem="{Binding Query.SelectedTab, Mode=TwoWay}"
                  ItemContainerTheme="{StaticResource ResultTabItem}"

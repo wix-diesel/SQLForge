@@ -14,8 +14,8 @@ namespace SQLForge.Ui.ViewModels.Workspace;
 /// メインウィンドウ右の作業領域。クエリエディタと結果ペインをまとめる。
 ///
 /// 開いていない間は作業領域に何も出さない（<see cref="IsOpen"/>）。
-/// エクスプローラーの右クリックで開き、文面を用意するところまでをやって、
-/// 実行するかどうかは利用者に任せる（SSMS の「上位 N 行の選択」と違い、勝手に投げない）。
+/// エクスプローラーの右クリックで開くのは空のエディタで、実行先のデータベースだけを
+/// 決めておく（テーブルの中身をのぞく文面は、別の入口として用意する）。
 /// </summary>
 public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLauncher
 {
@@ -58,16 +58,6 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
 
     public string MaxRowsLabel =>
         $"取得上限 {ExecuteQueryUseCase.DefaultMaxRows.ToString("N0", CultureInfo.InvariantCulture)} 行";
-
-    /// <summary>読み取り専用で開いた接続。書き込みは送る前に弾かれる。</summary>
-    public bool IsReadOnly => _session.Profile.IsReadOnly;
-
-    public void OpenTableQuery(DatabaseName database, SchemaName schema, string table)
-    {
-        SetTarget(database);
-        Sql = _session.BuildTableQuery(database, schema, table, ExecuteQueryUseCase.DefaultMaxRows);
-        Open();
-    }
 
     public void OpenNewQuery(DatabaseName database)
     {

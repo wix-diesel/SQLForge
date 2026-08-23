@@ -11,9 +11,9 @@ namespace SQLForge.Infrastructure.Connections;
 /// ADO.NET を使うセッションで共通の部分。接続の寿命と、
 /// 同時に投げられたカタログ照会の直列化だけを引き受ける。
 ///
-/// エンジンごとに違うのはカタログの読み方と、実行先データベースの切り替え方と、
-/// テーブルをのぞく文面の組み立て方だけ。結果の読み取りは ADO.NET の作法だけで
-/// 書けるので、どのドライバーでもここのものを使う。ツリーは複数のノードを同時に展開できるが、
+/// エンジンごとに違うのはカタログの読み方と、実行先データベースの切り替え方だけ。
+/// 結果の読み取りは ADO.NET の作法だけで書けるので、どのドライバーでもここのものを使う。
+/// ツリーは複数のノードを同時に展開できるが、
 /// <see cref="DbConnection"/> は 1 本で複数の照会を同時に走らせられないため、
 /// ここで門を 1 つに絞っている。
 /// </summary>
@@ -64,8 +64,6 @@ public abstract class AdoDatabaseSession : IDatabaseSession
                 return await ReadResultAsync(connection, sql, maxRows, token).ConfigureAwait(false);
             },
             cancellationToken);
-
-    public abstract string BuildTableQuery(DatabaseName database, SchemaName schema, string table, int maxRows);
 
     /// <summary>
     /// 実行先のデータベースへ切り替える。SQL Server のように 1 本の接続で切り替えられる

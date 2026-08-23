@@ -160,13 +160,6 @@ public class AdoDatabaseSessionTests
             DatabaseName database,
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
-
-        public override string BuildTableQuery(
-            DatabaseName database,
-            SchemaName schema,
-            string table,
-            int maxRows) =>
-            $"SELECT TOP ({maxRows}) * FROM [{database.Value}].[{schema.Value}].[{table}];";
     }
 
     /// <summary>破棄されたかだけを覚えている接続。照会には使わないので他は実装しない。</summary>

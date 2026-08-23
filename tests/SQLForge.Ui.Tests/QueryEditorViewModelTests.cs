@@ -14,21 +14,21 @@ namespace SQLForge.Ui.Tests;
 public class QueryEditorViewModelTests
 {
     private static readonly DatabaseName SalesDb = new("sales_db");
-    private static readonly SchemaName Dbo = new("dbo");
 
     [Fact]
-    public void ツリーから開くとエディタが出て文面が用意される()
+    public void ツリーから開くとエディタが空で出て実行先だけが決まる()
     {
+        // 接続時に開いたのは shop。ツリーから開いた先のデータベースで上書きされる。
         var session = ReadWriteSession();
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
 
         Assert.False(editor.IsOpen);
 
-        editor.OpenTableQuery(SalesDb, Dbo, "orders");
+        editor.OpenNewQuery(SalesDb);
 
         Assert.True(editor.IsOpen);
         Assert.Equal("sales_db", editor.TargetDatabase);
-        Assert.Contains("[sales_db].[dbo].[orders]", editor.Sql, StringComparison.Ordinal);
+        Assert.Equal(string.Empty, editor.Sql);
     }
 
     [Fact]
@@ -37,11 +37,29 @@ public class QueryEditorViewModelTests
         var session = ReadWriteSession();
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
 
-        editor.OpenTableQuery(SalesDb, Dbo, "orders");
+        editor.OpenNewQuery(SalesDb);
 
-        // 何が走るかを読んでから押せるように、勝手には投げない。
         Assert.Null(session.ExecutedSql);
         Assert.Empty(editor.Tabs);
+    }
+
+    [Fact]
+    public void 開き直すと前の結果を持ち越さない()
+    {
+        var session = ReadWriteSession();
+        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
+
+        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        editor.OpenNewQuery(SalesDb);
+        editor.Sql = "SELECT 1";
+        editor.RunCommand.Execute(null);
+
+        editor.OpenNewQuery(SalesDb);
+
+        Assert.Equal(string.Empty, editor.Sql);
+        Assert.Empty(editor.Tabs);
+        Assert.Null(editor.SelectedTab);
+        Assert.Equal(string.Empty, editor.Status);
     }
 
     [Fact]
@@ -125,20 +143,21 @@ public class QueryEditorViewModelTests
     }
 
     [Fact]
-    public async Task 読み取り専用の接続では書き込みを送らずに理由を出す()
+    public async Task 読み取り専用で開いた接続でも書き込みは止めない()
     {
-        // 見本データの先頭は本番タグの読み取り専用接続。
+        // 見本データの先頭は本番タグの読み取り専用接続。印を出すだけで、文面は素通しする
+        //（止めるのはサーバー側の権限の仕事）。
         var session = new FakeDatabaseSession();
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        Assert.True(session.Profile.IsReadOnly);
 
+        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
         editor.OpenNewQuery(SalesDb);
         editor.Sql = "DELETE FROM dbo.orders";
 
         await editor.RunCommand.ExecuteAsync(null);
 
-        Assert.True(editor.HasFailed);
-        Assert.Null(session.ExecutedSql);
-        Assert.Contains("読み取り専用", editor.SelectedTab!.Text, StringComparison.Ordinal);
+        Assert.Equal("DELETE FROM dbo.orders", session.ExecutedSql);
+        Assert.False(editor.HasFailed);
     }
 
     [Fact]

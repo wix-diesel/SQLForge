@@ -16,13 +16,6 @@ public sealed class SqlServerSession(ConnectionProfile profile, DbConnection con
     : AdoDatabaseSession(profile, connection, server)
 {
     /// <summary>
-    /// SSMS の「上位 N 行の選択」と同じ形。3 部名で書くので、
-    /// あとから実行先のデータベースを変えても指す先が動かない。
-    /// </summary>
-    public override string BuildTableQuery(DatabaseName database, SchemaName schema, string table, int maxRows) =>
-        $"SELECT TOP ({maxRows}) *\nFROM {Quote(database.Value)}.{Quote(schema.Value)}.{Quote(table)};";
-
-    /// <summary>
     /// USE で切り替える。カタログの照会は 3 部名で読むのでこの状態に依らないが、
     /// エディタの文面は修飾なしで書かれるのが普通なので、実行の直前に合わせる。
     /// </summary>

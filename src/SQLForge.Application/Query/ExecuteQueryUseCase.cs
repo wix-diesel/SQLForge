@@ -6,9 +6,9 @@ namespace SQLForge.Application.Query;
 /// <summary>
 /// エディタの文面を 1 回実行する。
 ///
-/// 読み取り専用で開いた接続では、書き込みの文面をサーバーへ送る前に弾く。
-/// 送ってからエラーで返ってくるのに任せると、弾けるのは権限のない接続だけになり、
-/// 「読み取り専用で開いた」という利用者の意思が効かなくなるため。
+/// 文面は書き換えずにそのまま送る。読み書きの別はサーバー側の権限が決めることにして、
+/// クライアントでは止めない（文面から書き込みかどうかを見分ける仕掛けは、
+/// 動的 SQL のような形をどうせ通してしまうので、あると誤解を招く）。
 /// </summary>
 public sealed class ExecuteQueryUseCase
 {
@@ -26,13 +26,6 @@ public sealed class ExecuteQueryUseCase
         if (request.Sql.Length == 0)
         {
             throw new QueryRejectedException("実行する文がありません。");
-        }
-
-        if (session.Profile.IsReadOnly && ReadOnlyQueryGuard.FindWriteKeyword(request.Sql) is { } keyword)
-        {
-            throw new QueryRejectedException(
-                $"読み取り専用で開いた接続では {keyword} を実行できません。" +
-                "書き込むには、接続し直してアクセス種別を「読み書き」にしてください。");
         }
 
         return await session

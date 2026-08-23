@@ -45,10 +45,4 @@ public interface IDatabaseSession : IAsyncDisposable
         string sql,
         int maxRows,
         CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// テーブルの中身をのぞく既定の文面（SSMS の「上位 N 行の選択」にあたる）。
-    /// 引用符の付け方も行の絞り方もエンジンで違うので、組み立てはドライバーに任せる。
-    /// </summary>
-    string BuildTableQuery(DatabaseName database, SchemaName schema, string table, int maxRows);
 }
