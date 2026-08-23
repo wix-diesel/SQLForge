@@ -15,6 +15,7 @@ public sealed class MainWindowViewModelFactory(
     ListDatabasesUseCase databases,
     ListSchemasUseCase schemas,
     ListTablesUseCase tables,
+    ListColumnsUseCase columns,
     ExecuteQueryUseCase queries)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
@@ -28,7 +29,7 @@ public sealed class MainWindowViewModelFactory(
         return new MainWindowViewModel(
             session,
             platform,
-            new CatalogContext(session, databases, schemas, tables, query),
+            new CatalogContext(session, databases, schemas, tables, columns, query),
             query);
     }
 }

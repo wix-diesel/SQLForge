@@ -154,6 +154,14 @@ public class AdoDatabaseSessionTests
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TableDescriptor>>([]);
 
+        protected override Task<IReadOnlyList<ColumnDescriptor>> ReadColumnsAsync(
+            DbConnection connection,
+            DatabaseName database,
+            SchemaName schema,
+            string table,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ColumnDescriptor>>([]);
+
         // クエリの実行はここでは試さない（門の作法だけを見るテストなので、接続には届かせない）。
         protected override Task SwitchDatabaseAsync(
             DbConnection connection,

@@ -183,6 +183,7 @@ public class MainWindowRenderTests
                 new ListDatabasesUseCase(),
                 new ListSchemasUseCase(),
                 new ListTablesUseCase(),
+                new ListColumnsUseCase(),
                 query),
             query);
     }

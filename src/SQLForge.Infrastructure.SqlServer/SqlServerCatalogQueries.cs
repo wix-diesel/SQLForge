@@ -65,4 +65,33 @@ internal static class SqlServerCatalogQueries
         WHERE s.name = @schema AND t.is_ms_shipped = 0
         GROUP BY t.name;
         """;
+
+    /// <summary>
+    /// カラム定義一覧。column_id はテーブル定義での並び順そのもの。
+    /// 主キーは sys.indexes.is_primary_key を持つインデックスの列から拾う
+    /// （PRIMARY KEY 制約は一意インデックスとして実体化されるため）。
+    /// </summary>
+    public const string ColumnsFormat = """
+        SELECT c.name                                                              AS name,
+               c.column_id                                                        AS ordinal_position,
+               ty.name                                                            AS type_name,
+               c.max_length                                                        AS max_length,
+               c.precision                                                         AS precision,
+               c.scale                                                             AS scale,
+               c.is_nullable                                                       AS is_nullable,
+               c.is_identity                                                       AS is_identity,
+               CONVERT(bit, CASE WHEN pk.column_id IS NOT NULL THEN 1 ELSE 0 END)  AS is_primary_key
+        FROM {0}.sys.columns AS c
+        INNER JOIN {0}.sys.tables AS t ON t.object_id = c.object_id
+        INNER JOIN {0}.sys.schemas AS s ON s.schema_id = t.schema_id
+        INNER JOIN {0}.sys.types AS ty ON ty.user_type_id = c.user_type_id
+        LEFT JOIN (
+            SELECT ic.object_id, ic.column_id
+            FROM {0}.sys.index_columns AS ic
+            INNER JOIN {0}.sys.indexes AS i ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            WHERE i.is_primary_key = 1
+        ) AS pk ON pk.object_id = c.object_id AND pk.column_id = c.column_id
+        WHERE s.name = @schema AND t.name = @table
+        ORDER BY c.column_id;
+        """;
 }
