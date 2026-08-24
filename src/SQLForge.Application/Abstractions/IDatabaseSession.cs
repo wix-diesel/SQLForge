@@ -1,6 +1,7 @@
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
 using SQLForge.Domain.Query;
+using SQLForge.Domain.Security;
 
 namespace SQLForge.Application.Abstractions;
 
@@ -51,6 +52,38 @@ public interface IDatabaseSession : IAsyncDisposable
         DatabaseName database,
         SchemaName schema,
         string procedure,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>指定データベース内のユーザー一覧。</summary>
+    Task<IReadOnlyList<DatabaseUserDescriptor>> ListDatabaseUsersAsync(
+        DatabaseName database,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>指定データベース内のデータベース ロール名の一覧（public を除く）。</summary>
+    Task<IReadOnlyList<string>> ListDatabaseRolesAsync(
+        DatabaseName database,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>ユーザーを 1 件作る。ロールへの追加まで含めて、途中で失敗したら何も残さない。</summary>
+    Task CreateDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// ユーザーを 1 件作り替える。<paramref name="original"/> は変更前の姿で、
+    /// 実際に変わったところだけを文面に出すために使う。
+    /// </summary>
+    Task AlterDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserDescriptor original,
+        DatabaseUserDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>ユーザーを 1 件削除する。</summary>
+    Task DropDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserName user,
         CancellationToken cancellationToken = default);
 
     /// <summary>

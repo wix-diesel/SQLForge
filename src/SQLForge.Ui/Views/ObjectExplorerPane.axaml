@@ -5,7 +5,7 @@
              x:Class="SQLForge.Ui.Views.ObjectExplorerPane"
              x:DataType="vm:MainWindowViewModel">
 
-  <!-- メインウィンドウ左ペイン: 接続 → データベース → スキーマ → テーブル -->
+  <!-- メインウィンドウ左ペイン: 接続 → データベース → スキーマ / セキュリティ → テーブル・ユーザー -->
   <Border Background="{DynamicResource BgPanelBrush}"
           BorderBrush="{DynamicResource BorderBrush}"
           BorderThickness="0,0,1,0">
@@ -115,7 +115,7 @@
 
           <!-- テーブル（行数は右端。下に「列」の見出しを持つ） -->
           <TreeDataTemplate DataType="explorer:TableNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
               <Grid.ContextMenu>
                 <ContextMenu>
                   <MenuItem Header="クエリを実行" Command="{Binding OpenQueryCommand}"/>
@@ -124,25 +124,27 @@
               </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconTable}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
-              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
             </Grid>
           </TreeDataTemplate>
 
           <!-- カラム（葉。主キーは鍵アイコン、型と NULL 許可は右端） -->
           <TreeDataTemplate DataType="explorer:ColumnNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
               <Panel Grid.Column="0" VerticalAlignment="Center">
                 <Path Classes="icon accent" Data="{StaticResource IconKey}" IsVisible="{Binding IsPrimaryKey}"/>
                 <Path Classes="icon" Data="{StaticResource IconColumn}" IsVisible="{Binding !IsPrimaryKey}"/>
               </Panel>
               <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
-              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
             </Grid>
           </TreeDataTemplate>
 
           <!-- ストアド プロシージャ（パラメーター数は右端。下に「パラメーター」の見出しを持つ） -->
           <TreeDataTemplate DataType="explorer:StoredProcedureNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
               <Grid.ContextMenu>
                 <ContextMenu>
                   <MenuItem Header="実行" Command="{Binding ExecuteCommand}"/>
@@ -151,16 +153,53 @@
               </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconProcedure}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
-              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
             </Grid>
           </TreeDataTemplate>
 
           <!-- ストアド プロシージャのパラメーター（葉。入出力の別と型は右端） -->
           <TreeDataTemplate DataType="explorer:StoredProcedureParameterNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Margin="0,0,8,0">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconColumn}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- ユーザーの見出し（右クリックから追加できる） -->
+          <TreeDataTemplate DataType="explorer:DatabaseUsersNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="新しいユーザー…" Command="{Binding NewUserCommand}"/>
+                  <MenuItem Header="最新の情報に更新" Command="{Binding RefreshCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon"
+                    Stroke="{DynamicResource CautionBrush}"
+                    Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
               <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- データベース ユーザー（葉。種類とログインは右端） -->
+          <TreeDataTemplate DataType="explorer:DatabaseUserNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="プロパティ" Command="{Binding PropertiesCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconUser}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
             </Grid>
           </TreeDataTemplate>
 

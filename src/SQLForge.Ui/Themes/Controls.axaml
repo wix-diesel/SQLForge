@@ -572,9 +572,22 @@
     <Setter Property="FontSize"          Value="{DynamicResource FontSizeSm}"/>
     <Setter Property="Foreground"        Value="{DynamicResource TextFaintBrush}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
+    <!-- 幅が足りないときに削るのは補足のほう。名前（nodeName）は残す。 -->
+    <Setter Property="TextTrimming"      Value="CharacterEllipsis"/>
   </Style>
   <Style Selector="TextBlock.nodeDetail.failure">
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+
+  <!-- 取り消せない操作の確定ボタン。PrimaryButton の上に重ねて色だけ差し替える。 -->
+  <Style Selector="Button.danger /template/ Border#PART_Root">
+    <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ Border#PART_Root">
+    <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}"/>
+  </Style>
+  <Style Selector="Button.danger:pressed /template/ Border#PART_Root">
+    <Setter Property="Background" Value="{DynamicResource DangerPressedBrush}"/>
   </Style>
 
   <!-- ===== 環境タグの色（危険度で決まる） ===== -->

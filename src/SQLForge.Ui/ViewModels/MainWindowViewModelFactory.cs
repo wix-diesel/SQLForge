@@ -1,7 +1,9 @@
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Query;
+using SQLForge.Application.Security;
 using SQLForge.Ui.ViewModels.Explorer;
+using SQLForge.Ui.ViewModels.Security;
 using SQLForge.Ui.ViewModels.Workspace;
 
 namespace SQLForge.Ui.ViewModels;
@@ -18,7 +20,9 @@ public sealed class MainWindowViewModelFactory(
     ListColumnsUseCase columns,
     ListStoredProceduresUseCase storedProcedures,
     ListStoredProcedureParametersUseCase storedProcedureParameters,
-    ExecuteQueryUseCase queries)
+    ExecuteQueryUseCase queries,
+    ListDatabaseUsersUseCase databaseUsers,
+    IDatabaseUserEditor userEditor)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
     {
@@ -28,10 +32,12 @@ public sealed class MainWindowViewModelFactory(
         // ツリーより先に居てもらう必要がある。
         var query = new QueryEditorViewModel(session, queries);
 
-        return new MainWindowViewModel(
-            session,
-            platform,
-            new CatalogContext(session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query),
-            query);
+        var catalog = new CatalogContext(
+            session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
+        {
+            Security = new DatabaseSecurityContext(databaseUsers, userEditor)
+        };
+
+        return new MainWindowViewModel(session, platform, catalog, query);
     }
 }
