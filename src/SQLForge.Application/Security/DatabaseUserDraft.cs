@@ -62,8 +62,9 @@ public sealed record DatabaseUserDraft
         return new DatabaseUserDefinition(
             new DatabaseUserName(Name.Trim()),
             Type,
-            // 種類を切り替えたあとに前の入力が残っていても、文面へは持ち出さない。
-            Type.RequiresLogin() && login.Length > 0 ? login : null,
+            // 種類を切り替えたあとに前の入力が残っていても、ログインを取らない種類なら
+            // DatabaseUserDefinition の側で落ちる。
+            login,
             schema.Length > 0 ? new SchemaName(schema) : null)
         {
             Roles = Roles

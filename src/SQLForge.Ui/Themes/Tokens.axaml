@@ -31,6 +31,8 @@
       <SolidColorBrush x:Key="TealBrush"    Color="#5fbfc9"/>
       <SolidColorBrush x:Key="SuccessBrush" Color="#4fb477"/>
       <SolidColorBrush x:Key="DangerBrush"  Color="#e05c62"/>
+      <SolidColorBrush x:Key="DangerHoverBrush"   Color="#e8737a"/>
+      <SolidColorBrush x:Key="DangerPressedBrush" Color="#c94a50"/>
       <SolidColorBrush x:Key="InfoBrush"    Color="#82aef0"/>
       <SolidColorBrush x:Key="CautionBrush" Color="#cba05e"/>
       <!-- オーバーレイ（#AARRGGBB） -->
@@ -107,6 +109,8 @@
       <SolidColorBrush x:Key="TealBrush"    Color="#0e7c88"/>
       <SolidColorBrush x:Key="SuccessBrush" Color="#1e7944"/>
       <SolidColorBrush x:Key="DangerBrush"  Color="#bf2c32"/>
+      <SolidColorBrush x:Key="DangerHoverBrush"   Color="#d13840"/>
+      <SolidColorBrush x:Key="DangerPressedBrush" Color="#a4232a"/>
       <SolidColorBrush x:Key="InfoBrush"    Color="#1e5eb6"/>
       <SolidColorBrush x:Key="CautionBrush" Color="#8b5a10"/>
       <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0b000000"/>

@@ -16,7 +16,9 @@ internal static class SqlServerSecurityStatements
         var name = Quote(definition.Name.Value);
         var create = new StringBuilder("CREATE USER ").Append(name);
 
-        create.Append(definition.Type.RequiresLogin() && definition.LoginName is { Length: > 0 } login
+        // 種類とログインの組み合わせは DatabaseUserDefinition が保証しているので、
+        // ここでは相手がいるかどうかだけを見ればよい。
+        create.Append(definition.LoginName is { } login
             ? $" FOR LOGIN {Quote(login)}"
             : " WITHOUT LOGIN");
 
@@ -83,8 +85,7 @@ internal static class SqlServerSecurityStatements
             clauses.Add($"DEFAULT_SCHEMA = {(schema is null ? "NULL" : Quote(schema))}");
         }
 
-        if (definition.Type.RequiresLogin()
-            && definition.LoginName is { Length: > 0 } login
+        if (definition.LoginName is { } login
             && !string.Equals(original.LoginName, login, StringComparison.OrdinalIgnoreCase))
         {
             clauses.Add($"LOGIN = {Quote(login)}");

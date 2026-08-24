@@ -3,7 +3,7 @@
         xmlns:vm="using:SQLForge.Ui.ViewModels"
         x:Class="SQLForge.Ui.Views.ConfirmWindow"
         x:DataType="vm:ConfirmDialogViewModel"
-        Title="SQLForge"
+        Title="{Binding Title}"
         Width="440" SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
@@ -45,6 +45,7 @@
                   IsCancel="True"
                   IsVisible="{Binding CanCancel}"/>
           <Button Theme="{StaticResource PrimaryButton}"
+                  Classes.danger="{Binding IsDestructive}"
                   Content="{Binding ConfirmLabel}"
                   Command="{Binding ConfirmCommand}"
                   IsDefault="True"/>

@@ -129,7 +129,14 @@ public class DatabaseUserWindowRenderTests
         using var frame = window.CaptureRenderedFrame();
         Assert.NotNull(frame);
         Assert.Contains("ユーザー app_user を削除しますか？", Texts(window));
-        Assert.Contains("削除", Texts(window));
+
+        // 見出しはビューモデルが決める（窓の題も含めて）。
+        Assert.Equal("オブジェクトの削除", window.Title);
+
+        // 取り消せない操作の確定ボタンは危険色にする。
+        var button = ConfirmButton(window);
+        Assert.Equal("削除", button.Content as string);
+        Assert.Contains("danger", button.Classes);
     }
 
     [AvaloniaFact]
@@ -144,7 +151,14 @@ public class DatabaseUserWindowRenderTests
         Assert.DoesNotContain(
             window.GetVisualDescendants().OfType<Button>(),
             button => button.IsVisible && button.Content as string == "キャンセル");
+
+        // 知らせるだけなので危険色にはしない。
+        Assert.DoesNotContain("danger", ConfirmButton(window).Classes);
     }
+
+    /// <summary>確認ダイアログの確定ボタン（既定の動作を持つほう）。</summary>
+    private static Button ConfirmButton(Window window) =>
+        window.GetVisualDescendants().OfType<Button>().First(button => button.IsDefault);
 
     /// <summary>SQL Server が最初から持っている固定ロール。箱に収まりきらない数の見本として使う。</summary>
     private static readonly string[] ManyRoles =
