@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
+using SQLForge.Domain.Connections;
 
 namespace SQLForge.Ui.ViewModels;
 
@@ -44,6 +45,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         _selectedTab = Tabs[0];
 
         SavedConnections.ProfileSelected += (_, profile) => OnProfileSelected(profile);
+        SavedConnections.ProfileActivated += (_, profile) => _ = ConnectStoredAsync(profile);
         SavedConnections.LoadFailed += (_, exception) =>
             SetStatus(false, "保存済み接続を読み込めません", exception.Message);
     }
@@ -56,7 +58,9 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
 
     public IReadOnlyList<DialogTabViewModel> Tabs { get; }
 
-    public string KeyringLabel => _secretStore.IsAvailable ? "キーリングに保存" : "キーリングを利用できません";
+    /// <summary>保管先の名前をそのまま出す（資格情報マネージャー・キーチェーン・キーリング）。</summary>
+    public string KeyringLabel =>
+        _secretStore.IsAvailable ? $"{_secretStore.DisplayName}に保存" : _secretStore.DisplayName;
 
     public bool IsKeyringAvailable => _secretStore.IsAvailable;
 
@@ -131,6 +135,27 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         }).ConfigureAwait(true);
     }
 
+    /// <summary>
+    /// 左ペインで押された保存済み接続をそのまま開く。
+    /// 入力欄にパスワードが打たれていればそれを使い、無ければキーリングに預けたものを使う。
+    /// どちらも無ければ接続は試みず、入力を促す。
+    /// </summary>
+    private Task ConnectStoredAsync(ConnectionProfile profile) =>
+        RunAsync(async () =>
+        {
+            var result = string.IsNullOrEmpty(Form.Password)
+                ? await _openConnection.ExecuteStoredAsync(profile).ConfigureAwait(true)
+                : await _openConnection.ExecuteAsync(Form.ToDraft(), Form.Password).ConfigureAwait(true);
+
+            Form.Validation = result.Validation;
+            SetStatus(result.Succeeded, result.Headline, result.Detail);
+
+            if (result.Session is { } session)
+            {
+                ConnectionEstablished?.Invoke(this, session);
+            }
+        });
+
     [RelayCommand]
     private void NewConnection()
     {
@@ -142,7 +167,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     [RelayCommand]
     private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
-    private void OnProfileSelected(Domain.Connections.ConnectionProfile profile)
+    private void OnProfileSelected(ConnectionProfile profile)
     {
         Form.Load(profile);
         ClearStatus();

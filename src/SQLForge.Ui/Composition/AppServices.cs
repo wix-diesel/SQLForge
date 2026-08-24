@@ -5,7 +5,6 @@ using SQLForge.Application.Connections;
 using SQLForge.Application.Query;
 using SQLForge.Application.Security;
 using SQLForge.Infrastructure.Connections;
-using SQLForge.Infrastructure.Security;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Security;
@@ -44,13 +43,16 @@ public static class AppServices
         services.AddSingleton<IDatabaseConnectorRegistry, DatabaseConnectorRegistry>();
         services.AddSingleton<IConnectionProbe, DriverConnectionProbe>();
 
-        // 保存済み接続とキーリングは、まだ差し替え前提の実装。
-        services.AddSingleton<IConnectionProfileRepository, InMemoryConnectionProfileRepository>();
-        services.AddSingleton<ISecretStore, InMemorySecretStore>();
-
         // OS ごとの体裁も OS ごとに別プロジェクト（SQLForge.Infrastructure.<OS>）へ置き、
         // 実行中の OS のものだけをここで差し込む。並びは PlatformProfiles にある。
         services.AddSingleton(_ => PlatformProfiles.ForCurrentHost());
+
+        // 保存済み接続は OS ごとの設定ディレクトリ（ProfileDirectory）の TOML に置く。
+        services.AddSingleton<IConnectionProfileRepository, TomlConnectionProfileRepository>();
+
+        // パスワードは OS のキーリングへ預ける。こちらも実装は OS ごとの
+        // 別プロジェクトにあり、実行中の OS のものを SecretStores が選ぶ。
+        services.AddSingleton(_ => SecretStores.ForCurrentHost());
     }
 
     private static void AddUseCases(IServiceCollection services)

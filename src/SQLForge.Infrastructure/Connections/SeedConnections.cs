@@ -3,8 +3,9 @@ using SQLForge.Domain.Connections;
 namespace SQLForge.Infrastructure.Connections;
 
 /// <summary>
-/// 起動直後に一覧を空にしないための見本データ。デザイン (Connect.dc.html) の
-/// 保存済み接続と同じ並びで、保存機構（TOML + Secret Service）が入るまでの仮置き。
+/// デザイン (Connect.dc.html) の保存済み接続と同じ並びの見本データ。
+/// 実際の保存先はファイル（<see cref="TomlConnectionProfileRepository"/>）になったので、
+/// 今はテストと描画確認で <see cref="InMemoryConnectionProfileRepository"/> に詰めて使う。
 /// </summary>
 public static class SeedConnections
 {

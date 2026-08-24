@@ -4,9 +4,10 @@ using SQLForge.Application.Abstractions;
 namespace SQLForge.Infrastructure.Security;
 
 /// <summary>
-/// キーリングのプロセス内代替。実装予定は Linux = Secret Service (org.freedesktop.secrets)、
-/// Windows = 資格情報マネージャー、macOS = キーチェーン。
-/// この版ではプロセス内に持つだけで、ディスクには一切書かない。
+/// キーリングのプロセス内代替。プロセス内に持つだけで、ディスクには一切書かない。
+/// 実際に使うのは OS ごとのキーリング（<see cref="PlatformSecretStore"/> の実装。
+/// Linux = Secret Service、Windows = 資格情報マネージャー、macOS = キーチェーン）で、
+/// こちらはテストの差し替え用に残してある。
 /// </summary>
 public sealed class InMemorySecretStore : ISecretStore
 {

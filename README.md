@@ -11,6 +11,11 @@ UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 
 アプリを起動すると接続ダイアログが開く。保存済み接続の一覧・検索、接続情報の入力と検証、
 環境タグ、読み取り専用モードのトグル、接続 URL の組み立てまでが動く。
 
+**接続情報は保存して使い回せる。**「保存」を押すと OS の設定ディレクトリの
+`connections.toml` に残り、次の起動でも左ペインに並ぶ。**左ペインの行を押すと、
+その接続でそのまま繋ぎに行く**（パスワードは OS のキーリングから取り出す）。
+パスワードを預けていない接続では、繋ぐ前に入力を促す。
+
 **SQL Server へは実際に接続する。**「接続をテスト」は本当にサーバーへ繋いで素性を読み、
 「接続」が通るとメインウィンドウが開いて、データベース → スキーマ → テーブルをツリーで辿れる。
 
@@ -32,8 +37,9 @@ UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 
 | データベース ユーザーの一覧・追加・編集・削除 | 動く。SQL ユーザー（ログインあり／なし）と Windows ユーザー／グループ。既定のスキーマとロールのメンバーシップも編集できる |
 | ログイン（サーバー単位）・ロールの追加編集・スキーマの所有権 | 未実装。ユーザーのダイアログではログイン名を手で入力する |
 | PostgreSQL / MySQL / ClickHouse / SQLite | ドライバー未実装。選んで接続すると「未対応」と出る（成功に見せかけない） |
-| 保存済み接続の永続化 | プロセス内のみ（`InMemoryConnectionProfileRepository`）。TOML への保存は未実装 |
-| 資格情報 | プロセス内のみ（`InMemorySecretStore`）。Secret Service / 資格情報マネージャー / キーチェーンは未接続 |
+| 保存済み接続の永続化 | 動く。OS の設定ディレクトリの `connections.toml`（Linux は `~/.config/sqlforge/`、Windows は `%APPDATA%\sqlforge\`）。パスワードは書かない |
+| 資格情報 | 動く。Windows は資格情報マネージャー、macOS はキーチェーン、Linux は Secret Service（`secret-tool`）。どれも使えない環境では都度入力になる |
+| 保存済み接続の削除・書き出し・取り込み | 未実装。消すときは `connections.toml` を直接編集する |
 | クエリの実行 | 動く。読み書きとも。複数の結果セット、影響行数、実行時間、取得上限 1,000 行での打ち切り、実行の取り消し |
 | テーブルの中身をのぞく既定の文面 | 未実装（別の入口として用意する予定）。右クリックで開くのは空のエディタ |
 | 結果グリッド | 動く。行の仮想化つき。NULL は薄字、数値の列は右寄せ、列幅は中身から自動で決める |
@@ -83,6 +89,37 @@ TLS の要求レベルは接続文字列へこう写す。
 接続テストの結果に出る「TLS 有効 / なし」は、要求した設定ではなくサーバーに問い合わせた実際の状態
 （`sys.dm_exec_connections`）。この DMV は `VIEW SERVER STATE` 権限が要るので、読めない接続では
 「TLS 不明 (要求 …)」と出して推測しない。
+
+### 接続情報を保存する
+
+「保存」を押すと、接続情報は OS の設定ディレクトリの `connections.toml` に残る。
+次の起動でも左ペインに並び、**行を押すとその接続で繋ぎに行く**。
+
+| OS | 接続情報 (TOML) | パスワードの預け先 |
+| --- | --- | --- |
+| Linux | `~/.config/sqlforge/connections.toml`（本人だけが読める 0600） | Secret Service（`secret-tool` ごし。GNOME キーリング / KWallet など） |
+| Windows | `%APPDATA%\sqlforge\connections.toml` | 資格情報マネージャーの汎用資格情報（`sqlforge:<接続の Id>`） |
+| macOS | OS の設定ディレクトリの `sqlforge/connections.toml` | ログイン キーチェーンの汎用パスワード（項目名 `sqlforge`） |
+
+**パスワードは TOML には書かない。**ファイルに残るのは「どこへ誰として繋ぐか」までで、
+パスワードは `ISecretStore` の OS ごとの実装が OS のキーリングへ預ける。SQLForge 自身は
+暗号鍵を持たない — 暗号化と、取り出してよい相手かの判断は OS の担当にしてある。
+
+キーリングを使えない環境（`secret-tool` が入っていない、セッション バスが無い、など）では
+「キーリングを利用できません」と出して保存トグルを無効にする。パスワードは都度入力になるが、
+接続情報そのものの保存は使える。
+
+左ペインの行を押したときの動きは次のとおり。
+
+| 状態 | 押したとき |
+| --- | --- |
+| パスワードを預けてある / OS 統合認証 | そのまま接続して、メインウィンドウが開く |
+| パスワードが要るのに預けていない | 入力欄へ写して「パスワードが必要です」と出す（サーバーへは行かない） |
+| 入力欄にパスワードを打ってある | 打った値で接続する（預けてあるものより優先する） |
+
+キーボードでの上下移動や、起動直後に先頭が選ばれることでは繋ぎに行かない。
+押した操作だけを合図にしてあるのは、開くつもりのない接続—とくに本番—へ
+うっかり繋いでしまわないようにするため。
 
 ### クエリを実行する
 
@@ -203,12 +240,16 @@ OS 依存は `IPlatformProfile` に閉じ込めてあり、その実装は **OS 
 現状の分岐はウィンドウ装飾と表示系の名前だけ — Linux / Windows はモックアップどおりの
 自前タイトルバー、macOS は信号機ボタンがあるので OS 標準の装飾を使う。
 
-分岐が少ないうちに分けてあるのは、OS 依存はあとから増えるものだからで（資格情報の保管先、
-ファイルの関連付け、単一インスタンス化など）、増えたときに置き場所を探さなくて済むようにするため。
+分岐はもう 3 つある。ウィンドウ装飾（自前タイトルバーか OS 標準か）、表示系の名前、
+そして**資格情報の預け先**（`PlatformSecretStore` の実装。Windows = 資格情報マネージャー、
+macOS = キーチェーン、Linux = Secret Service）。接続情報 (TOML) の置き場所も
+`IPlatformProfile.ProfileDirectory` として OS ごとに決まる。
 
-OS の見分け（`HostPlatform`）と体裁の共通部分（`PlatformProfileBase`）は OS に依らないので
-共通の `SQLForge.Infrastructure` に置き、選び分けは `PlatformProfileRegistry` が引き受ける。
-見分けのつかない OS では `UnknownPlatformProfile` が受けるので、起動はできる。
+OS の見分け（`HostPlatform`）と共通部分（`PlatformProfileBase`・`PlatformSecretStore`）は
+OS に依らないので共通の `SQLForge.Infrastructure` に置き、選び分けは
+`PlatformProfileRegistry` と `SecretStoreRegistry` が引き受ける。見分けのつかない OS では
+`UnknownPlatformProfile` と `UnavailableSecretStore` が受けるので、起動はできる
+（キーリングが無いぶん、パスワードは都度入力になる）。
 
 どの OS のプロジェクトも `net10.0` のままにしてある。`net10.0-windows` のような OS 付きの
 TFM にすると、3 つとも参照する合成ルートが他の OS では組めなくなるため。OS 固有の API を
@@ -225,6 +266,9 @@ OS 統合認証（Windows 認証）は Linux では Kerberos の設定が要る�
 1. `PlatformKind` に OS を足す
 2. `src/SQLForge.Infrastructure.<OS>` を作り、`SQLForge.Infrastructure` を参照する
 3. `PlatformProfileBase` を継承して、既定と違うところだけ上書きする
-4. `SQLForge.Ui` から新しいプロジェクトを参照し、`Composition/PlatformProfiles` の並びへ 1 行足す
-5. `LayerDependencyTests.PlatformAssemblies` に新しいアセンブリ名を足す
+4. その OS のキーリングへ預ける `PlatformSecretStore` を実装する
+   （外部コマンドごしなら `CommandLineSecretStore` を継承すると足回りが借りられる）
+5. `SQLForge.Ui` から新しいプロジェクトを参照し、`Composition/PlatformProfiles` と
+   `Composition/SecretStores` の並びへ 1 行ずつ足す
+6. `LayerDependencyTests.PlatformAssemblies` に新しいアセンブリ名を足す
    （共通の Infrastructure や他の OS へ混ざり込んだら落ちるようにするため）

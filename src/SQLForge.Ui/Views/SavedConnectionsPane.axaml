@@ -30,8 +30,9 @@
         </Grid>
       </Border>
 
-      <!-- 一覧（見出し行 + 接続行） -->
+      <!-- 一覧（見出し行 + 接続行）。行を押すとその接続を開く。 -->
       <ListBox Grid.Row="1"
+               Tapped="OnEntryTapped"
                Background="Transparent"
                BorderThickness="0"
                Padding="0"

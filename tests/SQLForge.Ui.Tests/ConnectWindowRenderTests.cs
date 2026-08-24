@@ -1,7 +1,14 @@
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
+using SQLForge.Application.Abstractions;
+using SQLForge.Infrastructure.Connections;
+using SQLForge.Infrastructure.Security;
 using SQLForge.Ui.Composition;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.Views;
@@ -58,9 +65,52 @@ public class ConnectWindowRenderTests
         Assert.True(viewModel.Form.IsReadOnly, "本番タグの接続は既定で読み取り専用になる。");
     }
 
+    [AvaloniaFact]
+    public void 一覧の行を押すとその接続を開こうとする()
+    {
+        // 左ペインの行から自動接続までが XAML ごしに繋がっていること。
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.Entries.Count > 0);
+
+        Click(window, RowOf(window, "staging-eu"));
+
+        // 見本データにはパスワードを預けていないので、接続の前に入力を促す。
+        WaitFor(() => viewModel.HasStatus);
+        Assert.Equal("staging-eu", viewModel.Form.Name);
+        Assert.Contains("パスワード", viewModel.StatusHeadline, StringComparison.Ordinal);
+    }
+
+    /// <summary>指定した名前の接続行（の中の名前を出している要素）を探す。</summary>
+    private static Visual RowOf(Window window, string name) =>
+        window.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .First(text => text.DataContext is SavedConnectionItemViewModel item && item.Name == name);
+
+    private static void Click(Window window, Visual target)
+    {
+        var center = target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), window)
+            ?? throw new InvalidOperationException("行の位置を求められません。");
+
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+    }
+
     private static ConnectWindow CreateWindow(out ConnectDialogViewModel viewModel)
     {
-        var services = AppServices.Build();
+        // 実際の合成に、保存済み接続とキーリングだけ見本データのものを差し替えて組む
+        // （利用者のホームにある connections.toml と OS のキーリングを触らないため）。
+        var services = new ServiceCollection();
+        AppServices.Configure(services);
+        services.AddSingleton<IConnectionProfileRepository, InMemoryConnectionProfileRepository>();
+        services.AddSingleton<ISecretStore, InMemorySecretStore>();
+
+        return CreateWindow(services.BuildServiceProvider(), out viewModel);
+    }
+
+    private static ConnectWindow CreateWindow(IServiceProvider services, out ConnectDialogViewModel viewModel)
+    {
         viewModel = services.GetRequiredService<ConnectDialogViewModel>();
         _ = viewModel.InitializeAsync();
 

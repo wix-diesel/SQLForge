@@ -26,9 +26,9 @@ SQLForge.Domain                    最内層。エンティティと値オブジ
       ↑                            他の SQLForge.* プロジェクトへの依存を持たない。
 SQLForge.Application               ユースケースとポート（インターフェース）。
       ↑                            Domain のみに依存する。
-SQLForge.Infrastructure            ポートの実装のうち DBMS に依らないもの
+SQLForge.Infrastructure            ポートの実装のうち DBMS にも OS にも依らないもの
       |                            （接続の台帳・接続テスト・ADO.NET 共通の足回り、
-      |                             保存済み接続、キーリング、OS 判定など）。
+      |                             保存済み接続の TOML 保存、キーリングの足回り、OS 判定など）。
       ↑
 SQLForge.Infrastructure.SqlServer  SQL Server ドライバー実装。
       |                            DB 固有パッケージ（Microsoft.Data.SqlClient 等）を
@@ -46,6 +46,7 @@ SQLForge.Ui                        最外層。Avalonia のビューとビュー
 | [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
 | [src/SQLForge.Infrastructure](src/SQLForge.Infrastructure) | ポートの DBMS 非依存な実装。`Connections/`・`Platform/`・`Security/` |
 | [src/SQLForge.Infrastructure.SqlServer](src/SQLForge.Infrastructure.SqlServer) | SQL Server 専用ドライバー実装。`Microsoft.Data.SqlClient` を抱えるのはここだけ |
+| src/SQLForge.Infrastructure.{Linux,Windows,MacOs} | OS 固有の実装。ウィンドウの体裁（`PlatformProfileBase` の派生）と、資格情報の預け先（`PlatformSecretStore` の派生。Secret Service / 資格情報マネージャー / キーチェーン） |
 | [src/SQLForge.Ui](src/SQLForge.Ui) | Avalonia の View / ViewModel。`Composition/` が合成ルート、`Presentation/` が表示用の変換ロジック |
 | [tests/SQLForge.Ui.Tests](tests/SQLForge.Ui.Tests) | 全層をまたぐテスト。`LayerDependencyTests` が層の境界（依存の向き）をアセンブリ参照から機械的に検証する |
 

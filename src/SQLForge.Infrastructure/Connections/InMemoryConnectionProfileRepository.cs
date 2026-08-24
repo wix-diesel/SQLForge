@@ -5,8 +5,9 @@ using SQLForge.Domain.Connections;
 namespace SQLForge.Infrastructure.Connections;
 
 /// <summary>
-/// 保存済み接続のインメモリ実装。永続化（~/.config/sqlforge/connections.toml）が
-/// 入るまでの差し替え用で、プロセスを終えると内容は消える。
+/// 保存済み接続のインメモリ実装。プロセスを終えると内容は消える。
+/// 実際に使うのはファイルへ置く <see cref="TomlConnectionProfileRepository"/> で、
+/// こちらは見本データ入りの差し替え（テストと描画確認）用に残してある。
 /// </summary>
 public sealed class InMemoryConnectionProfileRepository : IConnectionProfileRepository
 {
