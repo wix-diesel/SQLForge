@@ -25,10 +25,11 @@ public partial class ConnectWindow : Window
 
         _usesCustomTitleBar = !platform.PrefersNativeTitleBar;
 
-        ExtendClientAreaToDecorationsHint = _usesCustomTitleBar;
-        ExtendClientAreaChromeHints = _usesCustomTitleBar
-            ? Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome
-            : Avalonia.Platform.ExtendClientAreaChromeHints.Default;
+        // Avalonia 12 で ExtendClientAreaChromeHints は廃止された。自前のタイトルバーを
+        // 使うときは BorderOnly（枠だけ残してタイトルバーを消す）を指定する。
+        WindowDecorations = _usesCustomTitleBar
+            ? Avalonia.Controls.WindowDecorations.BorderOnly
+            : Avalonia.Controls.WindowDecorations.Full;
 
         if (this.FindControl<Button>("CloseButton") is { } closeButton)
         {
