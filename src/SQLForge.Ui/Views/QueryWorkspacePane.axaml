@@ -104,7 +104,7 @@
                Text="{Binding Query.Sql, Mode=TwoWay}"
                AcceptsReturn="True"
                AcceptsTab="True"
-               Watermark="SELECT ... と入力して 実行（F5）を押す"
+               PlaceholderText="SELECT ... と入力して 実行（F5）を押す"
                ScrollViewer.HorizontalScrollBarVisibility="Auto"
                ScrollViewer.VerticalScrollBarVisibility="Auto"/>
     </Border>
