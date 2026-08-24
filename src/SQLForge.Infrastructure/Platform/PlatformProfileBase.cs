@@ -24,4 +24,17 @@ public abstract class PlatformProfileBase : IPlatformProfile
     public virtual string ProfileDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "sqlforge");
+
+    /// <summary>
+    /// OS 統合認証で名乗るアカウント名。既定はログイン名だけを返す。
+    /// ドメイン名まで含めて名乗れる OS（Windows）が上書きする。
+    /// </summary>
+    public virtual string IntegratedAccountName =>
+        string.IsNullOrWhiteSpace(Environment.UserName) ? "不明" : Environment.UserName;
+
+    /// <summary>
+    /// 既定では Kerberos の用意が要るものとして扱う。SQL Server の統合認証を
+    /// OS の資格情報だけで通せるのは Windows だけなので、そちらが上書きする。
+    /// </summary>
+    public virtual bool IntegratedAuthenticationNeedsKerberos => true;
 }

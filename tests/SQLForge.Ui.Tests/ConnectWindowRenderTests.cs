@@ -7,9 +7,11 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using SQLForge.Application.Abstractions;
+using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.Security;
 using SQLForge.Ui.Composition;
+using SQLForge.Ui.Presentation;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.Views;
 using Xunit;
@@ -79,6 +81,26 @@ public class ConnectWindowRenderTests
         WaitFor(() => viewModel.HasStatus);
         Assert.Equal("staging-eu", viewModel.Form.Name);
         Assert.Contains("パスワード", viewModel.StatusHeadline, StringComparison.Ordinal);
+    }
+
+    [AvaloniaFact]
+    public void OS統合認証を選ぶと利用者名の欄がOSアカウントの表示に入れ替わる()
+    {
+        // 認証方式ごとの出し分けが XAML ごしに効いていること
+        // （伏せ忘れると、使われない利用者名を打てる欄が残ってしまう）。
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.SelectedItem is not null);
+
+        viewModel.Form.Authentication = AuthenticationChoice.For(AuthenticationMethod.Integrated);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Contains(
+            window.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == viewModel.Form.IntegratedAccountName && text.IsEffectivelyVisible);
+
+        using var frame = window.CaptureRenderedFrame();
+        Assert.NotNull(frame);
     }
 
     /// <summary>指定した名前の接続行（の中の名前を出している要素）を探す。</summary>

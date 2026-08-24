@@ -22,4 +22,16 @@ public interface IPlatformProfile
 
     /// <summary>接続情報 (TOML) を置くディレクトリ。</summary>
     string ProfileDirectory { get; }
+
+    /// <summary>
+    /// OS 統合認証で名乗るアカウント名。接続ダイアログが「どのアカウントで繋ぐのか」を
+    /// 押す前に見せるための表示で、接続文字列には載せない（名乗る相手は OS が決める）。
+    /// </summary>
+    string IntegratedAccountName { get; }
+
+    /// <summary>
+    /// OS 統合認証に Kerberos の設定が要るか。Windows は OS の資格情報がそのまま使えるが、
+    /// それ以外の OS では前もって用意しておく必要があるので、ダイアログで注意書きを出す。
+    /// </summary>
+    bool IntegratedAuthenticationNeedsKerberos { get; }
 }

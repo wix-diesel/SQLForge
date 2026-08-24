@@ -105,6 +105,26 @@ public class TomlConnectionProfileRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task OS統合認証の接続は利用者名を持たずに読み直せる()
+    {
+        // 利用者名が空でも TOML の往復で壊れないこと（統合認証では OS が名乗る）。
+        var profile = new ConnectionProfile(
+            ConnectionProfileId.New(),
+            "prod-sales-integrated",
+            EnvironmentTag.Production,
+            new ConnectionTarget(DatabaseDriver.SqlServer, new ServerAddress("db.internal", 1433), "sales_db", TlsMode.Require),
+            new ConnectionCredentials("analyst_ro", AuthenticationMethod.Integrated, storeSecretInKeyring: true),
+            AccessMode.ReadOnly);
+        await NewRepository().SaveAsync(profile);
+
+        var restored = Assert.Single(await NewRepository().ListAsync());
+
+        Assert.Equal(AuthenticationMethod.Integrated, restored.Credentials.Method);
+        Assert.Empty(restored.Credentials.UserName);
+        Assert.False(restored.Credentials.StoreSecretInKeyring);
+    }
+
+    [Fact]
     public async Task 壊れたファイルは理由付きで失敗する()
     {
         // 黙って捨てると利用者の接続情報が消えたように見えるので、読めないことを伝える。

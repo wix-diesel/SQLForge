@@ -32,7 +32,8 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         TestConnectionUseCase testConnection,
         SaveConnectionUseCase saveConnection,
         OpenConnectionUseCase openConnection,
-        ISecretStore secretStore)
+        ISecretStore secretStore,
+        IPlatformProfile platform)
     {
         SavedConnections = savedConnections;
         _testConnection = testConnection;
@@ -40,7 +41,8 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         _openConnection = openConnection;
         _secretStore = secretStore;
 
-        Form = new ConnectionFormViewModel();
+        // OS 統合認証で名乗るアカウント名を出すために、入力欄も OS の体裁を知る必要がある。
+        Form = new ConnectionFormViewModel(platform);
         Tabs = CreateTabs();
         _selectedTab = Tabs[0];
 

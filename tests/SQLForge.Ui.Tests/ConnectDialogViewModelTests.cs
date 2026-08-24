@@ -2,6 +2,7 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
+using SQLForge.Infrastructure.Linux;
 using SQLForge.Infrastructure.Security;
 using SQLForge.Ui.ViewModels;
 using Xunit;
@@ -73,7 +74,8 @@ public class ConnectDialogViewModelTests
             new TestConnectionUseCase(new DriverConnectionProbe(registry), resolver),
             new SaveConnectionUseCase(repository, store),
             new OpenConnectionUseCase(registry, resolver),
-            store);
+            store,
+            new LinuxPlatformProfile());
 
         return (dialog, connector, store);
     }
