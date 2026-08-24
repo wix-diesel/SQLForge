@@ -1,6 +1,6 @@
 # SQLForge — Avalonia / C# 実装への対応
 
-`design/` のモックアップを Avalonia 11 + .NET で実装するときの対応表と注意点。
+`design/` のモックアップを Avalonia 12 + .NET で実装するときの対応表と注意点。
 デザイントークンは `avalonia/Tokens.axaml`、主要コントロールテーマは `avalonia/Controls.axaml`。
 
 ## 1. 画面要素とコントロールの対応

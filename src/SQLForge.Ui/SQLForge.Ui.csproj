@@ -14,7 +14,8 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)' == 'Debug'" />
+    <!-- Avalonia.Diagnostics（DevTools）は Avalonia 12 系がまだリリースされていないため一時的に除外。
+         12 系パッケージが出たら復元する。 -->
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
