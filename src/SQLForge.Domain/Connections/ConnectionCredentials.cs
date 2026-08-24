@@ -8,9 +8,15 @@ public sealed record ConnectionCredentials
 
     public ConnectionCredentials(string userName, AuthenticationMethod method, bool storeSecretInKeyring)
     {
-        UserName = userName?.Trim() ?? string.Empty;
         Method = method;
-        StoreSecretInKeyring = storeSecretInKeyring;
+
+        // OS 統合認証では名乗る相手を OS が決める。ドライバーは利用者名もパスワードも見ないので、
+        // パスワード認証から切り替えたときに入力欄へ残っていた値をここで落とす。
+        // 残したままだと、保存内容と接続 URL が「使われない利用者名で繋ぐ」ように見えてしまう。
+        var usesOsIdentity = method == AuthenticationMethod.Integrated;
+
+        UserName = usesOsIdentity ? string.Empty : userName?.Trim() ?? string.Empty;
+        StoreSecretInKeyring = !usesOsIdentity && storeSecretInKeyring;
     }
 
     public string UserName { get; }
@@ -22,4 +28,7 @@ public sealed record ConnectionCredentials
 
     /// <summary>パスワード入力欄を出すかどうか。</summary>
     public bool RequiresSecret => Method == AuthenticationMethod.Password;
+
+    /// <summary>OS の資格情報で名乗る接続か（SQL Server の Windows 認証・Kerberos）。</summary>
+    public bool UsesOsIdentity => Method == AuthenticationMethod.Integrated;
 }

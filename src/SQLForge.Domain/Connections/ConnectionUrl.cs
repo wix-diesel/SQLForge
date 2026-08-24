@@ -25,11 +25,26 @@ public static class ConnectionUrl
             ? target.Address.ToString()
             : $"{credentials.UserName}@{target.Address}";
 
-        return $"{target.Driver.UrlScheme}://{authority}/{target.Database}?{BuildQuery(target)}";
+        return $"{target.Driver.UrlScheme}://{authority}/{target.Database}?{BuildQuery(target, credentials)}";
     }
 
-    private static string BuildQuery(ConnectionTarget target) =>
-        string.Join('&', $"sslmode={ToSslMode(target.Tls)}", $"application_name={ApplicationName}");
+    /// <summary>
+    /// クエリ部。OS 統合認証は権限部に書ける利用者名を持たないので、
+    /// 代わりにここへ出す ―― 出さないとパスワード認証との違いが URL から読み取れない。
+    /// </summary>
+    private static string BuildQuery(ConnectionTarget target, ConnectionCredentials credentials)
+    {
+        var parameters = new List<string> { $"sslmode={ToSslMode(target.Tls)}" };
+
+        if (credentials.UsesOsIdentity)
+        {
+            parameters.Add("integrated_security=true");
+        }
+
+        parameters.Add($"application_name={ApplicationName}");
+
+        return string.Join('&', parameters);
+    }
 
     private static string ToSslMode(TlsMode mode) => mode switch
     {

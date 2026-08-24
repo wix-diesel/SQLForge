@@ -63,6 +63,27 @@ public class PlatformProfileTests
     }
 
     [Fact]
+    public void OS統合認証で名乗るアカウント名を出せる()
+    {
+        // 「どのアカウントで繋ぐのか」が分からないまま押させないための表示。
+        // 実装は OS ごとに違うが、名乗れないことは無い。
+        foreach (var kind in new[] { PlatformKind.Linux, PlatformKind.Windows, PlatformKind.MacOs, PlatformKind.Unknown })
+        {
+            Assert.False(string.IsNullOrWhiteSpace(Registry.ForHost(kind).IntegratedAccountName), kind.ToString());
+        }
+    }
+
+    [Fact]
+    public void OS統合認証にKerberosが要らないのはWindowsだけ()
+    {
+        // Windows は OS の資格情報がそのまま使えるが、他は Kerberos の設定が要る。
+        Assert.False(Registry.ForHost(PlatformKind.Windows).IntegratedAuthenticationNeedsKerberos);
+        Assert.True(Registry.ForHost(PlatformKind.Linux).IntegratedAuthenticationNeedsKerberos);
+        Assert.True(Registry.ForHost(PlatformKind.MacOs).IntegratedAuthenticationNeedsKerberos);
+        Assert.True(Registry.ForHost(PlatformKind.Unknown).IntegratedAuthenticationNeedsKerberos);
+    }
+
+    [Fact]
     public void 合成ルートは実行中のOSの体裁を選ぶ()
     {
         Assert.Equal(HostPlatform.Current, PlatformProfiles.ForCurrentHost().Kind);

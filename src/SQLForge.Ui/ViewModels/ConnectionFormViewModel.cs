@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Ui.Presentation;
@@ -10,7 +11,7 @@ namespace SQLForge.Ui.ViewModels;
 /// 接続ダイアログ「一般」タブの入力欄。編集中の値をドラフトとして保持し、
 /// エンティティへの変換は検証を通ったあと（ユースケース側）で行う。
 /// </summary>
-public sealed partial class ConnectionFormViewModel : ObservableObject
+public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) : ObservableObject
 {
     private static readonly string[] UrlAffectingProperties =
     [
@@ -18,6 +19,7 @@ public sealed partial class ConnectionFormViewModel : ObservableObject
         nameof(User), nameof(Authentication), nameof(Tls)
     ];
 
+    private readonly IPlatformProfile _platform = platform;
     private ConnectionProfileId _id = ConnectionProfileId.New();
     private bool _isLoading;
 
@@ -50,6 +52,20 @@ public sealed partial class ConnectionFormViewModel : ObservableObject
     public string HostLabel => Driver.IsFileBased ? "ファイル" : "ホスト";
 
     public bool RequiresPassword => SupportsNetworkAddress && Authentication.Method == AuthenticationMethod.Password;
+
+    /// <summary>OS 統合認証を選んでいる状態。利用者名とパスワードは OS が受け持つ。</summary>
+    public bool UsesIntegratedAuthentication =>
+        SupportsNetworkAddress && Authentication.Method == AuthenticationMethod.Integrated;
+
+    /// <summary>利用者名の欄を出すか。OS 統合認証では打っても使われないので伏せる。</summary>
+    public bool RequiresUserName => SupportsNetworkAddress && !UsesIntegratedAuthentication;
+
+    /// <summary>OS 統合認証で名乗るアカウント名。利用者名の欄の代わりに出す。</summary>
+    public string IntegratedAccountName => _platform.IntegratedAccountName;
+
+    /// <summary>Kerberos の用意が要る OS で、統合認証を選んだときだけ出す注意書き。</summary>
+    public bool ShowsKerberosNotice =>
+        UsesIntegratedAuthentication && _platform.IntegratedAuthenticationNeedsKerberos;
 
     /// <summary>本番接続を書き込み可で開こうとしている状態。トグルの下に警告を出す。</summary>
     public bool IsUnsafeWriteAccess => Environment.Tag.RequiresReadOnlyByDefault && !IsReadOnly;
@@ -167,7 +183,15 @@ public sealed partial class ConnectionFormViewModel : ObservableObject
 
     partial void OnIsReadOnlyChanged(bool value) => OnPropertyChanged(nameof(IsUnsafeWriteAccess));
 
-    partial void OnAuthenticationChanged(AuthenticationChoice value) => OnPropertyChanged(nameof(RequiresPassword));
+    // 認証方式を変えると、利用者名・パスワード・OS アカウントのどれを出すかが入れ替わる。
+    partial void OnAuthenticationChanged(AuthenticationChoice value)
+    {
+        OnPropertyChanged(nameof(RequiresPassword));
+        OnPropertyChanged(nameof(RequiresUserName));
+        OnPropertyChanged(nameof(UsesIntegratedAuthentication));
+        OnPropertyChanged(nameof(IntegratedAccountName));
+        OnPropertyChanged(nameof(ShowsKerberosNotice));
+    }
 
     // 検証結果が変わったら、そこから導かれるエラー表示をまとめて更新する。
     partial void OnValidationChanged(ConnectionValidationResult value) => OnPropertyChanged(string.Empty);

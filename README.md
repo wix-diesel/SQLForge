@@ -32,7 +32,7 @@ UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 
 
 | 部分 | 現状 |
 | --- | --- |
-| SQL Server への接続 | 動く（`Microsoft.Data.SqlClient`）。パスワード認証と OS 統合認証、TLS 要求レベルの指定 |
+| SQL Server への接続 | 動く（`Microsoft.Data.SqlClient`）。パスワード認証と OS 統合認証（Windows 認証 / Kerberos）、TLS 要求レベルの指定 |
 | データベース一覧・スキーマ一覧・テーブル一覧 | 動く。展開したところだけを読む遅延読み込み。テーブルは概算行数付き |
 | データベース ユーザーの一覧・追加・編集・削除 | 動く。SQL ユーザー（ログインあり／なし）と Windows ユーザー／グループ。既定のスキーマとロールのメンバーシップも編集できる |
 | ログイン（サーバー単位）・ロールの追加編集・スキーマの所有権 | 未実装。ユーザーのダイアログではログイン名を手で入力する |
@@ -89,6 +89,41 @@ TLS の要求レベルは接続文字列へこう写す。
 接続テストの結果に出る「TLS 有効 / なし」は、要求した設定ではなくサーバーに問い合わせた実際の状態
 （`sys.dm_exec_connections`）。この DMV は `VIEW SERVER STATE` 権限が要るので、読めない接続では
 「TLS 不明 (要求 …)」と出して推測しない。
+
+### OS 統合認証（Windows 認証）で繋ぐ
+
+「一般」タブの認証方式で **OS 統合認証** を選ぶと、SQL Server へは
+`Integrated Security=true` で繋ぐ。名乗る相手を決めるのは OS なので、
+利用者名もパスワードも接続文字列には載らない。
+
+そのぶんダイアログの見え方も変わる。
+
+| 認証方式 | 「一般」タブに出るもの |
+| --- | --- |
+| パスワード | ユーザーの入力欄と、パスワードの入力欄（キーリングへ預けるトグル付き） |
+| OS 統合認証 | 打てる欄の代わりに、**実際に名乗る OS アカウント名**を読み取り専用で表示 |
+
+打てる欄を残さないのは、打った値が使われないため。ユーザー欄に何か入っていても、
+統合認証を選んだ時点でその値は保存内容にも接続 URL にも残らない
+（`ConnectionCredentials` が落とす）。同じ理由でパスワードもキーリングへ預けない。
+
+出る OS アカウント名は OS ごとに違う。
+
+| OS | 名乗るアカウント | Kerberos の下ごしらえ |
+| --- | --- | --- |
+| Windows | `WindowsIdentity.GetCurrent().Name`（`DOMAIN\user` の形） | 要らない。OS の資格情報がそのまま渡る |
+| Linux / macOS | ログイン名（`Environment.UserName`） | 要る。`kinit` で資格情報を取っておく |
+
+Kerberos の用意が要る OS では、統合認証を選ぶとその旨をダイアログに出す。
+それでも整っていなければ接続時に SqlClient が理由を返すので、フッターにそのまま出る。
+
+確認用の接続 URL にも認証方式が出る。統合認証には権限部に書ける利用者名が無いので、
+代わりにクエリへ `integrated_security=true` を足す。
+
+```
+パスワード認証: sqlserver://analyst_ro@db.internal:1433/sales_db?sslmode=require&application_name=sqlforge
+OS 統合認証:    sqlserver://db.internal:1433/sales_db?sslmode=require&integrated_security=true&application_name=sqlforge
+```
 
 ### 接続情報を保存する
 
@@ -255,7 +290,10 @@ OS に依らないので共通の `SQLForge.Infrastructure` に置き、選び�
 TFM にすると、3 つとも参照する合成ルートが他の OS では組めなくなるため。OS 固有の API を
 呼ぶときは、TFM ではなく呼び出し側に `[SupportedOSPlatform]` を付ける。
 
-OS 統合認証（Windows 認証）は Linux では Kerberos の設定が要る。整っていない環境では
+OS 統合認証（Windows 認証）で名乗るアカウント名も OS ごとに変わるので、
+`IPlatformProfile.IntegratedAccountName` と `IntegratedAuthenticationNeedsKerberos` として
+同じ仕組みに載せてある（Windows だけが `WindowsIdentity` で上書きする）。
+Linux / macOS では Kerberos の設定が要る。整っていない環境では
 接続時に SqlClient がその理由を返すので、ダイアログのフッターにそのまま出る。
 
 ### OS を増やすとき

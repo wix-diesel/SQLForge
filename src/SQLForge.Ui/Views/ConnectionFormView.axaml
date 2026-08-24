@@ -95,11 +95,31 @@
                    Classes.error="{Binding Form.HasDatabaseError}"
                    Text="{Binding Form.Database}"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Spacing="5" IsVisible="{Binding Form.SupportsNetworkAddress}">
+        <StackPanel Grid.Column="1" Spacing="5" IsVisible="{Binding Form.RequiresUserName}">
           <TextBlock Classes="label" Text="ユーザー"/>
           <TextBox Classes="mono"
                    Classes.error="{Binding Form.HasUserError}"
                    Text="{Binding Form.User}"/>
+        </StackPanel>
+
+        <!-- OS 統合認証では名乗る相手を OS が決めるので、打てる欄ではなく使われる名前を出す -->
+        <StackPanel Grid.Column="1" Spacing="5" IsVisible="{Binding Form.UsesIntegratedAuthentication}">
+          <TextBlock Classes="label" Text="OS アカウント"/>
+          <Border Height="{DynamicResource ControlHeightMd}"
+                  Padding="10,0"
+                  Background="{DynamicResource BgPanelBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RadiusMd}">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Path Classes="icon" Data="{StaticResource IconLock}" VerticalAlignment="Center"/>
+              <TextBlock Classes="mono"
+                         Text="{Binding Form.IntegratedAccountName}"
+                         ToolTip.Tip="{Binding Form.IntegratedAccountName}"
+                         TextTrimming="CharacterEllipsis"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
         </StackPanel>
       </Grid>
 
@@ -116,6 +136,15 @@
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
+        </StackPanel>
+
+        <!-- Kerberos の用意が要る OS では、繋ぐ前にその旨を出す -->
+        <StackPanel Grid.Column="1" Spacing="5" IsVisible="{Binding Form.ShowsKerberosNotice}">
+          <TextBlock Classes="label" Text="認証の下ごしらえ"/>
+          <TextBlock Classes="label"
+                     TextWrapping="Wrap"
+                     VerticalAlignment="Center"
+                     Text="この OS の統合認証には Kerberos の設定（kinit で取得した資格情報）が要ります。整っていない場合は接続時に理由が出ます。"/>
         </StackPanel>
 
         <StackPanel Grid.Column="1" Spacing="5" IsVisible="{Binding Form.RequiresPassword}">
