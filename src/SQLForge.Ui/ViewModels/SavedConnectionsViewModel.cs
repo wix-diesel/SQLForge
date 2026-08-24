@@ -25,8 +25,27 @@ public sealed partial class SavedConnectionsViewModel(ListSavedConnectionsUseCas
     /// <summary>接続が選ばれたときに、その内容を入力欄へ写すためのイベント。</summary>
     public event EventHandler<ConnectionProfile>? ProfileSelected;
 
+    /// <summary>
+    /// 利用者が行を押したときに、その接続を開くためのイベント。
+    /// 選択が変わっただけ（起動直後の選び直しやキーボードでの移動）では起こさない。
+    /// 開くつもりのない接続へ繋いでしまわないよう、押した操作だけを合図にする。
+    /// </summary>
+    public event EventHandler<ConnectionProfile>? ProfileActivated;
+
     /// <summary>検索の読み直しが失敗したことを伝える。呼び出し側でステータス表示に落とす。</summary>
     public event EventHandler<Exception>? LoadFailed;
+
+    /// <summary>行が押された。入力欄へ写したうえで、その接続を開くよう求める。</summary>
+    public void Activate(SavedConnectionItemViewModel item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        // すでに選ばれている行を押し直したときは、入力欄をそのままにする
+        // （打ちかけのパスワードを消さないため）。
+        SelectedItem = item;
+
+        ProfileActivated?.Invoke(this, item.Profile);
+    }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {

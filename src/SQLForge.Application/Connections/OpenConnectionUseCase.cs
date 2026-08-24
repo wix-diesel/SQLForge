@@ -1,5 +1,6 @@
 using System.Data.Common;
 using SQLForge.Application.Abstractions;
+using SQLForge.Domain.Connections;
 
 namespace SQLForge.Application.Connections;
 
@@ -14,11 +15,27 @@ public sealed record OpenConnectionResult(
     ConnectionValidationResult Validation,
     IDatabaseSession? Session = null)
 {
+    /// <summary>パスワードが要るのに手元に無い、という失敗。入力を促すのに使う。</summary>
+    public bool RequiresSecret { get; init; }
+
     public static OpenConnectionResult Invalid(ConnectionValidationResult validation) =>
         new(false, "接続できません", validation.FirstError ?? "入力を確認してください。", validation);
 
     public static OpenConnectionResult Failure(string detail) =>
         new(false, "接続に失敗", detail, ConnectionValidationResult.Valid);
+
+    /// <summary>
+    /// 保存済み接続を開こうとしたが、パスワードが預けられていなかったとき。
+    /// 空のパスワードでサーバーを叩いて失敗を出すより、入力を促すほうが分かりやすい。
+    /// </summary>
+    public static OpenConnectionResult SecretRequired(ConnectionProfile profile) =>
+        new(false,
+            "パスワードが必要です",
+            $"{profile.Name} のパスワードは預けられていません。入力して「接続」を押してください。",
+            ConnectionValidationResult.Valid)
+        {
+            RequiresSecret = true
+        };
 }
 
 /// <summary>
@@ -43,12 +60,46 @@ public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, C
             return OpenConnectionResult.Invalid(validation);
         }
 
-        if (!_registry.TryResolve(draft.Driver, out var connector))
+        var request = await _secrets.ResolveAsync(draft.ToProfile(), typedSecret, cancellationToken).ConfigureAwait(false);
+
+        return await OpenAsync(request, validation, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 保存済み接続をそのまま開く（左ペインで選んだときの自動接続）。
+    /// 入力欄を通らないので、パスワードはキーリングに預けてあるものだけを使う。
+    /// </summary>
+    public async Task<OpenConnectionResult> ExecuteStoredAsync(
+        ConnectionProfile profile,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var validation = ConnectionValidator.Validate(ConnectionDraft.FromProfile(profile));
+        if (!validation.IsValid)
         {
-            return OpenConnectionResult.Failure(UnsupportedDriverMessage.For(draft.Driver, _registry.SupportedDrivers));
+            return OpenConnectionResult.Invalid(validation);
         }
 
-        var request = await _secrets.ResolveAsync(draft.ToProfile(), typedSecret, cancellationToken).ConfigureAwait(false);
+        var request = await _secrets.ResolveAsync(profile, null, cancellationToken).ConfigureAwait(false);
+        if (profile.Credentials.RequiresSecret && string.IsNullOrEmpty(request.Secret))
+        {
+            return OpenConnectionResult.SecretRequired(profile);
+        }
+
+        return await OpenAsync(request, validation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<OpenConnectionResult> OpenAsync(
+        ConnectionRequest request,
+        ConnectionValidationResult validation,
+        CancellationToken cancellationToken)
+    {
+        var driver = request.Profile.Target.Driver;
+        if (!_registry.TryResolve(driver, out var connector))
+        {
+            return OpenConnectionResult.Failure(UnsupportedDriverMessage.For(driver, _registry.SupportedDrivers));
+        }
 
         try
         {

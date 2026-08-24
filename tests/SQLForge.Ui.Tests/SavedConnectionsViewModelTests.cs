@@ -61,6 +61,52 @@ public class SavedConnectionsViewModelTests
         Assert.Empty(viewModel.Entries);
     }
 
+    [Fact]
+    public async Task 読み込みでの選び直しは自動接続を求めない()
+    {
+        // 起動直後に先頭が選ばれるだけで繋ぎに行くと、開くつもりのない接続へ繋いでしまう。
+        var viewModel = NewViewModel();
+        ConnectionProfile? activated = null;
+        viewModel.ProfileActivated += (_, profile) => activated = profile;
+
+        await viewModel.LoadAsync();
+
+        Assert.NotNull(viewModel.SelectedItem);
+        Assert.Null(activated);
+    }
+
+    [Fact]
+    public async Task 行を選ぶと入力欄へ写して自動接続を求める()
+    {
+        var viewModel = NewViewModel();
+        await viewModel.LoadAsync();
+        ConnectionProfile? selected = null;
+        ConnectionProfile? activated = null;
+        viewModel.ProfileSelected += (_, profile) => selected = profile;
+        viewModel.ProfileActivated += (_, profile) => activated = profile;
+
+        var target = viewModel.Entries.OfType<SavedConnectionItemViewModel>().Last();
+        viewModel.Activate(target);
+
+        Assert.Same(target, viewModel.SelectedItem);
+        Assert.Same(target.Profile, selected);
+        Assert.Same(target.Profile, activated);
+    }
+
+    [Fact]
+    public async Task 選ばれている行をもう一度選んでも自動接続を求める()
+    {
+        // 起動直後は先頭が選ばれているので、そこを押しても何も起きないのでは困る。
+        var viewModel = NewViewModel();
+        await viewModel.LoadAsync();
+        var count = 0;
+        viewModel.ProfileActivated += (_, _) => count++;
+
+        viewModel.Activate(viewModel.SelectedItem!);
+
+        Assert.Equal(1, count);
+    }
+
     private static SavedConnectionsViewModel NewViewModel() =>
         new(new ListSavedConnectionsUseCase(new InMemoryConnectionProfileRepository()));
 

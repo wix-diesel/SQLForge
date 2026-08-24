@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>SQLForge.Infrastructure.Windows</RootNamespace>
+    <!-- 資格情報マネージャー (advapi32) を LibraryImport で呼ぶため。 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <!-- 共通の足回り（PlatformProfileBase）を借りる。 -->
