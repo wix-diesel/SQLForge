@@ -5,11 +5,14 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Query;
+using SQLForge.Application.Security;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Query;
+using SQLForge.Domain.Security;
 using SQLForge.Ui.Composition;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Explorer;
+using SQLForge.Ui.ViewModels.Security;
 using SQLForge.Ui.ViewModels.Workspace;
 using SQLForge.Ui.Views;
 using Xunit;
@@ -60,6 +63,42 @@ public class MainWindowRenderTests
         Assert.Contains("sales_db", titles);
         Assert.Contains("dbo", titles);
         Assert.Contains("orders", titles);
+    }
+
+    [AvaloniaFact]
+    public void ツリーにセキュリティとユーザーの行が並ぶ()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        WaitFor(() => viewModel.Explorer.Roots.FirstOrDefault()?.Children.Count > 0);
+
+        var databases = viewModel.Explorer.Roots[0].Children[0];
+        WaitFor(() => databases.Children.OfType<DatabaseNode>().Any());
+
+        // 「データベース → sales_db → セキュリティ → ユーザー」と、画面と同じ順に開いていく。
+        var database = databases.Children.OfType<DatabaseNode>().First();
+        database.IsExpanded = true;
+        WaitFor(() => database.Children.Any(node => node.Title == "セキュリティ"));
+
+        var security = database.Children.First(node => node.Title == "セキュリティ");
+        security.IsExpanded = true;
+        WaitFor(() => security.Children.OfType<DatabaseUsersNode>().Any());
+
+        var users = security.Children.OfType<DatabaseUsersNode>().First();
+        users.IsExpanded = true;
+        WaitFor(() => users.Children.OfType<DatabaseUserNode>().Any());
+
+        Dispatcher.UIThread.RunJobs();
+
+        var titles = window.GetVisualDescendants()
+            .OfType<TreeViewItem>()
+            .Select(item => (item.DataContext as ObjectExplorerNode)?.Title)
+            .ToList();
+
+        Assert.Contains("セキュリティ", titles);
+        Assert.Contains("ユーザー", titles);
+        Assert.Contains("app_user", titles);
     }
 
     [AvaloniaFact]
@@ -186,7 +225,10 @@ public class MainWindowRenderTests
                 new ListColumnsUseCase(),
                 new ListStoredProceduresUseCase(),
                 new ListStoredProcedureParametersUseCase(),
-                query),
+                query)
+            {
+                Security = new DatabaseSecurityContext(new ListDatabaseUsersUseCase())
+            },
             query);
     }
 
@@ -200,7 +242,10 @@ public class MainWindowRenderTests
             Databases = [new DatabaseDescriptor(new DatabaseName("sales_db"))]
         }
         .WithSchemas("sales_db", new SchemaDescriptor(dbo))
-        .WithTables("sales_db", "dbo", new TableDescriptor(dbo, "orders", 8_400_000));
+        .WithTables("sales_db", "dbo", new TableDescriptor(dbo, "orders", 8_400_000))
+        .WithDatabaseUsers("sales_db",
+            new DatabaseUserDescriptor(
+                new DatabaseUserName("app_user"), DatabaseUserType.SqlUserWithLogin, "app_login", dbo));
     }
 
     /// <summary>今そこに描かれている文字列。テンプレートが組み上がったかを見るのに使う。</summary>

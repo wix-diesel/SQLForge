@@ -24,4 +24,11 @@ public sealed record CatalogContext(
     ListColumnsUseCase Columns,
     ListStoredProceduresUseCase StoredProcedures,
     ListStoredProcedureParametersUseCase StoredProcedureParameters,
-    IQueryLauncher? Query = null);
+    IQueryLauncher? Query = null)
+{
+    /// <summary>
+    /// セキュリティ（ユーザー）の一式。無ければツリーに「セキュリティ」の枝を出さない。
+    /// カタログだけを組みたいときに、ユーザーの読み取り権限まで要求しないための逃げ道でもある。
+    /// </summary>
+    public DatabaseSecurityContext? Security { get; init; }
+}

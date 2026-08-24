@@ -36,11 +36,27 @@ public sealed partial class DatabaseNode : ObjectExplorerNode
     [RelayCommand(CanExecute = nameof(CanQuery))]
     private void OpenQuery() => _context.Query?.OpenNewQuery(_descriptor.Name);
 
-    protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
+    protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken)
+    {
+        var children = new List<ObjectExplorerNode> { new CatalogFolderNode("スキーマ", LoadSchemasAsync) };
+
+        if (_context.Security is not null)
+        {
+            children.Add(new CatalogFolderNode("セキュリティ", LoadSecurityAsync, showCount: false));
+        }
+
+        return Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(children);
+    }
+
+    /// <summary>
+    /// SSMS と同じく、セキュリティの下にユーザーの見出しを置く。
+    /// ロールやスキーマの所有権はまだ扱わないので、今いるのはユーザーだけ。
+    /// </summary>
+    private Task<IReadOnlyList<ObjectExplorerNode>> LoadSecurityAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
-        [
-            new CatalogFolderNode("スキーマ", LoadSchemasAsync)
-        ]);
+            _context.Security is { } security
+                ? [new DatabaseUsersNode(_context, security, _descriptor.Name)]
+                : []);
 
     private async Task<IReadOnlyList<ObjectExplorerNode>> LoadSchemasAsync(CancellationToken cancellationToken)
     {

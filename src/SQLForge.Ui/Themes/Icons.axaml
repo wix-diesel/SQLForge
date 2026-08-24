@@ -59,6 +59,9 @@
   <StreamGeometry x:Key="IconColumn">M5.6,2.6 V13.4 M2.6,2.6 H13.4 V13.4 H2.6 Z</StreamGeometry>
 
   <!-- 主キー（鍵） -->
+  <!-- ユーザー（データベース ユーザー） -->
+  <StreamGeometry x:Key="IconUser">M8,8.4 A2.7,2.7 0 1 0 8,3.0 A2.7,2.7 0 1 0 8,8.4 M3.2,13.6 C3.2,11.1 5.3,10.0 8,10.0 C10.7,10.0 12.8,11.1 12.8,13.6</StreamGeometry>
+
   <StreamGeometry x:Key="IconKey">M6.6,9.4 A2.6,2.6 0 1 0 6.6,4.2 A2.6,2.6 0 1 0 6.6,9.4 M8.5,7.5 L13.4,12.4 M11.2,10.2 L13.0,12.0 M10.0,11.4 L11.4,12.8</StreamGeometry>
 
   <!-- ストアド プロシージャ: 折り目付きの文書に実行三角を重ねる -->

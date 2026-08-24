@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SQLForge.Ui.ViewModels"
+        x:Class="SQLForge.Ui.Views.ConfirmWindow"
+        x:DataType="vm:ConfirmDialogViewModel"
+        Title="SQLForge"
+        Width="440" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgSurfaceBrush}"
+        Foreground="{DynamicResource TextBaseBrush}"
+        FontFamily="{DynamicResource FontFamilyUi}"
+        FontSize="{DynamicResource FontSizeBase}">
+
+  <!-- 取り消せない操作の確認と、失敗の知らせに使う小さなダイアログ。 -->
+  <Border BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
+    <Grid RowDefinitions="Auto,Auto">
+
+      <StackPanel Grid.Row="0" Margin="20,18" Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="9">
+          <Path Classes="icon danger"
+                Data="{StaticResource IconAlertCircle}"
+                VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding Headline}"
+                     FontSize="{DynamicResource FontSizeLg}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextHighBrush}"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock Text="{Binding Detail}"
+                   Foreground="{DynamicResource TextDimBrush}"
+                   TextWrapping="Wrap"/>
+      </StackPanel>
+
+      <Border Grid.Row="1"
+              Height="{DynamicResource DialogFooterHeight}"
+              Padding="16,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,1,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Theme="{StaticResource GhostButton}"
+                  Content="キャンセル"
+                  Command="{Binding CancelCommand}"
+                  IsCancel="True"
+                  IsVisible="{Binding CanCancel}"/>
+          <Button Theme="{StaticResource PrimaryButton}"
+                  Content="{Binding ConfirmLabel}"
+                  Command="{Binding ConfirmCommand}"
+                  IsDefault="True"/>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+  </Border>
+</Window>

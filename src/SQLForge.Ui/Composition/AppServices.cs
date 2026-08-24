@@ -3,10 +3,13 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Connections;
 using SQLForge.Application.Query;
+using SQLForge.Application.Security;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.Security;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
+using SQLForge.Ui.ViewModels.Security;
+using SQLForge.Ui.Views;
 
 namespace SQLForge.Ui.Composition;
 
@@ -65,12 +68,23 @@ public static class AppServices
         services.AddSingleton<ListStoredProceduresUseCase>();
         services.AddSingleton<ListStoredProcedureParametersUseCase>();
         services.AddSingleton<ExecuteQueryUseCase>();
+
+        services.AddSingleton<ListDatabaseUsersUseCase>();
+        services.AddSingleton<ListDatabaseRolesUseCase>();
+        services.AddSingleton<SaveDatabaseUserUseCase>();
+        services.AddSingleton<DropDatabaseUserUseCase>();
     }
 
     private static void AddViewModels(IServiceCollection services)
     {
         services.AddTransient<SavedConnectionsViewModel>();
         services.AddTransient<ConnectDialogViewModel>();
+
+        // ユーザーの編集ダイアログはメインウィンドウの上にモーダルで出すので、
+        // 親ウィンドウが決まったところ（App）で Owner を差せるよう 1 つを共有する。
+        services.AddSingleton<DatabaseUserDialogService>();
+        services.AddSingleton<IDatabaseUserEditor>(provider =>
+            provider.GetRequiredService<DatabaseUserDialogService>());
 
         // メインウィンドウは開いたセッションを渡して組み立てるので、工場ごしに作る。
         services.AddSingleton<MainWindowViewModelFactory>();

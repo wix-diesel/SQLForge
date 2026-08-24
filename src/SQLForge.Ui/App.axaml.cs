@@ -60,6 +60,9 @@ public partial class App : Avalonia.Application
         viewModel.CloseRequested += (_, _) => window.Close();
         window.Closed += async (_, _) => await viewModel.DisposeAsync().ConfigureAwait(false);
 
+        // ツリーから開くダイアログの親。ここで初めて決まる。
+        services.GetRequiredService<DatabaseUserDialogService>().Owner = window;
+
         window.Show();
         _ = viewModel.InitializeAsync();
 

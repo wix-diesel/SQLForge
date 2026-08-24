@@ -572,6 +572,8 @@
     <Setter Property="FontSize"          Value="{DynamicResource FontSizeSm}"/>
     <Setter Property="Foreground"        Value="{DynamicResource TextFaintBrush}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
+    <!-- 幅が足りないときに削るのは補足のほう。名前（nodeName）は残す。 -->
+    <Setter Property="TextTrimming"      Value="CharacterEllipsis"/>
   </Style>
   <Style Selector="TextBlock.nodeDetail.failure">
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>

@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
 using Xunit;
 
@@ -176,6 +177,41 @@ public class AdoDatabaseSessionTests
             string procedure,
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<StoredProcedureParameterDescriptor>>([]);
+
+        // セキュリティも門の作法は同じなので、ここでは中身を持たせない。
+        protected override Task<IReadOnlyList<DatabaseUserDescriptor>> ReadDatabaseUsersAsync(
+            DbConnection connection,
+            DatabaseName database,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DatabaseUserDescriptor>>([]);
+
+        protected override Task<IReadOnlyList<string>> ReadDatabaseRolesAsync(
+            DbConnection connection,
+            DatabaseName database,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+
+        protected override Task CreateUserAsync(
+            DbConnection connection,
+            DatabaseName database,
+            DatabaseUserDefinition definition,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        protected override Task AlterUserAsync(
+            DbConnection connection,
+            DatabaseName database,
+            DatabaseUserDescriptor original,
+            DatabaseUserDefinition definition,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        protected override Task DropUserAsync(
+            DbConnection connection,
+            DatabaseName database,
+            DatabaseUserName user,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
 
         // クエリの実行はここでは試さない（門の作法だけを見るテストなので、接続には届かせない）。
         protected override Task SwitchDatabaseAsync(

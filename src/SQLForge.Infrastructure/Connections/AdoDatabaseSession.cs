@@ -17,7 +17,7 @@ namespace SQLForge.Infrastructure.Connections;
 /// <see cref="DbConnection"/> は 1 本で複数の照会を同時に走らせられないため、
 /// ここで門を 1 つに絞っている。
 /// </summary>
-public abstract class AdoDatabaseSession : IDatabaseSession
+public abstract partial class AdoDatabaseSession : IDatabaseSession
 {
     private readonly DbConnection _connection;
     private readonly SemaphoreSlim _gate = new(1, 1);

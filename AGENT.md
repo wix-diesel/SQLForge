@@ -42,8 +42,8 @@ SQLForge.Ui                        最外層。Avalonia のビューとビュー
 
 | プロジェクト | 役割 |
 | --- | --- |
-| [src/SQLForge.Domain](src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、クエリ結果のモデル |
-| [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Query/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
+| [src/SQLForge.Domain](src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー）、クエリ結果のモデル |
+| [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
 | [src/SQLForge.Infrastructure](src/SQLForge.Infrastructure) | ポートの DBMS 非依存な実装。`Connections/`・`Platform/`・`Security/` |
 | [src/SQLForge.Infrastructure.SqlServer](src/SQLForge.Infrastructure.SqlServer) | SQL Server 専用ドライバー実装。`Microsoft.Data.SqlClient` を抱えるのはここだけ |
 | [src/SQLForge.Ui](src/SQLForge.Ui) | Avalonia の View / ViewModel。`Composition/` が合成ルート、`Presentation/` が表示用の変換ロジック |
@@ -74,8 +74,9 @@ DBMS を 1 つ足すたびに全利用者がその依存（SqlClient・Npgsql �
 
 - Nullable 参照型は有効（`Nullable=enable`）。null 許容の意図を型で明示する。
 - 層の依存方向を破らない（内側の層から外側の層の型を参照しない）。迷ったら上記のアーキテクチャ表を確認する。
-- エンティティ（`ConnectionProfile` など）は常に妥当な状態であることを前提とする。編集中の値は
-  `ConnectionDraft` のような Draft 型で保持し、検証を通してからエンティティへ変換する。
+- エンティティ（`ConnectionProfile`・`DatabaseUserDefinition` など）は常に妥当な状態であることを前提とする。
+  編集中の値は `ConnectionDraft`・`DatabaseUserDraft` のような Draft 型で保持し、
+  検証を通してからエンティティへ変換する。
 
 ## テスト方針
 

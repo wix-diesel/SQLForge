@@ -2,6 +2,7 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
 using SQLForge.Domain.Query;
+using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
 
 namespace SQLForge.Ui.Tests;
@@ -112,6 +113,103 @@ public sealed class FakeDatabaseSession : IDatabaseSession
             _storedProcedureParameters.TryGetValue($"{database.Value}.{schema.Value}.{procedure}", out var parameters)
                 ? parameters
                 : []);
+
+    private readonly Dictionary<string, IReadOnlyList<DatabaseUserDescriptor>> _databaseUsers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlyList<string>> _databaseRoles = new(StringComparer.Ordinal);
+
+    public FakeDatabaseSession WithDatabaseUsers(string database, params DatabaseUserDescriptor[] users)
+    {
+        _databaseUsers[database] = users;
+        return this;
+    }
+
+    public FakeDatabaseSession WithDatabaseRoles(string database, params string[] roles)
+    {
+        _databaseRoles[database] = roles;
+        return this;
+    }
+
+    /// <summary>ユーザーの読み書きで投げる例外。権限不足の見え方を確かめるために差し込む。</summary>
+    public Exception? SecurityFailure { get; set; }
+
+    public string? CreatedUserDatabase { get; private set; }
+
+    public DatabaseUserDefinition? CreatedUser { get; private set; }
+
+    public DatabaseUserDescriptor? AlteredOriginal { get; private set; }
+
+    public DatabaseUserDefinition? AlteredUser { get; private set; }
+
+    public string? DroppedUserDatabase { get; private set; }
+
+    public DatabaseUserName? DroppedUser { get; private set; }
+
+    public int DatabaseUserCallCount { get; private set; }
+
+    public Task<IReadOnlyList<DatabaseUserDescriptor>> ListDatabaseUsersAsync(
+        DatabaseName database,
+        CancellationToken cancellationToken = default)
+    {
+        DatabaseUserCallCount++;
+
+        return SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<DatabaseUserDescriptor>>(SecurityFailure)
+            : Task.FromResult(_databaseUsers.TryGetValue(database.Value, out var users) ? users : []);
+    }
+
+    public Task<IReadOnlyList<string>> ListDatabaseRolesAsync(
+        DatabaseName database,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_databaseRoles.TryGetValue(database.Value, out var roles) ? roles : []);
+
+    public Task CreateDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        CreatedUserDatabase = database.Value;
+        CreatedUser = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task AlterDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserDescriptor original,
+        DatabaseUserDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AlteredOriginal = original;
+        AlteredUser = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DropDatabaseUserAsync(
+        DatabaseName database,
+        DatabaseUserName user,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        DroppedUserDatabase = database.Value;
+        DroppedUser = user;
+
+        return Task.CompletedTask;
+    }
 
     /// <summary>実行で返す結果。差し替えて結果ペインの見え方を確かめる。</summary>
     public QueryResult? NextResult { get; set; }
