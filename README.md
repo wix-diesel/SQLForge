@@ -2,7 +2,7 @@
 
 Linux で SQL Server を操作するためのアプリ。
 
-UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 11 + .NET 10。
+UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 12 + .NET 10。
 
 ## 現在の状態
 
@@ -70,8 +70,7 @@ dotnet test                                # ヘッドレス描画テストを�
 .NET 10 SDK が要る（`global.json` で 10.0 系に固定している）。
 Linux では X11（Wayland では XWayland 経由）で動く。
 
-Avalonia は 11.3 系を使う。11.3 のパッケージが配っているのは net8.0 向けアセットだが、
-net10.0 からそのまま参照できる。
+Avalonia は 12.1 系を使う。net10.0 向けアセットが同梱されている。
 
 ### SQL Server へ繋ぐ
 

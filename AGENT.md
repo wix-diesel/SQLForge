@@ -5,16 +5,17 @@
 ## プロジェクト概要
 
 SQLForge は、Linux で SQL Server（将来的には他の DBMS も）を操作するためのデスクトップアプリ。
-UI は Avalonia 11、実行基盤は .NET 10。詳しい機能状況・使い方は [README.md](README.md) を参照。
+UI は Avalonia 12、実行基盤は .NET 10。詳しい機能状況・使い方は [README.md](README.md) を参照。
 
 ## 技術スタック
 
 - 言語: C# (`LangVersion` = latest, `Nullable` = enable, `ImplicitUsings` = enable)
 - ランタイム: .NET 10（`global.json` で `10.0.100` に固定、`rollForward: latestFeature`）
-- UI フレームワーク: Avalonia 11.3 系（`CommunityToolkit.Mvvm` で MVVM）
+- UI フレームワーク: Avalonia 12.1 系（`CommunityToolkit.Mvvm` で MVVM）
 - DI: `Microsoft.Extensions.DependencyInjection`
 - DB アクセス: ADO.NET 系ドライバー（現状は `Microsoft.Data.SqlClient` のみ実装）
-- テスト: xUnit（`tests/SQLForge.Ui.Tests`）。ヘッドレス描画テストを含む
+- テスト: xUnit v3（`tests/SQLForge.Ui.Tests`）。ヘッドレス描画テストを含む。
+  v3 のテストプロジェクトは `OutputType` が `Exe` である必要がある
 - 共通ビルド設定は [Directory.Build.props](Directory.Build.props) に集約
 
 ## アーキテクチャ

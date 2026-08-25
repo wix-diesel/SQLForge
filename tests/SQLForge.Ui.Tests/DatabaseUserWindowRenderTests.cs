@@ -215,7 +215,7 @@ public class DatabaseUserWindowRenderTests
 
     /// <summary>ログイン名の入力欄。隠れていても視覚ツリーには残るので、見え方で確かめる。</summary>
     private static TextBox LoginBox(Window window) =>
-        window.GetVisualDescendants().OfType<TextBox>().First(box => box.Watermark == "サーバー ログイン名");
+        window.GetVisualDescendants().OfType<TextBox>().First(box => box.PlaceholderText == "サーバー ログイン名");
 
     /// <summary>今そこに描かれている文字列。テンプレートが組み上がったかを見るのに使う。</summary>
     private static IReadOnlyList<string?> Texts(Window window) =>

@@ -16,7 +16,7 @@
           <TextBlock Classes="label" Text="接続名"/>
           <TextBox Text="{Binding Form.Name}"
                    Classes.error="{Binding Form.HasNameError}"
-                   Watermark="接続名"/>
+                   PlaceholderText="接続名"/>
         </StackPanel>
         <StackPanel Grid.Column="1" Spacing="5">
           <TextBlock Classes="label" Text="環境タグ"/>

@@ -65,7 +65,7 @@
             <TextBox Name="NameBox"
                      Text="{Binding Name}"
                      Classes.error="{Binding HasNameError}"
-                     Watermark="ユーザー名"/>
+                     PlaceholderText="ユーザー名"/>
           </StackPanel>
 
           <StackPanel Spacing="5" IsVisible="{Binding RequiresLogin}">
@@ -73,7 +73,7 @@
             <TextBox Classes="mono"
                      Text="{Binding LoginName}"
                      Classes.error="{Binding HasLoginError}"
-                     Watermark="サーバー ログイン名"/>
+                     PlaceholderText="サーバー ログイン名"/>
           </StackPanel>
 
           <StackPanel Spacing="5">
