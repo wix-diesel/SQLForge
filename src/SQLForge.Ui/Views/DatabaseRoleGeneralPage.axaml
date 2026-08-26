@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sec="using:SQLForge.Ui.ViewModels.Security"
+             x:Class="SQLForge.Ui.Views.DatabaseRoleGeneralPage"
+             x:DataType="sec:DatabaseRoleDialogViewModel">
+
+  <!-- SSMS の「データベース ロール」ダイアログの「全般」ページ。 -->
+  <Grid Margin="18,16" RowDefinitions="Auto,*,*" RowSpacing="13">
+
+    <StackPanel Grid.Row="0" Spacing="13">
+
+      <StackPanel Spacing="5">
+        <TextBlock Classes="label" Text="ロール名"/>
+        <TextBox Name="NameBox"
+                 Text="{Binding Name}"
+                 Classes.error="{Binding HasNameError}"
+                 IsEnabled="{Binding CanEditDefinition}"
+                 PlaceholderText="ロール名"/>
+        <TextBlock Classes="nodeDetail"
+                   Text="固定のデータベース ロールは、名前と所有者を変えられません。メンバーだけを出し入れできます。"
+                   TextWrapping="Wrap"
+                   IsVisible="{Binding !CanEditDefinition}"/>
+      </StackPanel>
+
+      <StackPanel Spacing="5">
+        <TextBlock Classes="label" Text="所有者"/>
+        <ComboBox ItemsSource="{Binding OwnerChoices}"
+                  SelectedItem="{Binding Owner}"
+                  IsEnabled="{Binding CanEditDefinition}"
+                  HorizontalAlignment="Stretch"/>
+        <TextBlock Classes="nodeDetail" Text="未指定なら、作成した利用者が所有者になります。"/>
+      </StackPanel>
+
+    </StackPanel>
+
+    <!-- 所有されているスキーマ -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
+      <TextBlock Grid.Row="0" Classes="label" Text="このロールが所有するスキーマ"/>
+      <Border Grid.Row="1"
+              MinHeight="90"
+              Background="{DynamicResource InputBackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RadiusMd}">
+        <!--
+          余白は中身（ItemsControl）側に置く。ScrollViewer の Padding にすると
+          スクロールできる長さ（Extent）にその分が入らず、最後の 1 行が
+          どこまで送っても欄の外に残ってしまう。
+        -->
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Schemas}" Margin="10,8">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="sec:RoleChoiceViewModel">
+                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsMember}"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- メンバー -->
+    <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="5">
+      <TextBlock Grid.Row="0" Classes="label" Text="このロールのメンバー"/>
+      <Border Grid.Row="1"
+              MinHeight="90"
+              Background="{DynamicResource InputBackgroundBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RadiusMd}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Members}" Margin="10,8">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="sec:RoleChoiceViewModel">
+                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsMember}"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+  </Grid>
+</UserControl>

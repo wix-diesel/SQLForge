@@ -41,30 +41,12 @@ public sealed partial class SqlServerSession
         // 2 つめの結果セットがロールの所属。ログインごとにまとめ直して貼り付ける。
         await reader.NextResultAsync(cancellationToken).ConfigureAwait(false);
 
-        var memberships = await ReadMembershipsAsync(reader, cancellationToken).ConfigureAwait(false);
+        var memberships = await ReadGroupedNamesAsync(reader, cancellationToken).ConfigureAwait(false);
 
         return logins
             .Select(login =>
                 memberships.TryGetValue(login.Name.Value, out var roles) ? login with { Roles = roles } : login)
             .ToList();
-    }
-
-    protected override async Task<IReadOnlyList<string>> ReadServerRolesAsync(
-        DbConnection connection,
-        CancellationToken cancellationToken)
-    {
-        await using var command = connection.CreateCommand();
-        command.CommandText = SqlServerLoginQueries.Roles;
-
-        var roles = new List<string>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            roles.Add(reader.GetString(0));
-        }
-
-        return roles;
     }
 
     protected override Task CreateLoginAsync(

@@ -116,7 +116,8 @@ public sealed class FakeDatabaseSession : IDatabaseSession
                 : []);
 
     private readonly Dictionary<string, IReadOnlyList<DatabaseUserDescriptor>> _databaseUsers = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, IReadOnlyList<string>> _databaseRoles = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IReadOnlyList<DatabaseRoleDescriptor>> _databaseRoles =
+        new(StringComparer.Ordinal);
 
     public FakeDatabaseSession WithDatabaseUsers(string database, params DatabaseUserDescriptor[] users)
     {
@@ -124,7 +125,14 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return this;
     }
 
+    /// <summary>名前だけのロール。所有者もメンバーも見ないテストではこちらを使う。</summary>
     public FakeDatabaseSession WithDatabaseRoles(string database, params string[] roles)
+    {
+        _databaseRoles[database] = roles.Select(role => new DatabaseRoleDescriptor(new RoleName(role))).ToList();
+        return this;
+    }
+
+    public FakeDatabaseSession WithDatabaseRoles(string database, params DatabaseRoleDescriptor[] roles)
     {
         _databaseRoles[database] = roles;
         return this;
@@ -158,10 +166,73 @@ public sealed class FakeDatabaseSession : IDatabaseSession
             : Task.FromResult(_databaseUsers.TryGetValue(database.Value, out var users) ? users : []);
     }
 
-    public Task<IReadOnlyList<string>> ListDatabaseRolesAsync(
+    public int DatabaseRoleCallCount { get; private set; }
+
+    public Task<IReadOnlyList<DatabaseRoleDescriptor>> ListDatabaseRolesAsync(
         DatabaseName database,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_databaseRoles.TryGetValue(database.Value, out var roles) ? roles : []);
+        CancellationToken cancellationToken = default)
+    {
+        DatabaseRoleCallCount++;
+
+        return SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<DatabaseRoleDescriptor>>(SecurityFailure)
+            : Task.FromResult(_databaseRoles.TryGetValue(database.Value, out var roles) ? roles : []);
+    }
+
+    public DatabaseRoleDefinition? CreatedDatabaseRole { get; private set; }
+
+    public DatabaseRoleDescriptor? AlteredOriginalDatabaseRole { get; private set; }
+
+    public DatabaseRoleDefinition? AlteredDatabaseRole { get; private set; }
+
+    public RoleName? DroppedDatabaseRole { get; private set; }
+
+    public Task CreateDatabaseRoleAsync(
+        DatabaseName database,
+        DatabaseRoleDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        CreatedDatabaseRole = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task AlterDatabaseRoleAsync(
+        DatabaseName database,
+        DatabaseRoleDescriptor original,
+        DatabaseRoleDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AlteredOriginalDatabaseRole = original;
+        AlteredDatabaseRole = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DropDatabaseRoleAsync(
+        DatabaseName database,
+        RoleName role,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        DroppedDatabaseRole = role;
+
+        return Task.CompletedTask;
+    }
 
     public Task CreateDatabaseUserAsync(
         DatabaseName database,
@@ -213,7 +284,7 @@ public sealed class FakeDatabaseSession : IDatabaseSession
     }
 
     private IReadOnlyList<ServerLoginDescriptor> _serverLogins = [];
-    private IReadOnlyList<string> _serverRoles = [];
+    private IReadOnlyList<ServerRoleDescriptor> _serverRoles = [];
 
     public FakeDatabaseSession WithServerLogins(params ServerLoginDescriptor[] logins)
     {
@@ -221,7 +292,14 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return this;
     }
 
+    /// <summary>名前だけのロール。所有者もメンバーも見ないテストではこちらを使う。</summary>
     public FakeDatabaseSession WithServerRoles(params string[] roles)
+    {
+        _serverRoles = roles.Select(role => new ServerRoleDescriptor(new RoleName(role))).ToList();
+        return this;
+    }
+
+    public FakeDatabaseSession WithServerRoles(params ServerRoleDescriptor[] roles)
     {
         _serverRoles = roles;
         return this;
@@ -247,8 +325,67 @@ public sealed class FakeDatabaseSession : IDatabaseSession
             : Task.FromResult(_serverLogins);
     }
 
-    public Task<IReadOnlyList<string>> ListServerRolesAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(_serverRoles);
+    public int ServerRoleCallCount { get; private set; }
+
+    public Task<IReadOnlyList<ServerRoleDescriptor>> ListServerRolesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ServerRoleCallCount++;
+
+        return SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<ServerRoleDescriptor>>(SecurityFailure)
+            : Task.FromResult(_serverRoles);
+    }
+
+    public ServerRoleDefinition? CreatedServerRole { get; private set; }
+
+    public ServerRoleDescriptor? AlteredOriginalServerRole { get; private set; }
+
+    public ServerRoleDefinition? AlteredServerRole { get; private set; }
+
+    public RoleName? DroppedServerRole { get; private set; }
+
+    public Task CreateServerRoleAsync(
+        ServerRoleDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        CreatedServerRole = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task AlterServerRoleAsync(
+        ServerRoleDescriptor original,
+        ServerRoleDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AlteredOriginalServerRole = original;
+        AlteredServerRole = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DropServerRoleAsync(RoleName role, CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        DroppedServerRole = role;
+
+        return Task.CompletedTask;
+    }
 
     public Task CreateServerLoginAsync(
         ServerLoginDefinition definition,
@@ -291,6 +428,154 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 
         return Task.CompletedTask;
     }
+
+    private readonly List<LoginUserMapping> _mappings = [];
+    private readonly Dictionary<string, IReadOnlyList<PermissionEntry>> _permissions = new(StringComparer.Ordinal);
+    private readonly Dictionary<SecurableKind, IReadOnlyList<SecurableReference>> _securables = [];
+
+    public SchemaDefinition? CreatedSchema { get; private set; }
+
+    public SchemaDescriptor? AlteredOriginalSchema { get; private set; }
+
+    public SchemaDefinition? AlteredSchema { get; private set; }
+
+    public SchemaName? DroppedSchema { get; private set; }
+
+    public Task CreateSchemaAsync(
+        DatabaseName database,
+        SchemaDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        CreatedSchema = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task AlterSchemaAsync(
+        DatabaseName database,
+        SchemaDescriptor original,
+        SchemaDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AlteredOriginalSchema = original;
+        AlteredSchema = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DropSchemaAsync(
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        DroppedSchema = schema;
+
+        return Task.CompletedTask;
+    }
+
+    public FakeDatabaseSession WithLoginUserMappings(params LoginUserMapping[] mappings)
+    {
+        _mappings.Clear();
+        _mappings.AddRange(mappings);
+
+        return this;
+    }
+
+    public IReadOnlyList<LoginUserMapping>? AppliedOriginalMappings { get; private set; }
+
+    public IReadOnlyList<LoginUserMapping>? AppliedMappings { get; private set; }
+
+    public Task<IReadOnlyList<LoginUserMapping>> ListLoginUserMappingsAsync(
+        ServerLoginName login,
+        CancellationToken cancellationToken = default) =>
+        SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<LoginUserMapping>>(SecurityFailure)
+            : Task.FromResult<IReadOnlyList<LoginUserMapping>>(_mappings);
+
+    public Task ApplyLoginUserMappingsAsync(
+        ServerLoginName login,
+        IReadOnlyList<LoginUserMapping> original,
+        IReadOnlyList<LoginUserMapping> desired,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AppliedOriginalMappings = original;
+        AppliedMappings = desired;
+
+        return Task.CompletedTask;
+    }
+
+    public FakeDatabaseSession WithPermissions(string principal, params PermissionEntry[] entries)
+    {
+        _permissions[principal] = entries;
+        return this;
+    }
+
+    public FakeDatabaseSession WithSecurables(SecurableKind kind, params SecurableReference[] securables)
+    {
+        _securables[kind] = securables;
+        return this;
+    }
+
+    public SecurityPrincipal? AppliedPrincipal { get; private set; }
+
+    public IReadOnlyList<PermissionEntry>? AppliedOriginalPermissions { get; private set; }
+
+    public IReadOnlyList<PermissionEntry>? AppliedPermissions { get; private set; }
+
+    public Task<IReadOnlyList<PermissionEntry>> ListPermissionsAsync(
+        SecurityPrincipal principal,
+        DatabaseName? database = null,
+        CancellationToken cancellationToken = default) =>
+        SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<PermissionEntry>>(SecurityFailure)
+            : Task.FromResult(_permissions.TryGetValue(principal.Name, out var entries) ? entries : []);
+
+    public Task ApplyPermissionsAsync(
+        SecurityPrincipal principal,
+        DatabaseName? database,
+        IReadOnlyList<PermissionEntry> original,
+        IReadOnlyList<PermissionEntry> desired,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AppliedPrincipal = principal;
+        AppliedOriginalPermissions = original;
+        AppliedPermissions = desired;
+
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<SecurableReference>> ListSecurablesAsync(
+        SecurableKind kind,
+        DatabaseName? database = null,
+        CancellationToken cancellationToken = default) =>
+        SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<SecurableReference>>(SecurityFailure)
+            : Task.FromResult(_securables.TryGetValue(kind, out var securables) ? securables : []);
 
     /// <summary>実行で返す結果。差し替えて結果ペインの見え方を確かめる。</summary>
     public QueryResult? NextResult { get; set; }

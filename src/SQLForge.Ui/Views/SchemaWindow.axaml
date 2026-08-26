@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sec="using:SQLForge.Ui.ViewModels.Security"
+        x:Class="SQLForge.Ui.Views.SchemaWindow"
+        x:DataType="sec:SchemaDialogViewModel"
+        Title="SQLForge — スキーマ"
+        Width="480" Height="340"
+        MinWidth="420" MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgSurfaceBrush}"
+        Foreground="{DynamicResource TextBaseBrush}"
+        FontFamily="{DynamicResource FontFamilyUi}"
+        FontSize="{DynamicResource FontSizeBase}">
+
+  <!-- SSMS の「スキーマ」ダイアログに対応する。決められるのは名前と所有者だけ。 -->
+  <Border BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- 見出し -->
+      <Border Grid.Row="0"
+              Height="{DynamicResource DialogHeaderHeight}"
+              Padding="14,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+          <Path Grid.Column="0" Classes="icon accent" Data="{StaticResource IconSchema}"/>
+          <TextBlock Grid.Column="1"
+                     Text="{Binding Title}"
+                     FontSize="{DynamicResource FontSizeLg}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextHighBrush}"
+                     TextTrimming="CharacterEllipsis"
+                     VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+
+      <StackPanel Grid.Row="1" Margin="18,16" Spacing="13">
+
+        <StackPanel Spacing="5">
+          <TextBlock Classes="label" Text="スキーマ名"/>
+          <TextBox Name="NameBox"
+                   Text="{Binding Name}"
+                   Classes.error="{Binding HasNameError}"
+                   IsEnabled="{Binding CanChangeName}"
+                   PlaceholderText="スキーマ名"/>
+          <TextBlock Classes="nodeDetail"
+                     Text="スキーマの名前は作成のときに決まります。あとから変えることはできません。"
+                     TextWrapping="Wrap"
+                     IsVisible="{Binding !CanChangeName}"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+          <TextBlock Classes="label" Text="スキーマの所有者"/>
+          <ComboBox ItemsSource="{Binding OwnerChoices}"
+                    SelectedItem="{Binding Owner}"
+                    Classes.error="{Binding HasOwnerError}"
+                    HorizontalAlignment="Stretch"/>
+          <TextBlock Classes="nodeDetail" Text="未指定なら、作成した利用者が所有者になります。"/>
+        </StackPanel>
+
+      </StackPanel>
+
+      <!-- 直前の操作の結果と確定操作 -->
+      <Border Grid.Row="2"
+              Height="{DynamicResource DialogFooterHeight}"
+              Padding="16,0"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+          <StackPanel Grid.Column="0"
+                      Orientation="Horizontal"
+                      Spacing="7"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding HasError}">
+            <Path Classes="icon danger" Data="{StaticResource IconAlertCircle}"/>
+            <TextBlock Classes="statusHeadline error"
+                       Text="{Binding ErrorMessage}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding ErrorMessage}"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+            <Button Theme="{StaticResource GhostButton}"
+                    Content="キャンセル"
+                    Command="{Binding CancelCommand}"
+                    IsCancel="True"/>
+            <Button Theme="{StaticResource PrimaryButton}"
+                    Content="OK"
+                    Command="{Binding SaveCommand}"
+                    IsDefault="True"
+                    IsEnabled="{Binding !IsBusy}"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+    </Grid>
+  </Border>
+</Window>

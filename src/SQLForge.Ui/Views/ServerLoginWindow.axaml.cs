@@ -4,18 +4,15 @@ using Avalonia.Markup.Xaml;
 namespace SQLForge.Ui.Views;
 
 /// <summary>
-/// ログインのプロパティ ダイアログ。メインウィンドウの上にモーダルで出すので、
-/// タイトルバーは OS の装飾に任せる（接続ダイアログのような自前の装飾は持たない）。
+/// ログインのプロパティ ダイアログ。ユーザーのダイアログと同じく、
+/// メインウィンドウの上にモーダルで出す。
+///
+/// 中身はページごとの <see cref="UserControl"/> に分かれていて、
+/// 開いた直後のフォーカスもそちらの受け持ち。
 /// </summary>
 public partial class ServerLoginWindow : Window
 {
-    public ServerLoginWindow()
-    {
-        InitializeComponent();
-
-        // 開いた直後は名前欄から入力できるようにする。
-        Opened += (_, _) => this.FindControl<TextBox>("NameBox")?.Focus();
-    }
+    public ServerLoginWindow() => InitializeComponent();
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }

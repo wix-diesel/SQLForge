@@ -16,7 +16,7 @@ public abstract partial class AdoDatabaseSession
         CancellationToken cancellationToken = default) =>
         QueryAsync((connection, token) => ReadDatabaseUsersAsync(connection, database, token), cancellationToken);
 
-    public Task<IReadOnlyList<string>> ListDatabaseRolesAsync(
+    public Task<IReadOnlyList<DatabaseRoleDescriptor>> ListDatabaseRolesAsync(
         DatabaseName database,
         CancellationToken cancellationToken = default) =>
         QueryAsync((connection, token) => ReadDatabaseRolesAsync(connection, database, token), cancellationToken);
@@ -58,7 +58,7 @@ public abstract partial class AdoDatabaseSession
         DatabaseName database,
         CancellationToken cancellationToken);
 
-    protected abstract Task<IReadOnlyList<string>> ReadDatabaseRolesAsync(
+    protected abstract Task<IReadOnlyList<DatabaseRoleDescriptor>> ReadDatabaseRolesAsync(
         DbConnection connection,
         DatabaseName database,
         CancellationToken cancellationToken);

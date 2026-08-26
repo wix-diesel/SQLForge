@@ -11,7 +11,8 @@ namespace SQLForge.Ui.ViewModels.Security;
 /// <summary>
 /// ログインのプロパティ ダイアログ。SSMS の「ログイン」に合わせ、
 /// 認証方式・ログイン名・パスワードと規則・既定のデータベース（「全般」）、
-/// サーバー ロールのメンバーシップ（「サーバー ロール」）、有効と無効（「状態」）を扱う。
+/// サーバー ロールのメンバーシップ（「サーバー ロール」）、ユーザー マッピング、
+/// セキュリティ保護可能なリソース、有効と無効（「状態」）を扱う。
 ///
 /// 認証方式は作ったあとに変えられない（CREATE の時点で決まる）ので、編集では選ばせない。
 /// </summary>
@@ -22,6 +23,7 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
     private readonly ListDatabasesUseCase _databases;
     private readonly ListServerRolesUseCase _roles;
     private readonly SaveServerLoginUseCase _save;
+    private readonly SavePermissionsUseCase _savePermissions;
 
     private SecurityValidationResult _validation = SecurityValidationResult.Valid;
 
@@ -35,6 +37,7 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
     [ObservableProperty] private string? _defaultDatabase;
     [ObservableProperty] private bool _isLoginEnabled;
     [ObservableProperty] private ServerLoginTypeChoiceViewModel _selectedType;
+    [ObservableProperty] private SecurityDialogPageViewModel _selectedPage;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private bool _isBusy;
 
@@ -43,13 +46,19 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
         ServerLoginDescriptor? original,
         ListDatabasesUseCase databases,
         ListServerRolesUseCase roles,
-        SaveServerLoginUseCase save)
+        SaveServerLoginUseCase save,
+        SavePermissionsUseCase savePermissions,
+        LoginUserMappingsViewModel mapping,
+        SecurablePermissionsViewModel securables)
     {
         _session = session;
         _original = original;
         _databases = databases;
         _roles = roles;
         _save = save;
+        _savePermissions = savePermissions;
+        Mapping = mapping;
+        Securables = securables;
 
         var draft = original is null ? ServerLoginDraft.ForNewLogin() : ServerLoginDraft.FromDescriptor(original);
 
@@ -65,7 +74,19 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
 
         // 一覧に無い種類（証明書ログインなど）で開かれても落ちないよう、無ければ先頭に落とす。
         _selectedType = TypeChoices.FirstOrDefault(choice => choice.Value == draft.Type) ?? TypeChoices[0];
+
+        Pages =
+        [
+            new SecurityDialogPageViewModel("全般", this),
+            new SecurityDialogPageViewModel("ユーザー マッピング", Mapping),
+            new SecurityDialogPageViewModel("セキュリティ保護可能なリソース", Securables)
+        ];
+
+        _selectedPage = Pages[0];
     }
+
+    /// <summary>ページの並び。SSMS の「ページの選択」にあたる。</summary>
+    public IReadOnlyList<SecurityDialogPageViewModel> Pages { get; }
 
     public IReadOnlyList<ServerLoginTypeChoiceViewModel> TypeChoices { get; }
 
@@ -74,6 +95,12 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
 
     /// <summary>サーバー ロールの一覧。チェックの有無が所属の有無になる。</summary>
     public ObservableCollection<RoleChoiceViewModel> Roles { get; } = [];
+
+    /// <summary>「ユーザー マッピング」のページ。</summary>
+    public LoginUserMappingsViewModel Mapping { get; }
+
+    /// <summary>「セキュリティ保護可能なリソース」のページ。</summary>
+    public SecurablePermissionsViewModel Securables { get; }
 
     public bool IsNew => _original is null;
 
@@ -126,6 +153,10 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
             // 候補が読めなくても、名前とパスワードだけで作ることはできる。理由だけ出して開いたままにする。
             SetError(exception.Message);
         }
+
+        // ページはどちらも自分で失敗を受け止めるので、ここでは待つだけにする。
+        await Mapping.InitializeAsync(cancellationToken).ConfigureAwait(true);
+        await Securables.InitializeAsync(cancellationToken).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -141,6 +172,17 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
         try
         {
             var result = await _save.ExecuteAsync(_session, ToDraft(), cancellationToken).ConfigureAwait(true);
+
+            if (result.IsValid)
+            {
+                // ログインができてからでないと権限は付けられない。
+                // 名前を変えた編集では新しい名前で付ける。
+                var principal = SecurityPrincipal.ForLogin(new ServerLoginName(Name.Trim()));
+
+                result = await _savePermissions
+                    .ExecuteAsync(_session, Securables.ToDraft(principal), cancellationToken)
+                    .ConfigureAwait(true);
+            }
 
             SetValidation(result);
 
@@ -180,7 +222,9 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
             MustChangePassword = MustChangePassword,
             DefaultDatabase = DefaultDatabase ?? string.Empty,
             IsDisabled = !IsLoginEnabled,
-            Roles = Roles.Where(role => role.IsMember).Select(role => role.Name).ToList()
+            Roles = Roles.Where(role => role.IsMember).Select(role => role.Name).ToList(),
+            OriginalMappings = Mapping.Original,
+            Mappings = Mapping.ToDrafts()
         };
 
     private async Task LoadDatabasesAsync(CancellationToken cancellationToken)
@@ -207,7 +251,9 @@ public sealed partial class ServerLoginDialogViewModel : ObservableObject
 
         foreach (var role in roles)
         {
-            Roles.Add(new RoleChoiceViewModel(role, current.Contains(role, StringComparer.OrdinalIgnoreCase)));
+            Roles.Add(new RoleChoiceViewModel(
+                role.Name.Value,
+                current.Contains(role.Name.Value, StringComparer.OrdinalIgnoreCase)));
         }
     }
 

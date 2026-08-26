@@ -65,7 +65,10 @@ public sealed partial class SqlServerSession(ConnectionProfile profile, DbConnec
 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            schemas.Add(new SchemaDescriptor(new SchemaName(reader.GetString(0)), IsSystem: reader.GetBoolean(1)));
+            schemas.Add(new SchemaDescriptor(
+                new SchemaName(reader.GetString(0)),
+                IsSystem: reader.GetBoolean(1),
+                Owner: reader.IsDBNull(2) ? null : reader.GetString(2)));
         }
 
         return schemas;

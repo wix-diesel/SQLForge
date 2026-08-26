@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sec="using:SQLForge.Ui.ViewModels.Security"
+             x:Class="SQLForge.Ui.Views.LoginUserMappingPage"
+             x:DataType="sec:LoginUserMappingsViewModel">
+
+  <!--
+    SSMS の「ユーザー マッピング」ページ。
+    上にデータベースの一覧、下に選んだデータベースでのロールを出す。
+  -->
+  <Grid Margin="18,16" RowDefinitions="Auto,*,Auto,*,Auto" RowSpacing="10">
+
+    <TextBlock Grid.Row="0"
+               Classes="label"
+               Text="このログインにマップされているユーザー"/>
+
+    <Border Grid.Row="1"
+            MinHeight="120"
+            Background="{DynamicResource InputBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}">
+      <ListBox Background="Transparent"
+               BorderThickness="0"
+               ItemsSource="{Binding Rows}"
+               SelectedItem="{Binding SelectedRow}">
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="sec:LoginUserMappingRowViewModel">
+            <Grid ColumnDefinitions="Auto,*,*,*" ColumnSpacing="8">
+              <CheckBox Grid.Column="0" IsChecked="{Binding IsMapped}"/>
+              <TextBlock Grid.Column="1" Text="{Binding Database}" VerticalAlignment="Center"/>
+              <TextBox Grid.Column="2"
+                       Text="{Binding UserName}"
+                       IsEnabled="{Binding IsMapped}"
+                       PlaceholderText="ユーザー名"/>
+              <TextBox Grid.Column="3"
+                       Text="{Binding DefaultSchema}"
+                       IsEnabled="{Binding IsMapped}"
+                       PlaceholderText="既定のスキーマ"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <TextBlock Grid.Row="2"
+               Classes="label"
+               Text="{Binding SelectedRow.Database}"/>
+
+    <Border Grid.Row="3"
+            MinHeight="96"
+            Background="{DynamicResource InputBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}">
+      <!--
+        余白は中身（ItemsControl）側に置く。ScrollViewer の Padding にすると
+        スクロールできる長さ（Extent）にその分が入らず、最後の 1 行が
+        どこまで送っても欄の外に残ってしまう。
+      -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding SelectedRow.Roles}" Margin="10,8">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="sec:RoleChoiceViewModel">
+              <CheckBox Content="{Binding Name}" IsChecked="{Binding IsMember}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <!-- 読み込みの失敗。ページの中で伝えて、ダイアログは開いたままにする。 -->
+    <TextBlock Grid.Row="4"
+               Classes="nodeDetail failure"
+               Text="{Binding Error}"
+               TextWrapping="Wrap"
+               IsVisible="{Binding HasError}"/>
+
+  </Grid>
+</UserControl>

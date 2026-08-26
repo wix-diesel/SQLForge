@@ -59,8 +59,27 @@ public interface IDatabaseSession : IAsyncDisposable
     Task<IReadOnlyList<ServerLoginDescriptor>> ListServerLoginsAsync(
         CancellationToken cancellationToken = default);
 
-    /// <summary>サーバー ロール名の一覧（public を除く）。</summary>
-    Task<IReadOnlyList<string>> ListServerRolesAsync(CancellationToken cancellationToken = default);
+    /// <summary>サーバー ロールの一覧（public を除く）。</summary>
+    Task<IReadOnlyList<ServerRoleDescriptor>> ListServerRolesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>サーバー ロールを 1 件作る。所有者・メンバー・メンバーシップまで含めて 1 つの操作として扱う。</summary>
+    Task CreateServerRoleAsync(
+        ServerRoleDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// サーバー ロールを 1 件作り替える。<paramref name="original"/> は変更前の姿で、
+    /// 実際に変わったところだけを文面に出すために使う。
+    /// </summary>
+    Task AlterServerRoleAsync(
+        ServerRoleDescriptor original,
+        ServerRoleDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>サーバー ロールを 1 件削除する。</summary>
+    Task DropServerRoleAsync(
+        RoleName role,
+        CancellationToken cancellationToken = default);
 
     /// <summary>ログインを 1 件作る。ロールへの追加や無効化まで含めて 1 つの操作として扱う。</summary>
     Task CreateServerLoginAsync(
@@ -86,9 +105,34 @@ public interface IDatabaseSession : IAsyncDisposable
         DatabaseName database,
         CancellationToken cancellationToken = default);
 
-    /// <summary>指定データベース内のデータベース ロール名の一覧（public を除く）。</summary>
-    Task<IReadOnlyList<string>> ListDatabaseRolesAsync(
+    /// <summary>指定データベース内のデータベース ロールの一覧（public を除く）。</summary>
+    Task<IReadOnlyList<DatabaseRoleDescriptor>> ListDatabaseRolesAsync(
         DatabaseName database,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// データベース ロールを 1 件作る。所有者・メンバー・所有スキーマまで含めて、
+    /// 途中で失敗したら何も残さない。
+    /// </summary>
+    Task CreateDatabaseRoleAsync(
+        DatabaseName database,
+        DatabaseRoleDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// データベース ロールを 1 件作り替える。<paramref name="original"/> は変更前の姿で、
+    /// 実際に変わったところだけを文面に出すために使う。
+    /// </summary>
+    Task AlterDatabaseRoleAsync(
+        DatabaseName database,
+        DatabaseRoleDescriptor original,
+        DatabaseRoleDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>データベース ロールを 1 件削除する。</summary>
+    Task DropDatabaseRoleAsync(
+        DatabaseName database,
+        RoleName role,
         CancellationToken cancellationToken = default);
 
     /// <summary>ユーザーを 1 件作る。ロールへの追加まで含めて、途中で失敗したら何も残さない。</summary>
@@ -111,6 +155,81 @@ public interface IDatabaseSession : IAsyncDisposable
     Task DropDatabaseUserAsync(
         DatabaseName database,
         DatabaseUserName user,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>スキーマを 1 件作る。所有者まで含めて 1 つの操作として扱う。</summary>
+    Task CreateSchemaAsync(
+        DatabaseName database,
+        SchemaDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// スキーマの所有者を付け替える。名前は変えられない（エンジンにその文面が無い）ので、
+    /// <paramref name="original"/> と <paramref name="definition"/> の名前は必ず同じになる。
+    /// </summary>
+    Task AlterSchemaAsync(
+        DatabaseName database,
+        SchemaDescriptor original,
+        SchemaDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>スキーマを 1 件削除する。</summary>
+    Task DropSchemaAsync(
+        DatabaseName database,
+        SchemaName schema,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// ログイン 1 件のユーザー マッピング。どのデータベースに、どの名前のユーザーとして
+    /// 居るのかを、データベースを横断して読む。
+    /// </summary>
+    Task<IReadOnlyList<LoginUserMapping>> ListLoginUserMappingsAsync(
+        ServerLoginName login,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// ユーザー マッピングを望みの姿へ揃える。<paramref name="original"/> にしか無い
+    /// データベースからはユーザーを外し、<paramref name="desired"/> にしか無いところへは作る。
+    ///
+    /// データベースごとに別の文面になるので、どこかで失敗しても他のデータベースの
+    /// 結果は残る。呼び出し側は読み直して実際の姿を出し直すこと。
+    /// </summary>
+    Task ApplyLoginUserMappingsAsync(
+        ServerLoginName login,
+        IReadOnlyList<LoginUserMapping> original,
+        IReadOnlyList<LoginUserMapping> desired,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 主体 1 人に明示的に付いている権限。<paramref name="database"/> は
+    /// データベース スコープの主体（ユーザー・データベース ロール）の居場所で、
+    /// サーバー スコープの主体では null。
+    /// </summary>
+    Task<IReadOnlyList<PermissionEntry>> ListPermissionsAsync(
+        SecurityPrincipal principal,
+        DatabaseName? database = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 権限を望みの姿へ揃える。<paramref name="desired"/> に出てくる「相手 × 権限」だけを
+    /// 見て、状態が変わったものに GRANT / DENY / REVOKE を出す。
+    /// <paramref name="desired"/> に出てこないものは触らない（この版が知らない権限を
+    /// 黙って落とさないため）。
+    /// </summary>
+    Task ApplyPermissionsAsync(
+        SecurityPrincipal principal,
+        DatabaseName? database,
+        IReadOnlyList<PermissionEntry> original,
+        IReadOnlyList<PermissionEntry> desired,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 権限を付けられるリソースの候補。<paramref name="database"/> は
+    /// データベース スコープの種類（スキーマ・テーブルなど）を読むときの居場所。
+    /// </summary>
+    Task<IReadOnlyList<SecurableReference>> ListSecurablesAsync(
+        SecurableKind kind,
+        DatabaseName? database = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

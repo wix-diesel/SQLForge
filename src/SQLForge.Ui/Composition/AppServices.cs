@@ -79,11 +79,24 @@ public static class AppServices
         services.AddSingleton<ListDatabaseRolesUseCase>();
         services.AddSingleton<SaveDatabaseUserUseCase>();
         services.AddSingleton<DropDatabaseUserUseCase>();
+        services.AddSingleton<SaveDatabaseRoleUseCase>();
+        services.AddSingleton<DropDatabaseRoleUseCase>();
 
         services.AddSingleton<ListServerLoginsUseCase>();
         services.AddSingleton<ListServerRolesUseCase>();
         services.AddSingleton<SaveServerLoginUseCase>();
         services.AddSingleton<DropServerLoginUseCase>();
+        services.AddSingleton<SaveServerRoleUseCase>();
+        services.AddSingleton<DropServerRoleUseCase>();
+
+        services.AddSingleton<ListLoginUserMappingsUseCase>();
+
+        services.AddSingleton<SaveSchemaUseCase>();
+        services.AddSingleton<DropSchemaUseCase>();
+
+        services.AddSingleton<ListPermissionsUseCase>();
+        services.AddSingleton<ListSecurablesUseCase>();
+        services.AddSingleton<SavePermissionsUseCase>();
     }
 
     private static void AddViewModels(IServiceCollection services)
@@ -101,6 +114,19 @@ public static class AppServices
         services.AddSingleton<ServerLoginDialogService>();
         services.AddSingleton<IServerLoginEditor>(provider =>
             provider.GetRequiredService<ServerLoginDialogService>());
+
+        // ロールとスキーマの編集ダイアログも同じ。
+        services.AddSingleton<DatabaseRoleDialogService>();
+        services.AddSingleton<IDatabaseRoleEditor>(provider =>
+            provider.GetRequiredService<DatabaseRoleDialogService>());
+
+        services.AddSingleton<ServerRoleDialogService>();
+        services.AddSingleton<IServerRoleEditor>(provider =>
+            provider.GetRequiredService<ServerRoleDialogService>());
+
+        services.AddSingleton<SchemaDialogService>();
+        services.AddSingleton<ISchemaEditor>(provider =>
+            provider.GetRequiredService<SchemaDialogService>());
 
         // メインウィンドウは開いたセッションを渡して組み立てるので、工場ごしに作る。
         services.AddSingleton<MainWindowViewModelFactory>();

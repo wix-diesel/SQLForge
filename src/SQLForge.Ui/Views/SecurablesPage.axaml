@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sec="using:SQLForge.Ui.ViewModels.Security"
+             xmlns:dom="using:SQLForge.Domain.Security"
+             x:Class="SQLForge.Ui.Views.SecurablesPage"
+             x:DataType="sec:SecurablePermissionsViewModel">
+
+  <!--
+    SSMS の「セキュリティ保護可能なリソース」ページ。
+    上にリソースの一覧、下に選んだリソースの権限を出す。
+  -->
+  <Grid Margin="18,16" RowDefinitions="Auto,*,Auto,*,Auto" RowSpacing="10">
+
+    <!-- リソースを足す -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+      <TextBlock Grid.Column="0" Classes="label" Text="種類" VerticalAlignment="Center"/>
+      <ComboBox Grid.Column="1"
+                ItemsSource="{Binding KindChoices}"
+                SelectedItem="{Binding SelectedKind}"
+                HorizontalAlignment="Stretch">
+        <ComboBox.ItemTemplate>
+          <DataTemplate DataType="sec:SecurableKindChoiceViewModel">
+            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <ComboBox Grid.Column="2"
+                MinWidth="180"
+                ItemsSource="{Binding Candidates}"
+                SelectedItem="{Binding SelectedCandidate}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate DataType="dom:SecurableReference">
+            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <Button Grid.Column="3"
+              Theme="{StaticResource GhostButton}"
+              Content="追加"
+              Command="{Binding AddSecurableCommand}"/>
+    </Grid>
+
+    <!-- 足したリソース -->
+    <Border Grid.Row="1"
+            MinHeight="90"
+            Background="{DynamicResource InputBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}">
+      <ListBox Background="Transparent"
+               BorderThickness="0"
+               ItemsSource="{Binding Securables}"
+               SelectedItem="{Binding SelectedSecurable}">
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="sec:SecurableRowViewModel">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBlock Grid.Column="0" Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeDetail" Text="{Binding KindName}"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <!-- 選んだリソースの権限 -->
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+      <TextBlock Grid.Column="0"
+                 Classes="label"
+                 Text="{Binding SelectedSecurable.DisplayName}"
+                 VerticalAlignment="Center"/>
+      <Button Grid.Column="1"
+              Theme="{StaticResource GhostButton}"
+              Content="一覧から外す"
+              Command="{Binding RemoveSecurableCommand}"/>
+    </Grid>
+
+    <Border Grid.Row="3"
+            MinHeight="120"
+            Background="{DynamicResource InputBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{DynamicResource RadiusMd}">
+      <!--
+        余白は中身（ItemsControl）側に置く。ScrollViewer の Padding にすると
+        スクロールできる長さ（Extent）にその分が入らず、最後の 1 行が
+        どこまで送っても欄の外に残ってしまう。
+      -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding SelectedSecurable.Permissions}" Margin="10,8">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="sec:PermissionRowViewModel">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,2">
+                <TextBlock Grid.Column="0" Text="{Binding Permission}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1"
+                          MinWidth="140"
+                          ItemsSource="{Binding StateChoices}"
+                          SelectedItem="{Binding SelectedState}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="sec:PermissionStateChoiceViewModel">
+                      <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <!-- 読み込みの失敗。ページの中で伝えて、ダイアログは開いたままにする。 -->
+    <TextBlock Grid.Row="4"
+               Classes="nodeDetail failure"
+               Text="{Binding Error}"
+               TextWrapping="Wrap"
+               IsVisible="{Binding HasError}"/>
+
+  </Grid>
+</UserControl>

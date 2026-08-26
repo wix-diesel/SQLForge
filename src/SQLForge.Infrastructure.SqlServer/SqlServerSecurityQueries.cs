@@ -36,15 +36,4 @@ internal static class SqlServerSecurityQueries
         INNER JOIN {0}.sys.database_principals AS m ON m.principal_id = rm.member_principal_id
         WHERE m.type NOT IN ('R', 'A') AND r.principal_id <> 0;
         """;
-
-    /// <summary>
-    /// データベース ロール一覧。principal_id 0 は public で、すべてのユーザーが暗黙に持つので外す。
-    /// ## で始まる名前はエンジンが用意したもの。アプリケーション ロール（type = 'A'）は
-    /// メンバーを取れないので候補に出さない。
-    /// </summary>
-    public const string RolesFormat = """
-        SELECT r.name AS name
-        FROM {0}.sys.database_principals AS r
-        WHERE r.type = 'R' AND r.principal_id <> 0 AND r.name NOT LIKE N'##%';
-        """;
 }

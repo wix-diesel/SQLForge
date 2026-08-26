@@ -13,7 +13,8 @@ public abstract partial class AdoDatabaseSession
         CancellationToken cancellationToken = default) =>
         QueryAsync(ReadServerLoginsAsync, cancellationToken);
 
-    public Task<IReadOnlyList<string>> ListServerRolesAsync(CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<ServerRoleDescriptor>> ListServerRolesAsync(
+        CancellationToken cancellationToken = default) =>
         QueryAsync(ReadServerRolesAsync, cancellationToken);
 
     public Task CreateServerLoginAsync(
@@ -45,7 +46,7 @@ public abstract partial class AdoDatabaseSession
         DbConnection connection,
         CancellationToken cancellationToken);
 
-    protected abstract Task<IReadOnlyList<string>> ReadServerRolesAsync(
+    protected abstract Task<IReadOnlyList<ServerRoleDescriptor>> ReadServerRolesAsync(
         DbConnection connection,
         CancellationToken cancellationToken);
 

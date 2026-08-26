@@ -129,12 +129,7 @@ public class ServerLoginWindowRenderTests
         }
         .WithServerRoles("sysadmin", "dbcreator");
 
-        dialog = new ServerLoginDialogViewModel(
-            session,
-            login,
-            new ListDatabasesUseCase(),
-            new ListServerRolesUseCase(),
-            new SaveServerLoginUseCase());
+        dialog = SecurityDialogs.Login(session, login);
 
         var window = new ServerLoginWindow { DataContext = dialog };
         _ = dialog.InitializeAsync();

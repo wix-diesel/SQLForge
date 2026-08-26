@@ -11,4 +11,14 @@ namespace SQLForge.Ui.ViewModels.Explorer;
 /// <param name="Editor">右クリックの追加・編集・削除の行き先。無ければメニューを出さない。</param>
 public sealed record DatabaseSecurityContext(
     ListDatabaseUsersUseCase Users,
-    IDatabaseUserEditor? Editor = null);
+    IDatabaseUserEditor? Editor = null)
+{
+    /// <summary>ロール一覧のユースケース。無ければ「データベース ロール」の見出しを出さない。</summary>
+    public ListDatabaseRolesUseCase? Roles { get; init; }
+
+    /// <summary>ロールの追加・編集・削除の行き先。無ければメニューを出さない。</summary>
+    public IDatabaseRoleEditor? RoleEditor { get; init; }
+
+    /// <summary>スキーマの追加・編集・削除の行き先。無ければメニューを出さない。</summary>
+    public ISchemaEditor? SchemaEditor { get; init; }
+}

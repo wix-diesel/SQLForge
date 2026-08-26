@@ -38,7 +38,7 @@ public sealed partial class DatabaseNode : ObjectExplorerNode
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken)
     {
-        var children = new List<ObjectExplorerNode> { new CatalogFolderNode("スキーマ", LoadSchemasAsync) };
+        var children = new List<ObjectExplorerNode> { new SchemasNode(_context, _descriptor.Name) };
 
         if (_context.Security is not null)
         {
@@ -49,21 +49,27 @@ public sealed partial class DatabaseNode : ObjectExplorerNode
     }
 
     /// <summary>
-    /// SSMS と同じく、セキュリティの下にユーザーの見出しを置く。
-    /// ロールやスキーマの所有権はまだ扱わないので、今いるのはユーザーだけ。
+    /// SSMS と同じく、セキュリティの下にユーザーとロールの見出しを置く。
+    /// スキーマは（SSMS ではここに来るが）テーブルの親でもあるので、
+    /// 同じ枝を 2 か所に出さずデータベースの直下 1 か所にまとめている。
     /// </summary>
-    private Task<IReadOnlyList<ObjectExplorerNode>> LoadSecurityAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
-            _context.Security is { } security
-                ? [new DatabaseUsersNode(_context, security, _descriptor.Name)]
-                : []);
-
-    private async Task<IReadOnlyList<ObjectExplorerNode>> LoadSchemasAsync(CancellationToken cancellationToken)
+    private Task<IReadOnlyList<ObjectExplorerNode>> LoadSecurityAsync(CancellationToken cancellationToken)
     {
-        var schemas = await _context.Schemas
-            .ExecuteAsync(_context.Session, _descriptor.Name, cancellationToken)
-            .ConfigureAwait(true);
+        if (_context.Security is not { } security)
+        {
+            return Task.FromResult<IReadOnlyList<ObjectExplorerNode>>([]);
+        }
 
-        return schemas.Select(schema => new SchemaNode(_context, _descriptor.Name, schema)).ToList();
+        var children = new List<ObjectExplorerNode>
+        {
+            new DatabaseUsersNode(_context, security, _descriptor.Name)
+        };
+
+        if (security.Roles is not null)
+        {
+            children.Add(new DatabaseRolesNode(_context, security, _descriptor.Name));
+        }
+
+        return Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(children);
     }
 }

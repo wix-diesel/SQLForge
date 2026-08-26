@@ -34,14 +34,4 @@ internal static class SqlServerLoginQueries
         INNER JOIN sys.server_principals AS m ON m.principal_id = rm.member_principal_id
         WHERE m.type <> 'R';
         """;
-
-    /// <summary>
-    /// サーバー ロール一覧。public はすべてのログインが暗黙に持つので外す。
-    /// ## で始まる名前はエンジンが用意したもの。
-    /// </summary>
-    public const string Roles = """
-        SELECT r.name AS name
-        FROM sys.server_principals AS r
-        WHERE r.type = 'R' AND r.name <> N'public' AND r.name NOT LIKE N'##%';
-        """;
 }

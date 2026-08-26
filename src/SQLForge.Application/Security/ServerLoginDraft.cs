@@ -44,6 +44,16 @@ public sealed record ServerLoginDraft
     /// <summary>所属させるサーバー ロール。</summary>
     public IReadOnlyList<string> Roles { get; init; } = [];
 
+    /// <summary>
+    /// 開いたときにサーバーから読んだユーザー マッピング。
+    /// ログインの一覧には出てこない（データベースごとに読む要りがある）ので、
+    /// 一覧の 1 件（<see cref="Original"/>）ではなくここに持たせる。
+    /// </summary>
+    public IReadOnlyList<LoginUserMapping> OriginalMappings { get; init; } = [];
+
+    /// <summary>ユーザー マッピングの今の姿。データベースごとに 1 行。</summary>
+    public IReadOnlyList<LoginUserMappingDraft> Mappings { get; init; } = [];
+
     public bool IsNew => Original is null;
 
     /// <summary>
@@ -95,6 +105,13 @@ public sealed record ServerLoginDraft
     /// ユースケースの境目を渡り歩くぶん、定義よりむしろログや例外へ紛れ込みやすい。
     /// </summary>
     public override string ToString() => $"{nameof(ServerLoginDraft)} {{ Name = {Name} }}";
+
+    /// <summary>
+    /// マッピングのうち、実際に対応づける行だけを写す。検証を通ったあとにだけ呼ぶこと。
+    /// ユーザー名を空のままにした行は、SSMS と同じくログイン名をそのまま使う。
+    /// </summary>
+    public IReadOnlyList<LoginUserMapping> ToMappings() =>
+        Mappings.Where(mapping => mapping.IsMapped).Select(mapping => mapping.ToMapping(Name)).ToList();
 
     /// <summary>検証を通ったあとにだけ呼ぶこと。</summary>
     public ServerLoginDefinition ToDefinition()

@@ -11,7 +11,8 @@ namespace SQLForge.Ui.ViewModels.Security;
 
 /// <summary>
 /// ユーザーのプロパティ ダイアログ。SSMS の「データベース ユーザー」に合わせ、
-/// 種類・ユーザー名・ログイン名・既定のスキーマと、メンバーシップ（ロール）を扱う。
+/// 種類・ユーザー名・ログイン名・既定のスキーマ、メンバーシップ（ロール）、
+/// セキュリティ保護可能なリソースを扱う。
 ///
 /// 種類は作ったあとに変えられない（CREATE の時点で決まる）ので、編集では選ばせない。
 /// </summary>
@@ -23,12 +24,14 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
     private readonly ListSchemasUseCase _schemas;
     private readonly ListDatabaseRolesUseCase _roles;
     private readonly SaveDatabaseUserUseCase _save;
+    private readonly SavePermissionsUseCase _savePermissions;
 
     [ObservableProperty] private string _name;
     [ObservableProperty] private string _loginName;
     // 候補から選ばれていないときは ComboBox が null を書き戻すので、null を許す。
     [ObservableProperty] private string? _defaultSchema;
     [ObservableProperty] private DatabaseUserTypeChoiceViewModel _selectedType;
+    [ObservableProperty] private SecurityDialogPageViewModel _selectedPage;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private bool _isBusy;
 
@@ -38,7 +41,9 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
         DatabaseUserDescriptor? original,
         ListSchemasUseCase schemas,
         ListDatabaseRolesUseCase roles,
-        SaveDatabaseUserUseCase save)
+        SaveDatabaseUserUseCase save,
+        SavePermissionsUseCase savePermissions,
+        SecurablePermissionsViewModel securables)
     {
         _session = session;
         _database = database;
@@ -46,6 +51,8 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
         _schemas = schemas;
         _roles = roles;
         _save = save;
+        _savePermissions = savePermissions;
+        Securables = securables;
 
         var draft = original is null ? DatabaseUserDraft.ForNewUser() : DatabaseUserDraft.FromDescriptor(original);
 
@@ -56,7 +63,18 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
 
         // 一覧に無い種類（証明書ユーザーなど）で開かれても落ちないよう、無ければ先頭に落とす。
         _selectedType = TypeChoices.FirstOrDefault(choice => choice.Value == draft.Type) ?? TypeChoices[0];
+
+        Pages =
+        [
+            new SecurityDialogPageViewModel("全般", this),
+            new SecurityDialogPageViewModel("セキュリティ保護可能なリソース", Securables)
+        ];
+
+        _selectedPage = Pages[0];
     }
+
+    /// <summary>ページの並び。SSMS の「ページの選択」にあたる。</summary>
+    public IReadOnlyList<SecurityDialogPageViewModel> Pages { get; }
 
     public IReadOnlyList<DatabaseUserTypeChoiceViewModel> TypeChoices { get; }
 
@@ -65,6 +83,9 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
 
     /// <summary>メンバーシップの一覧。チェックの有無が所属の有無になる。</summary>
     public ObservableCollection<RoleChoiceViewModel> Roles { get; } = [];
+
+    /// <summary>「セキュリティ保護可能なリソース」のページ。</summary>
+    public SecurablePermissionsViewModel Securables { get; }
 
     public bool IsNew => _original is null;
 
@@ -105,6 +126,9 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
             // 候補が読めなくても、名前と種類だけで作ることはできる。理由だけ出して開いたままにする。
             SetError(exception.Message);
         }
+
+        // 権限のページは自分で失敗を受け止めるので、ここでは待つだけにする。
+        await Securables.InitializeAsync(cancellationToken).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -121,6 +145,17 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
         {
             var result = await _save.ExecuteAsync(_session, _database, ToDraft(), cancellationToken)
                 .ConfigureAwait(true);
+
+            if (result.IsValid)
+            {
+                // ユーザーができてからでないと権限は付けられない。
+                // 名前を変えた編集では新しい名前で付ける。
+                var principal = SecurityPrincipal.ForUser(new DatabaseUserName(Name.Trim()));
+
+                result = await _savePermissions
+                    .ExecuteAsync(_session, Securables.ToDraft(principal), cancellationToken)
+                    .ConfigureAwait(true);
+            }
 
             SetValidation(result);
 
@@ -182,8 +217,8 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
         foreach (var role in roles)
         {
             Roles.Add(new RoleChoiceViewModel(
-                role,
-                current.Contains(role, StringComparer.OrdinalIgnoreCase)));
+                role.Name.Value,
+                current.Contains(role.Name.Value, StringComparer.OrdinalIgnoreCase)));
         }
     }
 

@@ -34,7 +34,7 @@ public class ServerLoginUseCaseTests
 
         var roles = await new ListServerRolesUseCase().ExecuteAsync(session);
 
-        Assert.Equal(["dbcreator", "processadmin", "sysadmin"], roles);
+        Assert.Equal(["dbcreator", "processadmin", "sysadmin"], roles.Select(role => role.Name.Value));
     }
 
     [Fact]
