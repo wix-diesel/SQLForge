@@ -63,7 +63,12 @@
 
           <!-- 接続（根） -->
           <TreeDataTemplate DataType="explorer:ServerNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="接続解除" Command="{Binding DisconnectCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon success"
                     Data="{StaticResource IconDatabase}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName"

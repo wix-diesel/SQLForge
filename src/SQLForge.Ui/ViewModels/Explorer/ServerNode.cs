@@ -1,9 +1,11 @@
+using CommunityToolkit.Mvvm.Input;
+
 namespace SQLForge.Ui.ViewModels.Explorer;
 
 /// <summary>
 /// ツリーの根。接続 1 本を表し、その下にデータベースと、サーバー単位のセキュリティを持つ。
 /// </summary>
-public sealed class ServerNode : ObjectExplorerNode
+public sealed partial class ServerNode : ObjectExplorerNode
 {
     private readonly CatalogContext _context;
 
@@ -13,6 +15,10 @@ public sealed class ServerNode : ObjectExplorerNode
         _context = context;
         Detail = context.Session.Server.Description;
     }
+
+    /// <summary>右クリックの「接続解除」。起動時の画面に戻る。</summary>
+    [RelayCommand]
+    private void Disconnect() => _context.ConnectionLauncher?.Disconnect();
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken)
     {

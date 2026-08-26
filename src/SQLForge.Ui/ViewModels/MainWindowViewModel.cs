@@ -14,7 +14,7 @@ namespace SQLForge.Ui.ViewModels;
 ///
 /// 開いているセッションはこのビューモデルが持ち、ウィンドウが閉じるときに閉じる。
 /// </summary>
-public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDisposable, IConnectionLauncher
 {
     private readonly IDatabaseSession _session;
     private readonly IPlatformProfile _platform;
@@ -28,6 +28,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
     {
         _session = session;
         _platform = platform;
+        catalog.ConnectionLauncher = this;
         Explorer = new ObjectExplorerViewModel(catalog);
         Query = query;
         TableEditor = tableEditor;
@@ -58,6 +59,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
     public bool ShowPlaceholder => !Query.IsOpen && !TableEditor.IsOpen;
 
     public event EventHandler? CloseRequested;
+
+    /// <summary>ツリーの「接続解除」から上がってくる合図。セッションを閉じて起動画面へ戻すのは呼び出し元の役目。</summary>
+    public event EventHandler? DisconnectRequested;
 
     private ConnectionProfile Profile => _session.Profile;
 
@@ -90,6 +94,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
 
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    void IConnectionLauncher.Disconnect() => DisconnectRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
     {
