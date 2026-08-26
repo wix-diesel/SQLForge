@@ -89,6 +89,13 @@ public sealed record ServerLoginDraft
         };
     }
 
+    /// <summary>
+    /// パスワードを抱えているので、レコードが既定で作る「全プロパティの書き出し」を潰す
+    /// （<see cref="ServerLoginDefinition.ToString"/> と同じ理由）。下書きは UI と
+    /// ユースケースの境目を渡り歩くぶん、定義よりむしろログや例外へ紛れ込みやすい。
+    /// </summary>
+    public override string ToString() => $"{nameof(ServerLoginDraft)} {{ Name = {Name} }}";
+
     /// <summary>検証を通ったあとにだけ呼ぶこと。</summary>
     public ServerLoginDefinition ToDefinition()
     {

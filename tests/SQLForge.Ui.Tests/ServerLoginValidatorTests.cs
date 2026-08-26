@@ -195,6 +195,16 @@ public class ServerLoginValidatorTests
     }
 
     [Fact]
+    public void 下書きもパスワードを書き出さない()
+    {
+        // 下書きは UI とユースケースの境目を渡り歩くので、定義よりむしろ露出しやすい。
+        var draft = Draft();
+
+        Assert.DoesNotContain("p@ssw0rd", draft.ToString(), StringComparison.Ordinal);
+        Assert.Contains("app_login", draft.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void 既存のログインからは今の姿を写した下書きを作る()
     {
         var login = Original() with { Roles = ["dbcreator"], IsDisabled = true };
