@@ -195,18 +195,25 @@ public sealed partial class SecurablePermissionsViewModel : ObservableObject
     }
 
     private SecurableRowViewModel? Find(SecurableReference securable) =>
-        Securables.FirstOrDefault(row =>
-            row.Securable.Kind == securable.Kind
-            && string.Equals(row.Securable.Name, securable.Name, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(row.Securable.Schema, securable.Schema, StringComparison.OrdinalIgnoreCase));
+        Securables.FirstOrDefault(row => Same(row.Securable, securable));
 
     private SecurableRowViewModel Append(SecurableReference securable)
     {
+        // 一度外した相手を足し直したときは控えを捨てる。残したままだと、
+        // 後ろに並ぶ「指定なし」が、足し直したぶんの権限を打ち消してしまう。
+        _removed.RemoveAll(entry => Same(entry.Securable, securable));
+
         var row = new SecurableRowViewModel(securable);
         Securables.Add(row);
 
         return row;
     }
+
+    /// <summary>同じリソースを指しているか。</summary>
+    private static bool Same(SecurableReference left, SecurableReference right) =>
+        left.Kind == right.Kind
+        && string.Equals(left.Name, right.Name, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(left.Schema, right.Schema, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>読んだ権限をリソースごとにまとめ、グリッドの行に組み直す。</summary>
     private void Fill(IReadOnlyList<PermissionEntry> entries)
