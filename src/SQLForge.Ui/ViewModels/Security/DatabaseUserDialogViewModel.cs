@@ -64,7 +64,7 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
     public ObservableCollection<string> SchemaChoices { get; } = [];
 
     /// <summary>メンバーシップの一覧。チェックの有無が所属の有無になる。</summary>
-    public ObservableCollection<DatabaseRoleChoiceViewModel> Roles { get; } = [];
+    public ObservableCollection<RoleChoiceViewModel> Roles { get; } = [];
 
     public bool IsNew => _original is null;
 
@@ -86,7 +86,7 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
     /// <summary>閉じることを伝える。true なら保存済みで、呼び出し側は一覧を読み直す。</summary>
     public event EventHandler<bool>? CloseRequested;
 
-    private DatabaseUserValidationResult _validation = DatabaseUserValidationResult.Valid;
+    private SecurityValidationResult _validation = SecurityValidationResult.Valid;
 
     /// <summary>スキーマとロールの候補を読む。開いた直後に 1 度だけ呼ぶ。</summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -181,13 +181,13 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
 
         foreach (var role in roles)
         {
-            Roles.Add(new DatabaseRoleChoiceViewModel(
+            Roles.Add(new RoleChoiceViewModel(
                 role,
                 current.Contains(role, StringComparer.OrdinalIgnoreCase)));
         }
     }
 
-    private void SetValidation(DatabaseUserValidationResult validation)
+    private void SetValidation(SecurityValidationResult validation)
     {
         _validation = validation;
         ErrorMessage = validation.FirstError;
@@ -196,14 +196,14 @@ public sealed partial class DatabaseUserDialogViewModel : ObservableObject
 
     private void SetError(string message)
     {
-        _validation = DatabaseUserValidationResult.Valid;
+        _validation = SecurityValidationResult.Valid;
         ErrorMessage = message;
         OnErrorChanged();
     }
 
     private void ClearError()
     {
-        _validation = DatabaseUserValidationResult.Valid;
+        _validation = SecurityValidationResult.Valid;
         ErrorMessage = null;
         OnErrorChanged();
     }

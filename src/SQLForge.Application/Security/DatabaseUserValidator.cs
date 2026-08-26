@@ -2,18 +2,6 @@ using SQLForge.Domain.Security;
 
 namespace SQLForge.Application.Security;
 
-/// <summary>入力欄の検証結果。エラーは欄名をキーにして UI 側で赤枠に使う。</summary>
-public sealed record DatabaseUserValidationResult(IReadOnlyDictionary<string, string> Errors)
-{
-    public static DatabaseUserValidationResult Valid { get; } = new(new Dictionary<string, string>());
-
-    public bool IsValid => Errors.Count == 0;
-
-    public string? FirstError => Errors.Values.FirstOrDefault();
-
-    public string? this[string field] => Errors.TryGetValue(field, out var message) ? message : null;
-}
-
 /// <summary>
 /// ユーザー編集の入力検査。識別子は SQL 文へ直接埋め込むので、
 /// 形が通ることをサーバーへ送る前にここで見る。
@@ -24,7 +12,7 @@ public static class DatabaseUserValidator
     public const string LoginField = "login";
     public const string DefaultSchemaField = "defaultSchema";
 
-    public static DatabaseUserValidationResult Validate(DatabaseUserDraft draft)
+    public static SecurityValidationResult Validate(DatabaseUserDraft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
 
@@ -34,7 +22,7 @@ public static class DatabaseUserValidator
         ValidateLogin(errors, draft);
         ValidateDefaultSchema(errors, draft.DefaultSchema);
 
-        return errors.Count == 0 ? DatabaseUserValidationResult.Valid : new DatabaseUserValidationResult(errors);
+        return errors.Count == 0 ? SecurityValidationResult.Valid : new SecurityValidationResult(errors);
     }
 
     /// <summary>編集の相手が触ってよいものか。ツリーからは押せないが、経路は 1 本にしておく。</summary>

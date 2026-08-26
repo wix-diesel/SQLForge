@@ -31,4 +31,10 @@ public sealed record CatalogContext(
     /// カタログだけを組みたいときに、ユーザーの読み取り権限まで要求しないための逃げ道でもある。
     /// </summary>
     public DatabaseSecurityContext? Security { get; init; }
+
+    /// <summary>
+    /// サーバー スコープのセキュリティ（ログイン）の一式。
+    /// 無ければツリーのサーバー直下に「セキュリティ」の枝を出さない。
+    /// </summary>
+    public ServerSecurityContext? ServerSecurity { get; init; }
 }
