@@ -50,8 +50,10 @@ public class MainWindowRenderTests
         WaitFor(() => databases.Children.OfType<DatabaseNode>().Any());
 
         // 「データベース → sales_db → スキーマ → dbo → テーブル」と、画面と同じ順に開いていく。
-        var schemas = Expand<SchemaNode>(databases.Children.OfType<DatabaseNode>().First(node => node.Title == "sales_db"));
-        Expand<TableNode>(schemas.First(node => node.Title == "dbo"));
+        var schemas = Expand<SchemaNode>(
+            databases.Children.OfType<DatabaseNode>().First(node => node.Title == "sales_db"),
+            "スキーマ");
+        Expand<TableNode>(schemas.First(node => node.Title == "dbo"), "テーブル");
 
         Dispatcher.UIThread.RunJobs();
 
@@ -264,19 +266,28 @@ public class MainWindowRenderTests
         var databases = viewModel.Explorer.Roots[0].Children[0];
         WaitFor(() => databases.Children.OfType<DatabaseNode>().Any());
 
-        var schemas = Expand<SchemaNode>(databases.Children.OfType<DatabaseNode>().First(node => node.Title == "sales_db"));
+        var schemas = Expand<SchemaNode>(
+            databases.Children.OfType<DatabaseNode>().First(node => node.Title == "sales_db"),
+            "スキーマ");
 
-        return Expand<TableNode>(schemas.First(node => node.Title == "dbo"))
+        return Expand<TableNode>(schemas.First(node => node.Title == "dbo"), "テーブル")
             .First(node => node.Title == "orders");
     }
 
-    /// <summary>ノードとその下の見出しノードを画面と同じ手順で開き、出てきた子を返す。</summary>
-    private static IReadOnlyList<T> Expand<T>(ObjectExplorerNode node) where T : ObjectExplorerNode
+    /// <summary>
+    /// ノードと、その下の名指しした見出しを画面と同じ手順で開き、出てきた子を返す。
+    ///
+    /// 見出しは型では選べない。データベースの下には「スキーマ」（<see cref="SchemasNode"/>）と
+    /// 「セキュリティ」（<see cref="CatalogFolderNode"/>）が並ぶように、種類の違う見出しが
+    /// 同じ階層に混ざるため。
+    /// </summary>
+    private static IReadOnlyList<T> Expand<T>(ObjectExplorerNode node, string folderTitle)
+        where T : ObjectExplorerNode
     {
         node.IsExpanded = true;
-        WaitFor(() => node.Children.OfType<CatalogFolderNode>().Any());
+        WaitFor(() => node.Children.Any(child => child.Title == folderTitle));
 
-        var folder = node.Children.OfType<CatalogFolderNode>().First();
+        var folder = node.Children.First(child => child.Title == folderTitle);
         folder.IsExpanded = true;
         WaitFor(() => folder.Children.OfType<T>().Any());
 
