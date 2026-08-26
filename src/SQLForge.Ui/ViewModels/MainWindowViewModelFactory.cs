@@ -25,7 +25,9 @@ public sealed class MainWindowViewModelFactory(
     EditTableRowsUseCase editTableRows,
     UpdateTableCellUseCase updateTableCell,
     ListDatabaseUsersUseCase databaseUsers,
-    IDatabaseUserEditor userEditor)
+    IDatabaseUserEditor userEditor,
+    ListServerLoginsUseCase serverLogins,
+    IServerLoginEditor loginEditor)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
     {
@@ -40,7 +42,8 @@ public sealed class MainWindowViewModelFactory(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
         {
             TableEditor = tableEditor,
-            Security = new DatabaseSecurityContext(databaseUsers, userEditor)
+            Security = new DatabaseSecurityContext(databaseUsers, userEditor),
+            ServerSecurity = new ServerSecurityContext(serverLogins, loginEditor)
         };
 
         return new MainWindowViewModel(session, platform, catalog, query, tableEditor);

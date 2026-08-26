@@ -236,6 +236,35 @@ public class AdoDatabaseSessionTests
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
+        protected override Task<IReadOnlyList<ServerLoginDescriptor>> ReadServerLoginsAsync(
+            DbConnection connection,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ServerLoginDescriptor>>([]);
+
+        protected override Task<IReadOnlyList<string>> ReadServerRolesAsync(
+            DbConnection connection,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
+
+        protected override Task CreateLoginAsync(
+            DbConnection connection,
+            ServerLoginDefinition definition,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        protected override Task AlterLoginAsync(
+            DbConnection connection,
+            ServerLoginDescriptor original,
+            ServerLoginDefinition definition,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        protected override Task DropLoginAsync(
+            DbConnection connection,
+            ServerLoginName login,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
         // クエリの実行はここでは試さない（門の作法だけを見るテストなので、接続には届かせない）。
         protected override Task SwitchDatabaseAsync(
             DbConnection connection,

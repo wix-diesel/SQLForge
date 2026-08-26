@@ -55,6 +55,32 @@ public interface IDatabaseSession : IAsyncDisposable
         string procedure,
         CancellationToken cancellationToken = default);
 
+    /// <summary>サーバー上のログイン一覧。SSMS の [セキュリティ] → [ログイン] にあたる。</summary>
+    Task<IReadOnlyList<ServerLoginDescriptor>> ListServerLoginsAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>サーバー ロール名の一覧（public を除く）。</summary>
+    Task<IReadOnlyList<string>> ListServerRolesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>ログインを 1 件作る。ロールへの追加や無効化まで含めて 1 つの操作として扱う。</summary>
+    Task CreateServerLoginAsync(
+        ServerLoginDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// ログインを 1 件作り替える。<paramref name="original"/> は変更前の姿で、
+    /// 実際に変わったところだけを文面に出すために使う。
+    /// </summary>
+    Task AlterServerLoginAsync(
+        ServerLoginDescriptor original,
+        ServerLoginDefinition definition,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>ログインを 1 件削除する。</summary>
+    Task DropServerLoginAsync(
+        ServerLoginName login,
+        CancellationToken cancellationToken = default);
+
     /// <summary>指定データベース内のユーザー一覧。</summary>
     Task<IReadOnlyList<DatabaseUserDescriptor>> ListDatabaseUsersAsync(
         DatabaseName database,

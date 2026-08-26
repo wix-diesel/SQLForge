@@ -43,7 +43,7 @@ SQLForge.Ui                        最外層。Avalonia のビューとビュー
 
 | プロジェクト | 役割 |
 | --- | --- |
-| [src/SQLForge.Domain](src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー）、クエリ結果のモデル、編集のモデル（編集できる列・先頭 N 行・セルの書き換え） |
+| [src/SQLForge.Domain](src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー、サーバー ログイン）、クエリ結果のモデル、編集のモデル（編集できる列・先頭 N 行・セルの書き換え） |
 | [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Editing/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
 | [src/SQLForge.Infrastructure](src/SQLForge.Infrastructure) | ポートの DBMS 非依存な実装。`Connections/`・`Platform/`・`Security/` |
 | [src/SQLForge.Infrastructure.SqlServer](src/SQLForge.Infrastructure.SqlServer) | SQL Server 専用ドライバー実装。`Microsoft.Data.SqlClient` を抱えるのはここだけ |

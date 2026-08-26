@@ -79,6 +79,11 @@ public static class AppServices
         services.AddSingleton<ListDatabaseRolesUseCase>();
         services.AddSingleton<SaveDatabaseUserUseCase>();
         services.AddSingleton<DropDatabaseUserUseCase>();
+
+        services.AddSingleton<ListServerLoginsUseCase>();
+        services.AddSingleton<ListServerRolesUseCase>();
+        services.AddSingleton<SaveServerLoginUseCase>();
+        services.AddSingleton<DropServerLoginUseCase>();
     }
 
     private static void AddViewModels(IServiceCollection services)
@@ -91,6 +96,11 @@ public static class AppServices
         services.AddSingleton<DatabaseUserDialogService>();
         services.AddSingleton<IDatabaseUserEditor>(provider =>
             provider.GetRequiredService<DatabaseUserDialogService>());
+
+        // ログインの編集ダイアログも同じ理由で 1 つを共有する。
+        services.AddSingleton<ServerLoginDialogService>();
+        services.AddSingleton<IServerLoginEditor>(provider =>
+            provider.GetRequiredService<ServerLoginDialogService>());
 
         // メインウィンドウは開いたセッションを渡して組み立てるので、工場ごしに作る。
         services.AddSingleton<MainWindowViewModelFactory>();

@@ -22,6 +22,16 @@ public class AppServicesTests
     }
 
     [Fact]
+    public void メインウィンドウの工場を組み立てられる()
+    {
+        // ツリーが使うユースケースとダイアログの行き先は、ここが一手に受け取る。
+        // 登録を足し忘れると、接続が通ったあと（起動して初めて）に落ちる。
+        using var provider = BuildProvider();
+
+        Assert.NotNull(provider.GetRequiredService<MainWindowViewModelFactory>());
+    }
+
+    [Fact]
     public void 保存済み接続はOSの設定ディレクトリのファイルに置く()
     {
         using var provider = BuildProvider();

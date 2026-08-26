@@ -212,6 +212,86 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return Task.CompletedTask;
     }
 
+    private IReadOnlyList<ServerLoginDescriptor> _serverLogins = [];
+    private IReadOnlyList<string> _serverRoles = [];
+
+    public FakeDatabaseSession WithServerLogins(params ServerLoginDescriptor[] logins)
+    {
+        _serverLogins = logins;
+        return this;
+    }
+
+    public FakeDatabaseSession WithServerRoles(params string[] roles)
+    {
+        _serverRoles = roles;
+        return this;
+    }
+
+    public ServerLoginDefinition? CreatedLogin { get; private set; }
+
+    public ServerLoginDescriptor? AlteredOriginalLogin { get; private set; }
+
+    public ServerLoginDefinition? AlteredLogin { get; private set; }
+
+    public ServerLoginName? DroppedLogin { get; private set; }
+
+    public int ServerLoginCallCount { get; private set; }
+
+    public Task<IReadOnlyList<ServerLoginDescriptor>> ListServerLoginsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ServerLoginCallCount++;
+
+        return SecurityFailure is not null
+            ? Task.FromException<IReadOnlyList<ServerLoginDescriptor>>(SecurityFailure)
+            : Task.FromResult(_serverLogins);
+    }
+
+    public Task<IReadOnlyList<string>> ListServerRolesAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(_serverRoles);
+
+    public Task CreateServerLoginAsync(
+        ServerLoginDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        CreatedLogin = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task AlterServerLoginAsync(
+        ServerLoginDescriptor original,
+        ServerLoginDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        AlteredOriginalLogin = original;
+        AlteredLogin = definition;
+
+        return Task.CompletedTask;
+    }
+
+    public Task DropServerLoginAsync(ServerLoginName login, CancellationToken cancellationToken = default)
+    {
+        if (SecurityFailure is not null)
+        {
+            return Task.FromException(SecurityFailure);
+        }
+
+        DroppedLogin = login;
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>実行で返す結果。差し替えて結果ペインの見え方を確かめる。</summary>
     public QueryResult? NextResult { get; set; }
 
