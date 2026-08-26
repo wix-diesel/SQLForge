@@ -675,6 +675,29 @@
     <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
     <Setter Property="FontStyle"  Value="Italic"/>
   </Style>
+  <!-- ===== 編集グリッドのセル =====
+       書き換えられない列は薄く、書き戻しに失敗したセルは赤く出す。 -->
+  <Style Selector="TextBlock.cell.readOnlyCell">
+    <Setter Property="Foreground" Value="{DynamicResource TextFaintBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.cell.errorCell">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+  </Style>
+
+  <!-- セルを開いたときの入力欄。セルの升目にそのまま重なるよう、余白と枠を合わせる。 -->
+  <Style Selector="TextBox.cellEditor">
+    <Setter Property="MinHeight"                 Value="0"/>
+    <Setter Property="Height"                    Value="{DynamicResource GridRowHeight}"/>
+    <Setter Property="Padding"                   Value="9,0"/>
+    <Setter Property="VerticalContentAlignment"  Value="Center"/>
+    <Setter Property="Background"                Value="{DynamicResource InputBackgroundBrush}"/>
+    <Setter Property="BorderBrush"               Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="BorderThickness"           Value="1"/>
+    <Setter Property="CornerRadius"              Value="0"/>
+    <Setter Property="FontFamily"                Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"                  Value="{DynamicResource FontSizeMono}"/>
+  </Style>
+
   <Style Selector="TextBlock.columnName">
     <Setter Property="FontFamily"        Value="{DynamicResource FontFamilyMono}"/>
     <Setter Property="FontSize"          Value="{DynamicResource FontSizeMd}"/>

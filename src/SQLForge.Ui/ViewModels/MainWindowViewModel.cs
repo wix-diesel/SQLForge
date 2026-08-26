@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Application.Abstractions;
@@ -22,18 +23,39 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
         IDatabaseSession session,
         IPlatformProfile platform,
         CatalogContext catalog,
-        QueryEditorViewModel query)
+        QueryEditorViewModel query,
+        TableEditorViewModel tableEditor)
     {
         _session = session;
         _platform = platform;
         Explorer = new ObjectExplorerViewModel(catalog);
         Query = query;
+        TableEditor = tableEditor;
+
+        // どちらを出すかはこの 2 つの開閉で決まる。片方が開いたら、もう片方の
+        // 出し分けも変わるので、まとめてここで受ける。
+        Query.PropertyChanged += OnWorkspaceChanged;
+        TableEditor.PropertyChanged += OnWorkspaceChanged;
     }
 
     public ObjectExplorerViewModel Explorer { get; }
 
     /// <summary>右の作業領域。ツリーから「クエリを実行」を選ぶまでは畳んである。</summary>
     public QueryEditorViewModel Query { get; }
+
+    /// <summary>同じ作業領域に出す編集グリッド。「先頭 100 行を編集」で開く。</summary>
+    public TableEditorViewModel TableEditor { get; }
+
+    /// <summary>
+    /// 作業領域に出すもの。編集グリッドを開いている間はそちらを前に出し、
+    /// 閉じるとクエリエディタが（開いていれば）戻ってくる。
+    /// </summary>
+    public bool ShowTableEditor => TableEditor.IsOpen;
+
+    public bool ShowQuery => Query.IsOpen && !TableEditor.IsOpen;
+
+    /// <summary>どちらも開いていないとき。選んでいるものの概要だけを出す。</summary>
+    public bool ShowPlaceholder => !Query.IsOpen && !TableEditor.IsOpen;
 
     public event EventHandler? CloseRequested;
 
@@ -68,6 +90,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
 
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnWorkspaceChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not nameof(QueryEditorViewModel.IsOpen))
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(ShowTableEditor));
+        OnPropertyChanged(nameof(ShowQuery));
+        OnPropertyChanged(nameof(ShowPlaceholder));
+    }
 
     public ValueTask DisposeAsync() => _session.DisposeAsync();
 }

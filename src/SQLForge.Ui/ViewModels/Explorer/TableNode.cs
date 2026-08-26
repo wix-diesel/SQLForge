@@ -61,6 +61,19 @@ public sealed partial class TableNode : ObjectExplorerNode
         _context.Query?.OpenAndRunQuery(_database, $"SELECT TOP (1000) * FROM {QuotedQualifiedName};");
 
     /// <summary>
+    /// 編集グリッドがつながっている構成か（<see cref="CanQuery"/> と同じ理由）。
+    /// </summary>
+    public bool CanEditRows => _context.TableEditor is not null;
+
+    /// <summary>
+    /// 右クリックの「先頭 100 行を編集」。SSMS の「上位 200 行の編集」にあたる入口で、
+    /// 文面ではなくグリッドを開き、セルを直せるようにする。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanEditRows))]
+    private void EditTopRows() =>
+        _context.TableEditor?.OpenTableEditor(_database, _descriptor.Schema, _descriptor.Name);
+
+    /// <summary>
     /// スキーマ名・テーブル名それぞれを角括弧で囲む。閉じ括弧はテーブル名の側に
     /// 含まれ得るので、二重にして閉じられないようにする（SQL Server の識別子の作法）。
     /// </summary>

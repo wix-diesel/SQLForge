@@ -194,6 +194,36 @@ public class ObjectExplorerTests
     }
 
     [Fact]
+    public async Task 先頭100行を編集するとグリッドへテーブルが渡る()
+    {
+        var tableEditor = new StubTableEditor();
+        var explorer = NewExplorer(NewSession(), new StubLauncher(), tableEditor);
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
+        var orders = tables.Children.OfType<TableNode>().First(node => node.Title == "orders");
+
+        Assert.True(orders.EditTopRowsCommand.CanExecute(null));
+        orders.EditTopRowsCommand.Execute(null);
+
+        // 文面ではなく、どのテーブルを開くかだけを渡す。
+        Assert.Equal("sales_db.dbo.orders", tableEditor.Opened);
+    }
+
+    [Fact]
+    public async Task 編集グリッドがつながっていなければ編集のメニューは押せない()
+    {
+        var explorer = NewExplorer(NewSession(), new StubLauncher());
+        await explorer.InitializeAsync();
+
+        var schemas = await ExpandAsync(Database(explorer, "sales_db"));
+        var tables = await ExpandAsync(schemas.Children.First(node => node.Title == "dbo"), "テーブル");
+
+        Assert.False(tables.Children.OfType<TableNode>().First().EditTopRowsCommand.CanExecute(null));
+    }
+
+    [Fact]
     public async Task テーブルを開くと列の見出しの下にカラム定義が並ぶ()
     {
         var explorer = NewExplorer(NewSession());
@@ -339,9 +369,19 @@ public class ObjectExplorerTests
         }
     }
 
+    /// <summary>編集グリッドの行き先。開かれたテーブルを覚えておく。</summary>
+    private sealed class StubTableEditor : ITableEditorLauncher
+    {
+        public string? Opened { get; private set; }
+
+        public void OpenTableEditor(DatabaseName database, SchemaName schema, string table) =>
+            Opened = $"{database.Value}.{schema.Value}.{table}";
+    }
+
     private static ObjectExplorerViewModel NewExplorer(
         FakeDatabaseSession session,
-        IQueryLauncher? query = null) =>
+        IQueryLauncher? query = null,
+        ITableEditorLauncher? tableEditor = null) =>
         new(new CatalogContext(
             session,
             new ListDatabasesUseCase(),
@@ -350,7 +390,10 @@ public class ObjectExplorerTests
             new ListColumnsUseCase(),
             new ListStoredProceduresUseCase(),
             new ListStoredProcedureParametersUseCase(),
-            query));
+            query)
+        {
+            TableEditor = tableEditor
+        });
 
     private static DatabaseNode Database(ObjectExplorerViewModel explorer, string name) =>
         explorer.Roots[0].Children[0].Children.OfType<DatabaseNode>().First(node => node.Title == name);

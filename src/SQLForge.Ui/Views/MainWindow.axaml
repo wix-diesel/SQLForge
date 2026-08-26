@@ -98,7 +98,7 @@
         <Panel Grid.Column="2">
 
           <Border Background="{DynamicResource BgSurfaceBrush}"
-                  IsVisible="{Binding !Query.IsOpen}">
+                  IsVisible="{Binding ShowPlaceholder}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" MaxWidth="420">
               <TextBlock Text="{Binding Explorer.SelectedNode.Title}"
                          FontSize="{DynamicResource FontSizeXl}"
@@ -111,7 +111,7 @@
                          Foreground="{DynamicResource TextDimBrush}"
                          TextAlignment="Center"
                          IsVisible="{Binding Explorer.SelectedNode, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-              <TextBlock Text="左のツリーでテーブルを右クリックし、「クエリを実行」を選ぶとエディタが開きます。"
+              <TextBlock Text="左のツリーでテーブルを右クリックし、「クエリを実行」でエディタが、「先頭 100 行を編集」でグリッドが開きます。"
                          Foreground="{DynamicResource TextFaintBrush}"
                          TextWrapping="Wrap"
                          TextAlignment="Center"
@@ -119,7 +119,9 @@
             </StackPanel>
           </Border>
 
-          <views:QueryWorkspacePane IsVisible="{Binding Query.IsOpen}"/>
+          <views:QueryWorkspacePane IsVisible="{Binding ShowQuery}"/>
+
+          <views:TableEditorPane IsVisible="{Binding ShowTableEditor}"/>
 
         </Panel>
       </Grid>

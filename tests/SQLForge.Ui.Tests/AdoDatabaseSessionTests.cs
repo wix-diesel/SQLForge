@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Domain.Editing;
 using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
 using Xunit;
@@ -162,6 +163,28 @@ public class AdoDatabaseSessionTests
             string table,
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<ColumnDescriptor>>([]);
+
+        protected override Task<IReadOnlyList<EditableColumn>> ReadEditableColumnsAsync(
+            DbConnection connection,
+            DatabaseName database,
+            SchemaName schema,
+            string table,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<EditableColumn>>([]);
+
+        protected override ParameterizedStatement BuildTopRowsSelect(
+            SchemaName schema,
+            string table,
+            IReadOnlyList<EditableColumn> columns,
+            int maxRows) =>
+            new(string.Empty, []);
+
+        protected override ParameterizedStatement BuildCellUpdate(
+            SchemaName schema,
+            string table,
+            IReadOnlyList<EditableColumn> columns,
+            TableCellUpdate update) =>
+            new(string.Empty, []);
 
         protected override Task<IReadOnlyList<StoredProcedureDescriptor>> ReadStoredProceduresAsync(
             DbConnection connection,

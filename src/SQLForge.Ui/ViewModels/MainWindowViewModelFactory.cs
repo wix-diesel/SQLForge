@@ -1,5 +1,6 @@
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
+using SQLForge.Application.Editing;
 using SQLForge.Application.Query;
 using SQLForge.Application.Security;
 using SQLForge.Ui.ViewModels.Explorer;
@@ -21,6 +22,8 @@ public sealed class MainWindowViewModelFactory(
     ListStoredProceduresUseCase storedProcedures,
     ListStoredProcedureParametersUseCase storedProcedureParameters,
     ExecuteQueryUseCase queries,
+    EditTableRowsUseCase editTableRows,
+    UpdateTableCellUseCase updateTableCell,
     ListDatabaseUsersUseCase databaseUsers,
     IDatabaseUserEditor userEditor,
     ListServerLoginsUseCase serverLogins,
@@ -33,14 +36,16 @@ public sealed class MainWindowViewModelFactory(
         // 作業領域を先に組む。ツリーの右クリックはここへ渡すので、
         // ツリーより先に居てもらう必要がある。
         var query = new QueryEditorViewModel(session, queries);
+        var tableEditor = new TableEditorViewModel(session, editTableRows, updateTableCell);
 
         var catalog = new CatalogContext(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
         {
+            TableEditor = tableEditor,
             Security = new DatabaseSecurityContext(databaseUsers, userEditor),
             ServerSecurity = new ServerSecurityContext(serverLogins, loginEditor)
         };
 
-        return new MainWindowViewModel(session, platform, catalog, query);
+        return new MainWindowViewModel(session, platform, catalog, query, tableEditor);
     }
 }

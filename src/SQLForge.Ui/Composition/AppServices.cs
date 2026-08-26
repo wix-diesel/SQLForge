@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Catalog;
 using SQLForge.Application.Connections;
+using SQLForge.Application.Editing;
 using SQLForge.Application.Query;
 using SQLForge.Application.Security;
 using SQLForge.Infrastructure.Connections;
@@ -70,6 +71,9 @@ public static class AppServices
         services.AddSingleton<ListStoredProceduresUseCase>();
         services.AddSingleton<ListStoredProcedureParametersUseCase>();
         services.AddSingleton<ExecuteQueryUseCase>();
+
+        services.AddSingleton<EditTableRowsUseCase>();
+        services.AddSingleton<UpdateTableCellUseCase>();
 
         services.AddSingleton<ListDatabaseUsersUseCase>();
         services.AddSingleton<ListDatabaseRolesUseCase>();

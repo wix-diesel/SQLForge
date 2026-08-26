@@ -1,6 +1,7 @@
 using SQLForge.Application.Abstractions;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Domain.Editing;
 using SQLForge.Domain.Query;
 using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
@@ -324,6 +325,63 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return QueryFailure is not null
             ? throw QueryFailure
             : NextResult ?? new QueryResult([], -1, TimeSpan.Zero);
+    }
+
+    private readonly Dictionary<string, EditableRowSet> _editableRows = new(StringComparer.Ordinal);
+
+    /// <summary>編集グリッドが読む行。差し替えてグリッドの見え方を確かめる。</summary>
+    public FakeDatabaseSession WithEditableRows(string database, string schema, string table, EditableRowSet rows)
+    {
+        _editableRows[$"{database}.{schema}.{table}"] = rows;
+        return this;
+    }
+
+    /// <summary>編集グリッドの読み書きで投げる例外。失敗の見え方を確かめるために差し込む。</summary>
+    public Exception? EditFailure { get; set; }
+
+    /// <summary>更新が返す行数。0 にすると「行が見つからない」を作れる。</summary>
+    public int UpdatedRows { get; set; } = 1;
+
+    public int EditableRowsCallCount { get; private set; }
+
+    public int EditableMaxRows { get; private set; }
+
+    public string? UpdatedTable { get; private set; }
+
+    public TableCellUpdate? LastUpdate { get; private set; }
+
+    public Task<EditableRowSet> ReadEditableRowsAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        int maxRows,
+        CancellationToken cancellationToken = default)
+    {
+        EditableRowsCallCount++;
+        EditableMaxRows = maxRows;
+
+        if (EditFailure is not null)
+        {
+            return Task.FromException<EditableRowSet>(EditFailure);
+        }
+
+        return Task.FromResult(
+            _editableRows.TryGetValue($"{database.Value}.{schema.Value}.{table}", out var rows)
+                ? rows
+                : new EditableRowSet([], []));
+    }
+
+    public Task<int> UpdateTableCellAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableCellUpdate update,
+        CancellationToken cancellationToken = default)
+    {
+        UpdatedTable = $"{database.Value}.{schema.Value}.{table}";
+        LastUpdate = update;
+
+        return EditFailure is not null ? Task.FromException<int>(EditFailure) : Task.FromResult(UpdatedRows);
     }
 
     public ValueTask DisposeAsync()

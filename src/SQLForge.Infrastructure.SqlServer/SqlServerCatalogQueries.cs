@@ -96,6 +96,36 @@ internal static class SqlServerCatalogQueries
         """;
 
     /// <summary>
+    /// 編集グリッドに出す列の素性。
+    ///
+    /// 型は基本型（system_type_id 側）で読む。別名型（sysname など）でも中身は基本型なので、
+    /// 値の作り方を分ける必要がない。IDENTITY と計算列は書き換えられないので、その別も返す。
+    /// </summary>
+    public const string EditableColumnsFormat = """
+        SELECT c.name                                                              AS name,
+               bt.name                                                             AS base_type_name,
+               c.max_length                                                        AS max_length,
+               c.precision                                                         AS precision,
+               c.scale                                                             AS scale,
+               c.is_nullable                                                       AS is_nullable,
+               c.is_identity                                                       AS is_identity,
+               c.is_computed                                                       AS is_computed,
+               CONVERT(bit, CASE WHEN pk.column_id IS NOT NULL THEN 1 ELSE 0 END)  AS is_primary_key
+        FROM {0}.sys.columns AS c
+        INNER JOIN {0}.sys.tables AS t ON t.object_id = c.object_id
+        INNER JOIN {0}.sys.schemas AS s ON s.schema_id = t.schema_id
+        INNER JOIN {0}.sys.types AS bt ON bt.user_type_id = c.system_type_id
+        LEFT JOIN (
+            SELECT ic.object_id, ic.column_id
+            FROM {0}.sys.index_columns AS ic
+            INNER JOIN {0}.sys.indexes AS i ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            WHERE i.is_primary_key = 1
+        ) AS pk ON pk.object_id = c.object_id AND pk.column_id = c.column_id
+        WHERE s.name = @schema AND t.name = @table
+        ORDER BY c.column_id;
+        """;
+
+    /// <summary>
     /// ストアド プロシージャ一覧とパラメーター数。sys.procedures は type IN ('P', 'RF') のみを
     /// 返すビューなので、スカラー関数などは含まれない。is_ms_shipped = 0 でエンジンが
     /// 用意したものを外すのはテーブルと同じ。parameter_id = 0 は戻り値なので数に入れない。

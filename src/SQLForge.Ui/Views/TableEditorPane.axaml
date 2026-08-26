@@ -1,0 +1,224 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             xmlns:workspace="using:SQLForge.Ui.ViewModels.Workspace"
+             x:Class="SQLForge.Ui.Views.TableEditorPane"
+             x:DataType="vm:MainWindowViewModel">
+
+  <!-- メインウィンドウ右の作業領域: テーブルの先頭 N 行を直に編集するグリッド。
+       SSMS の「上位 200 行の編集」にあたる。保存ボタンは無く、セルを確定するたびに書き戻す。 -->
+
+  <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource BgSurfaceBrush}">
+
+    <!-- ===== ツールバー ===== -->
+    <Border Grid.Row="0"
+            Height="{DynamicResource ToolBarHeight}"
+            Padding="10,0"
+            Background="{DynamicResource BgPanelBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+
+        <!-- 編集しているテーブル -->
+        <Border Grid.Column="0"
+                Height="{DynamicResource ControlHeightSm}"
+                Padding="9,0"
+                Background="{DynamicResource BgSurfaceBrush}"
+                BorderBrush="{DynamicResource BorderStrongBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusMd}"
+                ToolTip.Tip="編集しているテーブル">
+          <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+            <Path Classes="icon accent" Data="{StaticResource IconTable}" VerticalAlignment="Center"/>
+            <TextBlock Classes="mono"
+                       Text="{Binding TableEditor.Title}"
+                       Foreground="{DynamicResource TextHighBrush}"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+
+        <!-- 実行先のデータベース -->
+        <TextBlock Grid.Column="1"
+                   Classes="mono"
+                   Text="{Binding TableEditor.TargetDatabase}"
+                   Foreground="{DynamicResource TextDimBrush}"
+                   VerticalAlignment="Center"
+                   ToolTip.Tip="このテーブルがあるデータベース"/>
+
+        <Border Grid.Column="2" Theme="{StaticResource VerticalDivider}"/>
+
+        <!-- 読み直す -->
+        <Button Grid.Column="3"
+                Theme="{StaticResource ToolbarButton}"
+                Command="{Binding TableEditor.RefreshCommand}"
+                ToolTip.Tip="サーバーから読み直す">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon" Data="{StaticResource IconRefresh}" VerticalAlignment="Center"/>
+            <TextBlock Text="読み直す" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- 取得する行数。SSMS と同じで、開いた時点の先頭 N 行だけを相手にする。 -->
+        <TextBlock Grid.Column="4"
+                   Classes="label"
+                   Text="{Binding TableEditor.MaxRowsLabel}"
+                   VerticalAlignment="Center"
+                   ToolTip.Tip="編集グリッドに読む行数（変更は未実装）"/>
+
+        <!-- 読み込みと書き戻しの一行 -->
+        <TextBlock Grid.Column="6"
+                   Classes="runStatus"
+                   Classes.failure="{Binding TableEditor.HasFailed}"
+                   Text="{Binding TableEditor.Status}"/>
+
+        <Button Grid.Column="7"
+                Theme="{StaticResource IconButton}"
+                Command="{Binding TableEditor.CloseCommand}"
+                ToolTip.Tip="編集グリッドを閉じる">
+          <Path Classes="icon" Data="{StaticResource IconClose}"/>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ===== グリッド ===== -->
+    <Panel Grid.Row="1">
+
+      <TextBlock Text="読み込んでいます…"
+                 Foreground="{DynamicResource TextFaintBrush}"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 IsVisible="{Binding TableEditor.IsLoading}"/>
+
+      <!-- 横は外側の器でまとめて送り、縦は行の並びに任せて仮想化させる（結果グリッドと同じ）。 -->
+      <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Disabled"
+                    IsVisible="{Binding !TableEditor.IsLoading}">
+        <Grid RowDefinitions="Auto,*">
+
+          <!-- 見出し。鍵になる列には鍵を出す（この列で行を特定している、という意味）。 -->
+          <Border Grid.Row="0"
+                  Height="{DynamicResource GridHeaderHeight}"
+                  Background="{DynamicResource BgRaisedBrush}"
+                  BorderBrush="{DynamicResource BorderStrongBrush}"
+                  BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+              <Border Width="{DynamicResource GridGutterWidth}"
+                      BorderBrush="{DynamicResource BorderStrongBrush}"
+                      BorderThickness="0,0,1,0"/>
+              <ItemsControl ItemsSource="{Binding TableEditor.Columns}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="workspace:EditableColumnViewModel">
+                    <Border Width="{Binding Width}"
+                            Padding="10,0"
+                            BorderBrush="{DynamicResource BorderStrongBrush}"
+                            BorderThickness="0,0,1,0">
+                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Path Classes="icon accent"
+                              Data="{StaticResource IconKey}"
+                              IsVisible="{Binding IsKey}"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="行を特定するのに使う列"/>
+                        <TextBlock Classes="columnName" Text="{Binding Name}"/>
+                        <TextBlock Classes="columnType" Text="{Binding TypeName}"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <!-- 行 -->
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding TableEditor.Rows}"
+                   ItemContainerTheme="{StaticResource ResultRowItem}"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   Padding="0"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="workspace:EditableRowViewModel">
+                <StackPanel Orientation="Horizontal">
+                  <Border Width="{DynamicResource GridGutterWidth}"
+                          Padding="0,0,8,0"
+                          Background="{DynamicResource BgPanelBrush}"
+                          BorderBrush="{DynamicResource BorderBrush}"
+                          BorderThickness="0,0,1,0">
+                    <TextBlock Text="{Binding Number}"
+                               FontFamily="{DynamicResource FontFamilyMono}"
+                               FontSize="{DynamicResource FontSizeMonoSm}"
+                               Foreground="{DynamicResource TextFaintBrush}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"/>
+                  </Border>
+                  <ItemsControl ItemsSource="{Binding Cells}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="workspace:EditableCellViewModel">
+                        <!-- 背景を敷かないと、セルの空いているところで押しても拾えない。 -->
+                        <Border Width="{Binding Column.Width}"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="0,0,1,0"
+                                Tapped="OnCellTapped">
+                          <Border.ContextMenu>
+                            <ContextMenu>
+                              <MenuItem Header="NULL を設定 (Ctrl+0)" Command="{Binding SetNullCommand}"/>
+                            </ContextMenu>
+                          </Border.ContextMenu>
+                          <Panel>
+                            <TextBlock Classes="cell"
+                                       Classes.nullValue="{Binding IsNull}"
+                                       Classes.readOnlyCell="{Binding !IsEditable}"
+                                       Classes.errorCell="{Binding HasError}"
+                                       Margin="10,0"
+                                       Text="{Binding Text}"
+                                       TextAlignment="{Binding Column.Alignment}"
+                                       TextTrimming="CharacterEllipsis"
+                                       IsVisible="{Binding !IsEditing}"
+                                       ToolTip.Tip="{Binding Text}"/>
+                            <TextBox Classes="cellEditor"
+                                     Text="{Binding EditText, Mode=TwoWay}"
+                                     IsVisible="{Binding IsEditing}"
+                                     KeyDown="OnEditorKeyDown"
+                                     LostFocus="OnEditorLostFocus"/>
+                          </Panel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </ScrollViewer>
+    </Panel>
+
+    <!-- ===== 書き換えられないときの断り書き ===== -->
+    <Border Grid.Row="2"
+            Padding="12,7"
+            Background="{DynamicResource BgPanelBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            IsVisible="{Binding TableEditor.ReadOnlyReason, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <StackPanel Orientation="Horizontal" Spacing="7">
+        <Path Classes="icon faint" Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding TableEditor.ReadOnlyReason}"
+                   FontSize="{DynamicResource FontSizeSm}"
+                   Foreground="{DynamicResource TextDimBrush}"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>
