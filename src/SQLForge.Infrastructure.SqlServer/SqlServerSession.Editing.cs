@@ -87,7 +87,8 @@ public sealed partial class SqlServerSession
             .ToList();
     }
 
-    private static void AddParameter(DbCommand command, string name, string value)
+    /// <summary>パラメータを 1 つ足す。値は文字列とは限らない（SID のようなバイト列もある）。</summary>
+    private static void AddParameter(DbCommand command, string name, object value)
     {
         var parameter = command.CreateParameter();
         parameter.ParameterName = name;

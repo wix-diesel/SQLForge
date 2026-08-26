@@ -33,12 +33,25 @@ public sealed partial class ServerNode : ObjectExplorerNode
     }
 
     /// <summary>
-    /// SSMS と同じく、サーバーのセキュリティの下にログインの見出しを置く。
-    /// サーバー ロールや資格情報はまだ扱わないので、今いるのはログインだけ。
+    /// SSMS と同じく、サーバーのセキュリティの下にログインとサーバー ロールの見出しを置く。
+    /// 資格情報や監査はまだ扱わない。
     /// </summary>
-    private Task<IReadOnlyList<ObjectExplorerNode>> LoadSecurityAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
-            _context.ServerSecurity is { } security ? [new ServerLoginsNode(_context, security)] : []);
+    private Task<IReadOnlyList<ObjectExplorerNode>> LoadSecurityAsync(CancellationToken cancellationToken)
+    {
+        if (_context.ServerSecurity is not { } security)
+        {
+            return Task.FromResult<IReadOnlyList<ObjectExplorerNode>>([]);
+        }
+
+        var children = new List<ObjectExplorerNode> { new ServerLoginsNode(_context, security) };
+
+        if (security.Roles is not null)
+        {
+            children.Add(new ServerRolesNode(_context, security));
+        }
+
+        return Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(children);
+    }
 
     private async Task<IReadOnlyList<ObjectExplorerNode>> LoadDatabasesAsync(CancellationToken cancellationToken)
     {

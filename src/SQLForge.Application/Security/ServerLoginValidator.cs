@@ -16,6 +16,7 @@ public static class ServerLoginValidator
     public const string ConfirmationField = "confirmation";
     public const string PolicyField = "policy";
     public const string DefaultDatabaseField = "defaultDatabase";
+    public const string MappingField = "mapping";
 
     public static SecurityValidationResult Validate(ServerLoginDraft draft)
     {
@@ -27,6 +28,7 @@ public static class ServerLoginValidator
         ValidatePassword(errors, draft);
         ValidatePolicy(errors, draft);
         ValidateDefaultDatabase(errors, draft.DefaultDatabase);
+        ValidateMappings(errors, draft);
 
         return errors.Count == 0 ? SecurityValidationResult.Valid : new SecurityValidationResult(errors);
     }
@@ -132,6 +134,28 @@ public static class ServerLoginValidator
         else if (draft.MustChangePassword && !(draft.EnforcePolicy && draft.EnforceExpiration))
         {
             errors[PolicyField] = "次回ログイン時のパスワード変更を求めるには、パスワード ポリシーと期限の適用が要ります。";
+        }
+    }
+
+    /// <summary>
+    /// ユーザー マッピング。ユーザー名を空のままにした行はログイン名をそのまま使うので、
+    /// そのときは名前の形もログイン名で見る（別の欄の理由をここへ二重に出さない）。
+    /// </summary>
+    private static void ValidateMappings(IDictionary<string, string> errors, ServerLoginDraft draft)
+    {
+        foreach (var mapping in draft.Mappings.Where(mapping => mapping.IsMapped))
+        {
+            var user = mapping.UserName.Trim();
+
+            var reason = user.Length > 0
+                ? SecurityNameRules.Optional(user, $"{mapping.Database} のユーザー名")
+                : SecurityNameRules.Required(draft.Name, "ログイン名");
+
+            SecurityNameRules.Set(errors, MappingField, reason);
+            SecurityNameRules.Set(
+                errors,
+                MappingField,
+                SecurityNameRules.Optional(mapping.DefaultSchema, $"{mapping.Database} の既定のスキーマ"));
         }
     }
 

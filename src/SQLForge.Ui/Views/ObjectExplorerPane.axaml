@@ -105,16 +105,38 @@
             </Grid>
           </TreeDataTemplate>
 
-          <!-- スキーマ -->
+          <!-- スキーマの見出し（右クリックから追加できる） -->
+          <TreeDataTemplate DataType="explorer:SchemasNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="新しいスキーマ…" Command="{Binding NewSchemaCommand}"/>
+                  <MenuItem Header="最新の情報に更新" Command="{Binding RefreshCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconFolder}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- スキーマ（所有者は右端。右クリックから所有者を付け替える） -->
           <TreeDataTemplate DataType="explorer:SchemaNode" ItemsSource="{Binding Children}">
-            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="プロパティ" Command="{Binding PropertiesCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon"
                     Stroke="{DynamicResource TealBrush}"
                     Data="{StaticResource IconSchema}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName"
                          Classes.system="{Binding IsSystem}"
                          Text="{Binding Title}"/>
-              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
             </Grid>
           </TreeDataTemplate>
 
@@ -209,6 +231,41 @@
             </Grid>
           </TreeDataTemplate>
 
+          <!-- サーバー ロールの見出し（右クリックから追加できる） -->
+          <TreeDataTemplate DataType="explorer:ServerRolesNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="新しいサーバー ロール…" Command="{Binding NewRoleCommand}"/>
+                  <MenuItem Header="最新の情報に更新" Command="{Binding RefreshCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon"
+                    Stroke="{DynamicResource CautionBrush}"
+                    Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- サーバー ロール（葉。所有者とメンバー数は右端） -->
+          <TreeDataTemplate DataType="explorer:ServerRoleNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="プロパティ" Command="{Binding PropertiesCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
+            </Grid>
+          </TreeDataTemplate>
+
           <!-- ユーザーの見出し（右クリックから追加できる） -->
           <TreeDataTemplate DataType="explorer:DatabaseUsersNode" ItemsSource="{Binding Children}">
             <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
@@ -236,6 +293,41 @@
                 </ContextMenu>
               </Grid.ContextMenu>
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconUser}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- データベース ロールの見出し（右クリックから追加できる） -->
+          <TreeDataTemplate DataType="explorer:DatabaseRolesNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="新しいデータベース ロール…" Command="{Binding NewRoleCommand}"/>
+                  <MenuItem Header="最新の情報に更新" Command="{Binding RefreshCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon"
+                    Stroke="{DynamicResource CautionBrush}"
+                    Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- データベース ロール（葉。所有者とメンバー数は右端） -->
+          <TreeDataTemplate DataType="explorer:DatabaseRoleNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="プロパティ" Command="{Binding PropertiesCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName"
                          Classes.system="{Binding IsSystem}"
                          Text="{Binding Title}"/>

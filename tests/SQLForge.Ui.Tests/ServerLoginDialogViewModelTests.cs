@@ -204,12 +204,7 @@ public class ServerLoginDialogViewModelTests
         FakeDatabaseSession session,
         ServerLoginDescriptor? login = null)
     {
-        var dialog = new ServerLoginDialogViewModel(
-            session,
-            login,
-            new ListDatabasesUseCase(),
-            new ListServerRolesUseCase(),
-            new SaveServerLoginUseCase());
+        var dialog = SecurityDialogs.Login(session, login);
 
         await dialog.InitializeAsync();
 

@@ -38,16 +38,20 @@ internal static class SqlServerCatalogQueries
         """;
 
     /// <summary>
-    /// スキーマ一覧。schema_id は dbo=1・guest=2・INFORMATION_SCHEMA=3・sys=4 で、
+    /// スキーマ一覧と、その所有者。schema_id は dbo=1・guest=2・INFORMATION_SCHEMA=3・sys=4 で、
     /// 固定データベースロールのスキーマ（db_owner など）は 16384 以降。
     /// 名前ではなく id で判定するので、照合順序や言語設定に左右されない。
+    ///
+    /// 所有者は principal_id で辿る。読めないこともあるので LEFT JOIN にして NULL を許す。
     /// </summary>
     public const string SchemasFormat = """
         SELECT s.name                                                              AS name,
                CONVERT(bit, CASE WHEN s.schema_id <> 1
                                   AND (s.schema_id < 5 OR s.schema_id > 16383)
-                                 THEN 1 ELSE 0 END)                                AS is_system
-        FROM {0}.sys.schemas AS s;
+                                 THEN 1 ELSE 0 END)                                AS is_system,
+               p.name                                                              AS owner_name
+        FROM {0}.sys.schemas AS s
+        LEFT JOIN {0}.sys.database_principals AS p ON p.principal_id = s.principal_id;
         """;
 
     /// <summary>

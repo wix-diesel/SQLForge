@@ -1,9 +1,6 @@
 using System.Data.Common;
 using SQLForge.Domain.Catalog;
-using SQLForge.Domain.Connections;
 using SQLForge.Domain.Editing;
-using SQLForge.Domain.Query;
-using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
 using Xunit;
 
@@ -124,11 +121,7 @@ public class AdoDatabaseSessionEditingTests
     /// 編集の口だけを実装したセッション。文面の組み立ては記録に置き換えて、
     /// 共通部分（求めた行数・読み取り・トランザクション）だけを見る。
     /// </summary>
-    private sealed class EditingSession(DbConnection connection)
-        : AdoDatabaseSession(
-            SeedConnections.Create().First(),
-            connection,
-            new ServerInfo("SQL Server 2022", "16.0.4215.2"))
+    private sealed class EditingSession(DbConnection connection) : StubAdoSession(connection)
     {
         /// <summary>文面へ渡された行数。上限より 1 行多いことを確かめるのに使う。</summary>
         public int RequestedMaxRows { get; private set; }
@@ -165,108 +158,5 @@ public class AdoDatabaseSessionEditingTests
             IReadOnlyList<EditableColumn> columns,
             TableCellUpdate update) =>
             new("UPDATE", [update.Value]);
-
-        protected override Task SwitchDatabaseAsync(
-            DbConnection connection,
-            DatabaseName database,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task<IReadOnlyList<DatabaseDescriptor>> ReadDatabasesAsync(
-            DbConnection connection,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<DatabaseDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<SchemaDescriptor>> ReadSchemasAsync(
-            DbConnection connection,
-            DatabaseName database,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<SchemaDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<TableDescriptor>> ReadTablesAsync(
-            DbConnection connection,
-            DatabaseName database,
-            SchemaName schema,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<TableDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<ColumnDescriptor>> ReadColumnsAsync(
-            DbConnection connection,
-            DatabaseName database,
-            SchemaName schema,
-            string table,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ColumnDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<StoredProcedureDescriptor>> ReadStoredProceduresAsync(
-            DbConnection connection,
-            DatabaseName database,
-            SchemaName schema,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<StoredProcedureDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ReadStoredProcedureParametersAsync(
-            DbConnection connection,
-            DatabaseName database,
-            SchemaName schema,
-            string procedure,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<StoredProcedureParameterDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<DatabaseUserDescriptor>> ReadDatabaseUsersAsync(
-            DbConnection connection,
-            DatabaseName database,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<DatabaseUserDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<string>> ReadDatabaseRolesAsync(
-            DbConnection connection,
-            DatabaseName database,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
-
-        protected override Task CreateUserAsync(
-            DbConnection connection,
-            DatabaseName database,
-            DatabaseUserDefinition definition,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task AlterUserAsync(
-            DbConnection connection,
-            DatabaseName database,
-            DatabaseUserDescriptor original,
-            DatabaseUserDefinition definition,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task DropUserAsync(
-            DbConnection connection,
-            DatabaseName database,
-            DatabaseUserName user,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task<IReadOnlyList<ServerLoginDescriptor>> ReadServerLoginsAsync(
-            DbConnection connection,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ServerLoginDescriptor>>([]);
-
-        protected override Task<IReadOnlyList<string>> ReadServerRolesAsync(
-            DbConnection connection,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
-
-        protected override Task CreateLoginAsync(
-            DbConnection connection,
-            ServerLoginDefinition definition,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task AlterLoginAsync(
-            DbConnection connection,
-            ServerLoginDescriptor original,
-            ServerLoginDefinition definition,
-            CancellationToken cancellationToken) => Task.CompletedTask;
-
-        protected override Task DropLoginAsync(
-            DbConnection connection,
-            ServerLoginName login,
-            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

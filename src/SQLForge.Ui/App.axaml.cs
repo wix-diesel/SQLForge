@@ -65,6 +65,9 @@ public partial class App : Avalonia.Application
         // ツリーから開くダイアログの親。ここで初めて決まる。
         services.GetRequiredService<DatabaseUserDialogService>().Owner = window;
         services.GetRequiredService<ServerLoginDialogService>().Owner = window;
+        services.GetRequiredService<DatabaseRoleDialogService>().Owner = window;
+        services.GetRequiredService<ServerRoleDialogService>().Owner = window;
+        services.GetRequiredService<SchemaDialogService>().Owner = window;
 
         window.Show();
         _ = viewModel.InitializeAsync();

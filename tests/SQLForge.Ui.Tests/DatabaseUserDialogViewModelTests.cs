@@ -157,13 +157,7 @@ public class DatabaseUserDialogViewModelTests
         FakeDatabaseSession session,
         DatabaseUserDescriptor? user = null)
     {
-        var dialog = new DatabaseUserDialogViewModel(
-            session,
-            new DatabaseName("sales_db"),
-            user,
-            new ListSchemasUseCase(),
-            new ListDatabaseRolesUseCase(),
-            new SaveDatabaseUserUseCase());
+        var dialog = SecurityDialogs.User(session, new DatabaseName("sales_db"), user);
 
         await dialog.InitializeAsync();
 

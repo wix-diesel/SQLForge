@@ -5,4 +5,11 @@ namespace SQLForge.Domain.Catalog;
 /// </summary>
 /// <param name="Name">スキーマ名。</param>
 /// <param name="IsSystem">エンジンが用意したスキーマ（SQL Server の sys / INFORMATION_SCHEMA など）。</param>
-public sealed record SchemaDescriptor(SchemaName Name, bool IsSystem = false);
+/// <param name="Owner">
+/// スキーマの所有者（データベース ユーザーまたはデータベース ロール）。読めないときは null。
+/// </param>
+public sealed record SchemaDescriptor(SchemaName Name, bool IsSystem = false, string? Owner = null)
+{
+    /// <summary>この版で所有者を付け替えたり削除したりしてよいか。</summary>
+    public bool IsEditable => !IsSystem;
+}

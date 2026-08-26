@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sec="using:SQLForge.Ui.ViewModels.Security"
+             x:Class="SQLForge.Ui.Views.ServerLoginGeneralPage"
+             x:DataType="sec:ServerLoginDialogViewModel">
+
+  <!-- SSMS の「ログイン」ダイアログの「全般」ページ（状態とサーバー ロールも含む）。 -->
+  <Grid Margin="18,16" RowDefinitions="Auto,*" RowSpacing="13">
+
+        <StackPanel Grid.Row="0" Spacing="13">
+
+          <StackPanel Spacing="5">
+            <TextBlock Classes="label" Text="認証方式"/>
+            <ComboBox ItemsSource="{Binding TypeChoices}"
+                      SelectedItem="{Binding SelectedType}"
+                      IsEnabled="{Binding CanChangeType}"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate DataType="sec:ServerLoginTypeChoiceViewModel">
+                  <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="nodeDetail"
+                       Text="認証方式は作成のときに決まります。あとから変えることはできません。"
+                       IsVisible="{Binding !CanChangeType}"/>
+          </StackPanel>
+
+          <StackPanel Spacing="5">
+            <TextBlock Classes="label" Text="ログイン名"/>
+            <TextBox Name="NameBox"
+                     Classes="mono"
+                     Text="{Binding Name}"
+                     Classes.error="{Binding HasNameError}"
+                     IsEnabled="{Binding CanRename}"
+                     PlaceholderText="ログイン名（Windows 認証は DOMAIN\name）"/>
+          </StackPanel>
+
+          <!-- パスワードと規則。SQL Server 認証のときだけ使う。 -->
+          <StackPanel Spacing="13" IsVisible="{Binding RequiresPassword}">
+
+            <StackPanel Spacing="5">
+              <TextBlock Classes="label" Text="パスワード"/>
+              <TextBox PasswordChar="●"
+                       Text="{Binding Password}"
+                       Classes.error="{Binding HasPasswordError}"
+                       PlaceholderText="パスワード"/>
+              <TextBlock Classes="nodeDetail"
+                         Text="空のままにすると、今のパスワードをそのまま残します。"
+                         IsVisible="{Binding CanKeepPassword}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+              <TextBlock Classes="label" Text="パスワードの確認入力"/>
+              <TextBox PasswordChar="●"
+                       Text="{Binding PasswordConfirmation}"
+                       Classes.error="{Binding HasConfirmationError}"
+                       PlaceholderText="もう一度入力"/>
+            </StackPanel>
+
+            <StackPanel Spacing="7">
+              <CheckBox Content="パスワード ポリシーを適用する"
+                        IsChecked="{Binding EnforcePolicy}"/>
+              <CheckBox Content="パスワードの期限を適用する"
+                        IsChecked="{Binding EnforceExpiration}"/>
+              <CheckBox Content="次回ログイン時にパスワードの変更を求める"
+                        IsChecked="{Binding MustChangePassword}"/>
+              <TextBlock Classes="nodeDetail"
+                         Text="期限と次回変更には、パスワード ポリシーの適用が要ります。"
+                         IsVisible="{Binding HasPolicyError}"/>
+            </StackPanel>
+
+          </StackPanel>
+
+          <StackPanel Spacing="5">
+            <TextBlock Classes="label" Text="既定のデータベース"/>
+            <ComboBox ItemsSource="{Binding DatabaseChoices}"
+                      SelectedItem="{Binding DefaultDatabase}"
+                      HorizontalAlignment="Stretch"/>
+            <TextBlock Classes="nodeDetail" Text="未指定なら master が使われます。"/>
+          </StackPanel>
+
+          <CheckBox Content="このログインを有効にする" IsChecked="{Binding IsLoginEnabled}"/>
+
+        </StackPanel>
+
+        <!-- 一覧は余った高さいっぱいに広げる。ウィンドウを縦に伸ばせばそのぶん多く見える。 -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
+          <TextBlock Grid.Row="0" Classes="label" Text="メンバーシップ（サーバー ロール）"/>
+          <Border Grid.Row="1"
+                  MinHeight="96"
+                  Background="{DynamicResource InputBackgroundBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RadiusMd}">
+            <!--
+              余白は中身（ItemsControl）側に置く。ScrollViewer の Padding にすると
+              スクロールできる長さ（Extent）にその分が入らず、最後の 1 行が
+              どこまで送っても欄の外に残ってしまう。
+            -->
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+              <ItemsControl ItemsSource="{Binding Roles}" Margin="10,8">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="sec:RoleChoiceViewModel">
+                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsMember}"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+  </Grid>
+</UserControl>

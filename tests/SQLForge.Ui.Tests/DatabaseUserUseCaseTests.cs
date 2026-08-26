@@ -36,7 +36,7 @@ public class DatabaseUserUseCaseTests
 
         var roles = await new ListDatabaseRolesUseCase().ExecuteAsync(session, SalesDb);
 
-        Assert.Equal(["app_reader", "db_datareader", "db_owner"], roles);
+        Assert.Equal(["app_reader", "db_datareader", "db_owner"], roles.Select(role => role.Name.Value));
     }
 
     [Fact]

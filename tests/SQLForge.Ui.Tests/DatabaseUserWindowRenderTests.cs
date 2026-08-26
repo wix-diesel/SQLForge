@@ -179,13 +179,7 @@ public class DatabaseUserWindowRenderTests
                 new SchemaDescriptor(new SchemaName("sys"), IsSystem: true))
             .WithDatabaseRoles("sales_db", roles ?? ["db_datawriter", "db_datareader"]);
 
-        dialog = new DatabaseUserDialogViewModel(
-            session,
-            new DatabaseName("sales_db"),
-            user,
-            new ListSchemasUseCase(),
-            new ListDatabaseRolesUseCase(),
-            new SaveDatabaseUserUseCase());
+        dialog = SecurityDialogs.User(session, new DatabaseName("sales_db"), user);
 
         var window = new DatabaseUserWindow { DataContext = dialog };
         _ = dialog.InitializeAsync();

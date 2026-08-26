@@ -38,30 +38,11 @@ public sealed partial class SqlServerSession
         // 2 つめの結果セットがロールの所属。ユーザーごとにまとめ直して貼り付ける。
         await reader.NextResultAsync(cancellationToken).ConfigureAwait(false);
 
-        var memberships = await ReadMembershipsAsync(reader, cancellationToken).ConfigureAwait(false);
+        var memberships = await ReadGroupedNamesAsync(reader, cancellationToken).ConfigureAwait(false);
 
         return users
             .Select(user => memberships.TryGetValue(user.Name.Value, out var roles) ? user with { Roles = roles } : user)
             .ToList();
-    }
-
-    protected override async Task<IReadOnlyList<string>> ReadDatabaseRolesAsync(
-        DbConnection connection,
-        DatabaseName database,
-        CancellationToken cancellationToken)
-    {
-        await using var command = connection.CreateCommand();
-        command.CommandText = Format(SqlServerSecurityQueries.RolesFormat, database);
-
-        var roles = new List<string>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            roles.Add(reader.GetString(0));
-        }
-
-        return roles;
     }
 
     protected override Task CreateUserAsync(
@@ -89,7 +70,11 @@ public sealed partial class SqlServerSession
         ExecuteStatementsAsync(
             connection, database, [SqlServerSecurityStatements.Drop(user)], cancellationToken);
 
-    private static async Task<Dictionary<string, IReadOnlyList<string>>> ReadMembershipsAsync(
+    /// <summary>
+    /// 「名前 → 名前の並び」の結果セットをまとめ直す。1 列目で束ね、2 列目を集める。
+    /// ユーザーの所属ロール・ロールのメンバー・ロールの所有スキーマは、どれもこの形をしている。
+    /// </summary>
+    internal static async Task<Dictionary<string, IReadOnlyList<string>>> ReadGroupedNamesAsync(
         DbDataReader reader,
         CancellationToken cancellationToken)
     {
