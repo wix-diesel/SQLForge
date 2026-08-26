@@ -1,4 +1,5 @@
 using SQLForge.Application.Abstractions;
+using SQLForge.Domain.Security;
 
 namespace SQLForge.Application.Security;
 
