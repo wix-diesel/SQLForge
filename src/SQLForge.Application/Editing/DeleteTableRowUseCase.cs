@@ -6,8 +6,10 @@ namespace SQLForge.Application.Editing;
 /// <summary>
 /// 編集グリッドの行 1 つをサーバーから消す。
 ///
-/// SSMS と同じで、確認を取ってから 1 行ずつ DELETE を投げる。条件は主キー
-/// （無ければ比較できる列すべて）の値で組み、ちょうど 1 行に当たらない削除は成立させない。
+/// SSMS と同じで、確認を取ってから 1 行ずつ DELETE を投げる。条件は鍵になる列
+/// （<see cref="Domain.Editing.EditableColumn.IsKey"/>。主キーがあればその列、無ければ
+/// 比較できる列すべてで、どれを鍵にするかはドライバーが決めている）の値で組み、
+/// ちょうど 1 行に当たらない削除は成立させない。
 /// 確認を取るのは画面側の受け持ちで、ここへ来た時点で「消してよい」ことは決まっている。
 /// </summary>
 public sealed class DeleteTableRowUseCase

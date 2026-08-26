@@ -27,10 +27,11 @@ internal static class RowCriteria
             }
         }
 
+        // 文面は変更と削除で共通。どちらから来ても正しく読めるようにする。
         return criteria.Count > 0
             ? criteria
             : throw new TableEditRejectedException(
-                "行を 1 件に特定できないため、この行は編集できません（主キーがありません）。");
+                "行を 1 件に特定できる列がないため、この行は変更も削除もできません。");
     }
 
     /// <summary>行の値の並びが列の並びと合っているか。合わないときは読み直してもらう。</summary>

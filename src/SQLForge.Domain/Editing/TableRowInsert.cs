@@ -18,6 +18,12 @@ public sealed class TableRowInsert
             throw new ArgumentException("追加する値がありません。", nameof(values));
         }
 
+        // 同じ列が 2 度並ぶと壊れた文面になる（INSERT の列並びに同じ名前が出る）。
+        if (values.Select(value => value.Column).Distinct(StringComparer.Ordinal).Count() != values.Count)
+        {
+            throw new ArgumentException("同じ列に 2 つの値は置けません。", nameof(values));
+        }
+
         Values = values;
     }
 

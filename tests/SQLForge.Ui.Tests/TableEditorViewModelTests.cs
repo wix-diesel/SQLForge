@@ -312,6 +312,20 @@ public class TableEditorViewModelTests
     }
 
     [Fact]
+    public async Task 行の右クリックからの取り消しも一行に出す()
+    {
+        // 捨てたのに「編集中です」が残ると、画面と手元の状態が食い違う。
+        var session = ReadWriteSession();
+        var editor = await OpenAsync(session);
+
+        Fill(editor.NewRow!, ordinal: 1, "kudo");
+        editor.NewRow!.CancelCommand.Execute(null);
+
+        Assert.False(editor.NewRow.HasPendingValues);
+        Assert.Contains("取り消しました", editor.Status, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task 足すのに失敗したら打ちかけを残して理由を出す()
     {
         var session = ReadWriteSession();

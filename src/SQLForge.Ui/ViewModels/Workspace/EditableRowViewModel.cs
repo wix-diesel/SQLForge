@@ -79,9 +79,12 @@ public sealed partial class EditableRowViewModel : ObservableObject
     [RelayCommand]
     private Task DeleteAsync() => _editor.DeleteRowAsync(this);
 
-    /// <summary>右クリックの「新しい行を取り消す」。打ちかけを捨てる。</summary>
+    /// <summary>
+    /// 右クリックの「新しい行を取り消す」。捨てたことを一行に出すところまで含めて
+    /// <see cref="TableEditorViewModel"/> の受け持ちなので、そちらを通す。
+    /// </summary>
     [RelayCommand]
-    private void Cancel() => Reset();
+    private void Cancel() => _editor.CancelNewRow();
 
     /// <summary>足し終わった行を普通の行にする。</summary>
     internal void MarkCommitted(int number)

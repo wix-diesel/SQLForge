@@ -137,9 +137,14 @@ public sealed partial class TableEditorViewModel
         }
     }
 
-    /// <summary>Esc と右クリックの「新しい行を取り消す」。打ちかけを捨てる。</summary>
+    /// <summary>
+    /// Esc と右クリックの「新しい行を取り消す」。打ちかけを捨てる。
+    /// 行の側（<see cref="EditableRowViewModel"/>）からもここを通す。一行に出す文面まで
+    /// 含めて取り消しなので、行が自分で <see cref="EditableRowViewModel.Reset"/> だけを
+    /// 呼ぶと、画面には「編集中です」が残ってしまう。
+    /// </summary>
     [RelayCommand]
-    private void CancelNewRow()
+    internal void CancelNewRow()
     {
         if (NewRow is not { HasPendingValues: true } pending)
         {

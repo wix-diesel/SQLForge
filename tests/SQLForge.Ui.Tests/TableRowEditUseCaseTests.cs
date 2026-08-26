@@ -75,6 +75,14 @@ public class TableRowEditUseCaseTests
     }
 
     [Fact]
+    public void 同じ列に2つの値は置けない()
+    {
+        // 並びに同じ名前が 2 度出ると、INSERT の文面が壊れる。
+        Assert.Throws<ArgumentException>(() =>
+            new TableRowInsert([new TableCellValue("customer", "tanaka"), new TableCellValue("customer", "sato")]));
+    }
+
+    [Fact]
     public async Task 主キーの列だけを条件にして消す()
     {
         var session = new FakeDatabaseSession();
