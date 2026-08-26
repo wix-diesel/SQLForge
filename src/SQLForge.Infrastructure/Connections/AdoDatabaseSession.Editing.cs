@@ -28,9 +28,11 @@ public abstract partial class AdoDatabaseSession
                 // 文面は修飾なしの 2 部名で組むので、先に実行先へ合わせる。
                 await SwitchDatabaseAsync(connection, database, token).ConfigureAwait(false);
 
+                // 上限より 1 行だけ多く求める。ちょうど上限で切る文面だと、上限まで返ってきたのが
+                // 「たまたま上限ちょうど」なのか「まだ続きがある」のかを見分けられない。
                 return await ReadEditableRowsAsync(
                         connection,
-                        BuildTopRowsSelect(schema, table, columns, maxRows),
+                        BuildTopRowsSelect(schema, table, columns, OneMoreThan(maxRows)),
                         columns,
                         maxRows,
                         token)
@@ -122,7 +124,7 @@ public abstract partial class AdoDatabaseSession
 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            // 上限ちょうどを求めた文面でも、1 行多く返るエンジンに備えて数え直す。
+            // 上限より先の 1 行。続きがあることだけを確かめて、持たずに置いていく。
             if (rows.Count >= maxRows)
             {
                 isTruncated = true;
@@ -171,6 +173,9 @@ public abstract partial class AdoDatabaseSession
 
         return affected;
     }
+
+    /// <summary>続きの有無を見るための 1 行ぶん。上限が飽和していたらそのまま返す。</summary>
+    private static int OneMoreThan(int maxRows) => maxRows == int.MaxValue ? maxRows : maxRows + 1;
 
     private static DbCommand Command(DbConnection connection, ParameterizedStatement statement)
     {
