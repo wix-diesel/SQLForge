@@ -27,6 +27,11 @@ public sealed record CatalogContext(
     IQueryLauncher? Query = null)
 {
     /// <summary>
+    /// 右クリックの「先頭 N 行を編集」の行き先。無ければツリーにそのメニューを出さない。
+    /// </summary>
+    public ITableEditorLauncher? TableEditor { get; init; }
+
+    /// <summary>
     /// セキュリティ（ユーザー）の一式。無ければツリーに「セキュリティ」の枝を出さない。
     /// カタログだけを組みたいときに、ユーザーの読み取り権限まで要求しないための逃げ道でもある。
     /// </summary>

@@ -1,5 +1,6 @@
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Connections;
+using SQLForge.Domain.Editing;
 using SQLForge.Domain.Query;
 using SQLForge.Domain.Security;
 
@@ -97,5 +98,30 @@ public interface IDatabaseSession : IAsyncDisposable
         DatabaseName database,
         string sql,
         int maxRows,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 指定テーブルの先頭 <paramref name="maxRows"/> 行を編集用に読む。
+    ///
+    /// 列の素性（鍵にできるか、書き換えられるか）はエンジンごとに違うので、
+    /// その判断まで含めて実装側が済ませる。並び順は指定しない。
+    /// </summary>
+    Task<EditableRowSet> ReadEditableRowsAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        int maxRows,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 編集グリッドのセル 1 つを書き戻す。ちょうど 1 行に当たらない更新は成立させず、
+    /// 何も残さないのは実装側の責務（条件に複数行が当たる更新は取り消す）。
+    /// </summary>
+    /// <returns>実際に更新した行数。</returns>
+    Task<int> UpdateTableCellAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableCellUpdate update,
         CancellationToken cancellationToken = default);
 }

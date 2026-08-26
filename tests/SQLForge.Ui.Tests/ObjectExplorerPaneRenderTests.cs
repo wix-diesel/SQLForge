@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using SQLForge.Application.Catalog;
+using SQLForge.Application.Editing;
 using SQLForge.Application.Query;
 using SQLForge.Application.Security;
 using SQLForge.Domain.Catalog;
@@ -161,6 +162,7 @@ public class ObjectExplorerPaneRenderTests
                 new DatabaseUserName("app_user"), DatabaseUserType.SqlUserWithLogin, "app_login", dbo));
 
         var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        var tableEditor = new TableEditorViewModel(session, new EditTableRowsUseCase(), new UpdateTableCellUseCase());
 
         return new MainWindowViewModel(
             session,
@@ -175,9 +177,11 @@ public class ObjectExplorerPaneRenderTests
                 new ListStoredProcedureParametersUseCase(),
                 query)
             {
+                TableEditor = tableEditor,
                 Security = new DatabaseSecurityContext(new ListDatabaseUsersUseCase())
             },
-            query);
+            query,
+            tableEditor);
     }
 
     private static void WaitFor(Func<bool> condition)
