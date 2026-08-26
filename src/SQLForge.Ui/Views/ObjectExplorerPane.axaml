@@ -5,7 +5,7 @@
              x:Class="SQLForge.Ui.Views.ObjectExplorerPane"
              x:DataType="vm:MainWindowViewModel">
 
-  <!-- メインウィンドウ左ペイン: 接続 → データベース → スキーマ / セキュリティ → テーブル・ユーザー -->
+  <!-- メインウィンドウ左ペイン: 接続 → データベース / セキュリティ → スキーマ・ログイン → テーブル・ユーザー -->
   <Border Background="{DynamicResource BgPanelBrush}"
           BorderBrush="{DynamicResource BorderBrush}"
           BorderThickness="0,0,1,0">
@@ -163,6 +163,41 @@
             <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0">
               <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconColumn}" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
+                         HorizontalAlignment="Right"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- ログインの見出し（右クリックから追加できる） -->
+          <TreeDataTemplate DataType="explorer:ServerLoginsNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="新しいログイン…" Command="{Binding NewLoginCommand}"/>
+                  <MenuItem Header="最新の情報に更新" Command="{Binding RefreshCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon"
+                    Stroke="{DynamicResource CautionBrush}"
+                    Data="{StaticResource IconShield}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName" Text="{Binding Title}"/>
+              <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"/>
+            </Grid>
+          </TreeDataTemplate>
+
+          <!-- サーバー ログイン（葉。認証方式と既定のデータベースは右端） -->
+          <TreeDataTemplate DataType="explorer:ServerLoginNode" ItemsSource="{Binding Children}">
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6" Margin="0,0,8,0" Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="プロパティ" Command="{Binding PropertiesCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
+              <Path Grid.Column="0" Classes="icon" Data="{StaticResource IconKey}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Classes="nodeName"
+                         Classes.system="{Binding IsSystem}"
+                         Text="{Binding Title}"/>
               <TextBlock Grid.Column="2" Classes="nodeDetail" Text="{Binding Detail}"
                          HorizontalAlignment="Right"/>
             </Grid>

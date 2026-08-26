@@ -22,7 +22,9 @@ public sealed class MainWindowViewModelFactory(
     ListStoredProcedureParametersUseCase storedProcedureParameters,
     ExecuteQueryUseCase queries,
     ListDatabaseUsersUseCase databaseUsers,
-    IDatabaseUserEditor userEditor)
+    IDatabaseUserEditor userEditor,
+    ListServerLoginsUseCase serverLogins,
+    IServerLoginEditor loginEditor)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
     {
@@ -35,7 +37,8 @@ public sealed class MainWindowViewModelFactory(
         var catalog = new CatalogContext(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
         {
-            Security = new DatabaseSecurityContext(databaseUsers, userEditor)
+            Security = new DatabaseSecurityContext(databaseUsers, userEditor),
+            ServerSecurity = new ServerSecurityContext(serverLogins, loginEditor)
         };
 
         return new MainWindowViewModel(session, platform, catalog, query);

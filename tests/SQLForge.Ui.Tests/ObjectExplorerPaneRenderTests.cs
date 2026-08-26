@@ -43,6 +43,19 @@ public class ObjectExplorerPaneRenderTests
     }
 
     [AvaloniaFact]
+    public void ペインが狭くてもログイン名は消えない()
+    {
+        var window = NarrowPane(out var viewModel);
+        window.Show();
+
+        var logins = ExpandToLogins(viewModel);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("app_login", logins.Children.OfType<ServerLoginNode>().Single().Title);
+        Assert.True(Width(window, "app_login") > 0, "ログイン名が潰れて消えています。");
+    }
+
+    [AvaloniaFact]
     public void ペインが狭くてもカラム名は消えない()
     {
         // カラムの補足（PK, IDENTITY, int, not null）はユーザーの補足よりさらに長い。
@@ -107,6 +120,19 @@ public class ObjectExplorerPaneRenderTests
         return users;
     }
 
+    /// <summary>サーバー直下のセキュリティ（データベースの下のものとは別）を開く。</summary>
+    private static ObjectExplorerNode ExpandToLogins(MainWindowViewModel viewModel)
+    {
+        WaitFor(() => viewModel.Explorer.Roots.FirstOrDefault()?.Children.Count > 1);
+
+        var security = Expand(viewModel.Explorer.Roots[0], "セキュリティ");
+        var logins = Expand(security, "ログイン");
+
+        WaitFor(() => logins.Children.OfType<ServerLoginNode>().Any());
+
+        return logins;
+    }
+
     private static void ExpandToColumns(MainWindowViewModel viewModel)
     {
         var schemas = Expand(Database(viewModel), "スキーマ");
@@ -158,7 +184,12 @@ public class ObjectExplorerPaneRenderTests
             new ColumnDescriptor("id", 1, "int", IsNullable: false, IsIdentity: true, IsPrimaryKey: true))
         .WithDatabaseUsers("sales_db",
             new DatabaseUserDescriptor(
-                new DatabaseUserName("app_user"), DatabaseUserType.SqlUserWithLogin, "app_login", dbo));
+                new DatabaseUserName("app_user"), DatabaseUserType.SqlUserWithLogin, "app_login", dbo))
+        .WithServerLogins(
+            new ServerLoginDescriptor(
+                new ServerLoginName("app_login"),
+                ServerLoginType.SqlLogin,
+                new DatabaseName("sales_db")));
 
         var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
 
@@ -175,7 +206,8 @@ public class ObjectExplorerPaneRenderTests
                 new ListStoredProcedureParametersUseCase(),
                 query)
             {
-                Security = new DatabaseSecurityContext(new ListDatabaseUsersUseCase())
+                Security = new DatabaseSecurityContext(new ListDatabaseUsersUseCase()),
+                ServerSecurity = new ServerSecurityContext(new ListServerLoginsUseCase())
             },
             query);
     }
