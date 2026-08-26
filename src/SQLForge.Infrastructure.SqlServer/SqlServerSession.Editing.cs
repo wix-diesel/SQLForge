@@ -59,6 +59,20 @@ public sealed partial class SqlServerSession
         TableCellUpdate update) =>
         SqlServerEditStatements.CellUpdate(schema, table, columns, update);
 
+    protected override ParameterizedStatement BuildRowInsert(
+        SchemaName schema,
+        string table,
+        IReadOnlyList<EditableColumn> columns,
+        TableRowInsert insert) =>
+        SqlServerEditStatements.RowInsert(schema, table, columns, insert);
+
+    protected override ParameterizedStatement BuildRowDelete(
+        SchemaName schema,
+        string table,
+        IReadOnlyList<EditableColumn> columns,
+        TableRowDelete delete) =>
+        SqlServerEditStatements.RowDelete(schema, table, columns, delete);
+
     /// <summary>
     /// 行を特定する鍵を決めてから、列の素性を組む。
     ///
@@ -83,7 +97,9 @@ public sealed partial class SqlServerSession
                     || column.IsComputed
                     || !SqlServerCellValue.IsEditable(column.BaseType),
                 IsNumeric: SqlServerCellValue.IsNumeric(column.BaseType),
-                IsText: SqlServerCellValue.IsText(column.BaseType)))
+                IsText: SqlServerCellValue.IsText(column.BaseType),
+                // 足した行を読み直すときに SCOPE_IDENTITY() で当てられる列。
+                IsIdentity: column.IsIdentity))
             .ToList();
     }
 

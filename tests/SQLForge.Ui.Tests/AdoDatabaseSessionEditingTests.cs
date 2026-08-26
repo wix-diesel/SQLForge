@@ -109,8 +109,65 @@ public class AdoDatabaseSessionEditingTests
         Assert.False(connection.Transaction.IsCommitted);
     }
 
+    [Fact]
+    public async Task 足した行は読み直した値をそのまま返す()
+    {
+        // IDENTITY や既定値でサーバーが決めた値は、足したあとに読み直さないと分からない。
+        var connection = new FakeDbConnection { Rows = [new object?[] { "8", "paid" }] };
+        var session = new EditingSession(connection);
+
+        var inserted = await session.InsertTableRowAsync(ShopDb, Dbo, "orders", Insert());
+
+        Assert.Equal(["8", "paid"], inserted);
+        Assert.True(connection.Transaction!.IsCommitted);
+    }
+
+    [Fact]
+    public async Task 読み直しが返らなければ足したことだけを伝える()
+    {
+        // 読み直す条件を組めない文面（既定値で決まる主キーなど）。行は足せている。
+        var connection = new FakeDbConnection { Rows = [] };
+        var session = new EditingSession(connection);
+
+        var inserted = await session.InsertTableRowAsync(ShopDb, Dbo, "orders", Insert());
+
+        Assert.Null(inserted);
+        Assert.True(connection.Transaction!.IsCommitted);
+    }
+
+    [Fact]
+    public async Task 一行だけに当たった削除はコミットする()
+    {
+        var connection = new FakeDbConnection { AffectedRows = 1 };
+        var session = new EditingSession(connection);
+
+        var affected = await session.DeleteTableRowAsync(ShopDb, Dbo, "orders", Delete());
+
+        Assert.Equal(1, affected);
+        Assert.True(connection.Transaction!.IsCommitted);
+    }
+
+    [Fact]
+    public async Task 二行以上に当たった削除は巻き戻す()
+    {
+        // 消すのは取り消せない。思っていたより多くの行に当たった時点で別のことをしている。
+        var connection = new FakeDbConnection { AffectedRows = 3 };
+        var session = new EditingSession(connection);
+
+        var failure = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => session.DeleteTableRowAsync(ShopDb, Dbo, "orders", Delete()));
+
+        Assert.Contains("削除を取り消しました", failure.Message, StringComparison.Ordinal);
+        Assert.True(connection.Transaction!.IsRolledBack);
+        Assert.False(connection.Transaction.IsCommitted);
+    }
+
     private static TableCellUpdate Update() =>
         new("status", "shipped", [new RowCriterion("id", "1")]);
+
+    private static TableRowInsert Insert() => new([new TableCellValue("status", "paid")]);
+
+    private static TableRowDelete Delete() => new([new RowCriterion("id", "1")]);
 
     private static IReadOnlyList<IReadOnlyList<object?>> Rows(int count) =>
         Enumerable.Range(1, count)
@@ -158,5 +215,19 @@ public class AdoDatabaseSessionEditingTests
             IReadOnlyList<EditableColumn> columns,
             TableCellUpdate update) =>
             new("UPDATE", [update.Value]);
+
+        protected override ParameterizedStatement BuildRowInsert(
+            SchemaName schema,
+            string table,
+            IReadOnlyList<EditableColumn> columns,
+            TableRowInsert insert) =>
+            new("INSERT", [insert.Values[0].Value]);
+
+        protected override ParameterizedStatement BuildRowDelete(
+            SchemaName schema,
+            string table,
+            IReadOnlyList<EditableColumn> columns,
+            TableRowDelete delete) =>
+            new("DELETE", [delete.Criteria[0].Value]);
     }
 }

@@ -9,7 +9,7 @@ namespace SQLForge.Infrastructure.Connections;
 ///
 /// 読むところと流すところは ADO.NET の作法だけで書けるのでここに置き、
 /// 文面の組み立て（TOP と LIMIT の違い、識別子の引用符、型ごとの値の作り方）だけを
-/// ドライバーへ預ける。
+/// ドライバーへ預ける。行を足す・消すほうはもう一枚（Rows）にある。
 /// </summary>
 public abstract partial class AdoDatabaseSession
 {
@@ -59,9 +59,10 @@ public abstract partial class AdoDatabaseSession
 
                 await SwitchDatabaseAsync(connection, database, token).ConfigureAwait(false);
 
-                return await ExecuteUpdateAsync(
+                return await ExecuteWriteAsync(
                         connection,
                         BuildCellUpdate(schema, table, columns, update),
+                        "更新",
                         token)
                     .ConfigureAwait(false);
             },
@@ -145,14 +146,16 @@ public abstract partial class AdoDatabaseSession
     }
 
     /// <summary>
-    /// 更新を 1 つ流す。条件に 2 行以上が当たったら巻き戻す。
+    /// 書き込みを 1 つ流す。条件に 2 行以上が当たったら巻き戻す。
     ///
-    /// 編集グリッドの操作は「画面のこの行を直す」なので、思っていたより多くの行に
+    /// 編集グリッドの操作は「画面のこの行を直す（消す）」なので、思っていたより多くの行に
     /// 当たった時点でそれは別のことをしている。コミットへ辿り着かなければ破棄が巻き戻す。
     /// </summary>
-    private static async Task<int> ExecuteUpdateAsync(
+    /// <param name="operation">巻き戻したときの文面に出す操作の名前（更新・削除）。</param>
+    private static async Task<int> ExecuteWriteAsync(
         DbConnection connection,
         ParameterizedStatement statement,
+        string operation,
         CancellationToken cancellationToken)
     {
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -166,7 +169,7 @@ public abstract partial class AdoDatabaseSession
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 
             throw new InvalidOperationException(
-                $"条件に {affected} 行が当たったため、更新を取り消しました。行を 1 件に特定できません。");
+                $"条件に {affected} 行が当たったため、{operation}を取り消しました。行を 1 件に特定できません。");
         }
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);

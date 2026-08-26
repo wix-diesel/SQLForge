@@ -24,6 +24,9 @@ public sealed class MainWindowViewModelFactory(
     ExecuteQueryUseCase queries,
     EditTableRowsUseCase editTableRows,
     UpdateTableCellUseCase updateTableCell,
+    InsertTableRowUseCase insertTableRow,
+    DeleteTableRowUseCase deleteTableRow,
+    IRowDeletionPrompt rowDeletionPrompt,
     ListDatabaseUsersUseCase databaseUsers,
     IDatabaseUserEditor userEditor,
     ListDatabaseRolesUseCase databaseRoles,
@@ -41,7 +44,8 @@ public sealed class MainWindowViewModelFactory(
         // 作業領域を先に組む。ツリーの右クリックはここへ渡すので、
         // ツリーより先に居てもらう必要がある。
         var query = new QueryEditorViewModel(session, queries);
-        var tableEditor = new TableEditorViewModel(session, editTableRows, updateTableCell);
+        var tableEditor = new TableEditorViewModel(
+            session, editTableRows, updateTableCell, insertTableRow, deleteTableRow, rowDeletionPrompt);
 
         var catalog = new CatalogContext(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)

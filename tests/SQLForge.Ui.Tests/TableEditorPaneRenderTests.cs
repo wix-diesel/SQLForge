@@ -52,6 +52,21 @@ public class TableEditorPaneRenderTests
     }
 
     [AvaloniaFact]
+    public void いちばん下に新しい行が並ぶ()
+    {
+        // SSMS と同じで、行を足せるテーブルでは行番号が * の行が常にいちばん下に出る。
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        viewModel.TableEditor.OpenTableEditor(SalesDb, Dbo, "orders");
+        WaitFor(() => viewModel.TableEditor.Rows.Count > 0);
+        WaitFor(() => Texts(window).Contains(EditableRowViewModel.NewRowMark));
+
+        Assert.NotNull(viewModel.TableEditor.NewRow);
+        Assert.Equal(EditableRowViewModel.NewRowMark, viewModel.TableEditor.Rows[^1].Number);
+    }
+
+    [AvaloniaFact]
     public void セルを開くと入力欄が重なって出る()
     {
         var window = CreateWindow(out var viewModel);
@@ -109,7 +124,13 @@ public class TableEditorPaneRenderTests
     private static MainWindowViewModel NewViewModel(FakeDatabaseSession session)
     {
         var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        var tableEditor = new TableEditorViewModel(session, new EditTableRowsUseCase(), new UpdateTableCellUseCase());
+        var tableEditor = new TableEditorViewModel(
+            session,
+            new EditTableRowsUseCase(),
+            new UpdateTableCellUseCase(),
+            new InsertTableRowUseCase(),
+            new DeleteTableRowUseCase(),
+            new FakeRowDeletionPrompt());
 
         return new MainWindowViewModel(
             session,

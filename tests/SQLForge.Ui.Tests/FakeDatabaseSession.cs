@@ -669,6 +669,48 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return EditFailure is not null ? Task.FromException<int>(EditFailure) : Task.FromResult(UpdatedRows);
     }
 
+    /// <summary>行を足したあとに返す読み直しの結果。null は「読み直せなかった」。</summary>
+    public IReadOnlyList<string?>? InsertedRow { get; set; }
+
+    public string? InsertedTable { get; private set; }
+
+    public TableRowInsert? LastInsert { get; private set; }
+
+    /// <summary>削除が返す行数。0 にすると「行が見つからない」を作れる。</summary>
+    public int DeletedRows { get; set; } = 1;
+
+    public string? DeletedTable { get; private set; }
+
+    public TableRowDelete? LastDelete { get; private set; }
+
+    public Task<IReadOnlyList<string?>?> InsertTableRowAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableRowInsert insert,
+        CancellationToken cancellationToken = default)
+    {
+        InsertedTable = $"{database.Value}.{schema.Value}.{table}";
+        LastInsert = insert;
+
+        return EditFailure is not null
+            ? Task.FromException<IReadOnlyList<string?>?>(EditFailure)
+            : Task.FromResult(InsertedRow);
+    }
+
+    public Task<int> DeleteTableRowAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableRowDelete delete,
+        CancellationToken cancellationToken = default)
+    {
+        DeletedTable = $"{database.Value}.{schema.Value}.{table}";
+        LastDelete = delete;
+
+        return EditFailure is not null ? Task.FromException<int>(EditFailure) : Task.FromResult(DeletedRows);
+    }
+
     public ValueTask DisposeAsync()
     {
         IsDisposed = true;
