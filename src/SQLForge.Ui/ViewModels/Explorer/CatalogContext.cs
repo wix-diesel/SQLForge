@@ -42,4 +42,10 @@ public sealed record CatalogContext(
     /// 無ければツリーのサーバー直下に「セキュリティ」の枝を出さない。
     /// </summary>
     public ServerSecurityContext? ServerSecurity { get; init; }
+
+    /// <summary>
+    /// 右クリックの「接続解除」の行き先。メインウィンドウのビューモデルは
+    /// このコンテキストを組んだあとにしか作れないので、あとから差す。
+    /// </summary>
+    public IConnectionLauncher? ConnectionLauncher { get; set; }
 }

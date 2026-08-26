@@ -48,16 +48,18 @@ public partial class App : Avalonia.Application
     }
 
     /// <summary>
-    /// 開いたセッションをメインウィンドウへ渡し、接続ダイアログを閉じる。
-    /// セッションを閉じるのはメインウィンドウのビューモデルの役目。
+    /// 開いたセッションをメインウィンドウへ渡し、それまでの窓（接続ダイアログ、または
+    /// 接続解除で閉じる前のメインウィンドウ）を閉じる。セッションを閉じるのはメインウィンドウの
+    /// ビューモデルの役目。
     /// </summary>
-    private static void ShowMainWindow(IServiceProvider services, IDatabaseSession session, ConnectWindow connectWindow)
+    private static void ShowMainWindow(IServiceProvider services, IDatabaseSession session, Avalonia.Controls.Window windowToClose)
     {
         var viewModel = services.GetRequiredService<MainWindowViewModelFactory>().Create(session);
         var window = new MainWindow { DataContext = viewModel };
 
         window.ApplyPlatform(services.GetRequiredService<IPlatformProfile>());
         viewModel.CloseRequested += (_, _) => window.Close();
+        viewModel.DisconnectRequested += (_, _) => Disconnect(services, window);
         window.Closed += async (_, _) => await viewModel.DisposeAsync().ConfigureAwait(false);
 
         // ツリーから開くダイアログの親。ここで初めて決まる。
@@ -67,6 +69,16 @@ public partial class App : Avalonia.Application
         window.Show();
         _ = viewModel.InitializeAsync();
 
-        connectWindow.Close();
+        windowToClose.Close();
+    }
+
+    /// <summary>
+    /// 接続解除。新しい接続ダイアログを先に出してから今のメインウィンドウを閉じる
+    /// （閉じる順を逆にすると、一瞬どちらの窓も無い状態になり OnLastWindowClose でアプリごと終わる）。
+    /// </summary>
+    private static void Disconnect(IServiceProvider services, MainWindow window)
+    {
+        CreateConnectWindow(services).Show();
+        window.Close();
     }
 }
