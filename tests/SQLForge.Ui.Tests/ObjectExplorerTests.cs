@@ -30,6 +30,33 @@ public class ObjectExplorerTests
     }
 
     [Fact]
+    public async Task 接続解除を選ぶと行き先へ伝わる()
+    {
+        var launcher = new StubConnectionLauncher();
+        var explorer = NewExplorer(NewSession(), connectionLauncher: launcher);
+        await explorer.InitializeAsync();
+
+        var server = Assert.IsType<ServerNode>(Assert.Single(explorer.Roots));
+
+        Assert.True(server.DisconnectCommand.CanExecute(null));
+        server.DisconnectCommand.Execute(null);
+
+        Assert.True(launcher.Disconnected);
+    }
+
+    [Fact]
+    public async Task 行き先がつながっていなくても接続解除は例外にならない()
+    {
+        var explorer = NewExplorer(NewSession());
+        await explorer.InitializeAsync();
+
+        var server = Assert.IsType<ServerNode>(Assert.Single(explorer.Roots));
+
+        Assert.True(server.DisconnectCommand.CanExecute(null));
+        server.DisconnectCommand.Execute(null);
+    }
+
+    [Fact]
     public async Task スキーマを開くまでテーブルは読まない()
     {
         var explorer = NewExplorer(NewSession());
@@ -378,10 +405,19 @@ public class ObjectExplorerTests
             Opened = $"{database.Value}.{schema.Value}.{table}";
     }
 
+    /// <summary>接続解除の行き先。呼ばれたかどうかだけを覚えておく。</summary>
+    private sealed class StubConnectionLauncher : IConnectionLauncher
+    {
+        public bool Disconnected { get; private set; }
+
+        public void Disconnect() => Disconnected = true;
+    }
+
     private static ObjectExplorerViewModel NewExplorer(
         FakeDatabaseSession session,
         IQueryLauncher? query = null,
-        ITableEditorLauncher? tableEditor = null) =>
+        ITableEditorLauncher? tableEditor = null,
+        IConnectionLauncher? connectionLauncher = null) =>
         new(new CatalogContext(
             session,
             new ListDatabasesUseCase(),
@@ -392,7 +428,8 @@ public class ObjectExplorerTests
             new ListStoredProcedureParametersUseCase(),
             query)
         {
-            TableEditor = tableEditor
+            TableEditor = tableEditor,
+            ConnectionLauncher = connectionLauncher
         });
 
     private static DatabaseNode Database(ObjectExplorerViewModel explorer, string name) =>
