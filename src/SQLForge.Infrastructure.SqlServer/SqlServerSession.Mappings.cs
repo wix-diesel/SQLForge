@@ -117,7 +117,10 @@ public sealed partial class SqlServerSession
             }
 
             var user = new DatabaseUserName(reader.GetString(0));
-            var schema = reader.IsDBNull(1) ? null : new SchemaName(reader.GetString(1));
+
+            // 既定のスキーマは読めないことがある。SchemaName は値型なので、
+            // 「無い」を表すには受け皿の側を null 許容にしておく。
+            SchemaName? schema = reader.IsDBNull(1) ? null : new SchemaName(reader.GetString(1));
 
             await reader.NextResultAsync(cancellationToken).ConfigureAwait(false);
 

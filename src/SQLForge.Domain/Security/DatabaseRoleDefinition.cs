@@ -11,6 +11,9 @@ public sealed record DatabaseRoleDefinition(RoleName Name, string? Owner = null)
     /// <summary>このロールに入れるユーザーとロール。</summary>
     public IReadOnlyList<string> Members { get; init; } = [];
 
-    /// <summary>このロールに持たせるスキーマ。外れたスキーマの持ち主は変更後の所有者ではなく元のまま。</summary>
+    /// <summary>
+    /// このロールに持たせるスキーマ。ここから外れたスキーマの行き先はドライバーが決める
+    /// （スキーマは持ち主を空にできないため。SQL Server では SSMS と同じく dbo へ移す）。
+    /// </summary>
     public IReadOnlyList<string> OwnedSchemas { get; init; } = [];
 }

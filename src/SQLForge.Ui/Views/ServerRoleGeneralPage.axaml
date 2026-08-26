@@ -33,7 +33,7 @@
 
     </StackPanel>
 
-    <!-- 所有されているスキーマ -->
+    <!-- メンバーシップ（このロールが入る別のサーバー ロール） -->
     <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
       <TextBlock Grid.Row="0" Classes="label" Text="メンバーシップ（このロールが入るサーバー ロール）"/>
       <Border Grid.Row="1"
