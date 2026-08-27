@@ -74,7 +74,9 @@ public partial class QueryWorkspacePane : UserControl
 
         foreach (var (kind, key) in SyntaxBrushes)
         {
-            if (this.TryFindResource(key, out var found) && found is IBrush brush)
+            // テーマ別の辞書（Tokens.axaml の ThemeDictionaries）に入っているので、
+            // 今のテーマを渡して引く。渡さないと変種なしの辞書しか見に行かず、何も見つからない。
+            if (this.TryFindResource(key, ActualThemeVariant, out var found) && found is IBrush brush)
             {
                 brushes[kind] = brush;
             }
