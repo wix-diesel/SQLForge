@@ -42,6 +42,10 @@ public partial class App : Avalonia.Application
         window.ApplyPlatform(services.GetRequiredService<IPlatformProfile>());
         viewModel.CloseRequested += (_, _) => window.Close();
         viewModel.ConnectionEstablished += (_, session) => ShowMainWindow(services, session, window);
+
+        // 左ペインの削除・書き出し・取り込みで出すダイアログの親。接続解除で開き直すたびに差し替える。
+        services.GetRequiredService<SavedConnectionDialogService>().Owner = window;
+
         _ = viewModel.InitializeAsync();
 
         return window;

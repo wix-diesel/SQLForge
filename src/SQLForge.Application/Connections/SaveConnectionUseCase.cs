@@ -56,5 +56,9 @@ public sealed class SaveConnectionUseCase(IConnectionProfileRepository repositor
         }
     }
 
-    public static string SecretKeyFor(ConnectionProfile profile) => $"sqlforge:{profile.Id}";
+    public static string SecretKeyFor(ConnectionProfile profile) =>
+        SecretKeyFor((profile ?? throw new ArgumentNullException(nameof(profile))).Id);
+
+    /// <summary>接続そのものが手元に無いとき（削除したあとの後始末など）に使う。</summary>
+    public static string SecretKeyFor(ConnectionProfileId id) => $"sqlforge:{id}";
 }

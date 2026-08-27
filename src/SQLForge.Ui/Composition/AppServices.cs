@@ -52,6 +52,9 @@ public static class AppServices
         // 保存済み接続は OS ごとの設定ディレクトリ（ProfileDirectory）の TOML に置く。
         services.AddSingleton<IConnectionProfileRepository, TomlConnectionProfileRepository>();
 
+        // 書き出し・取り込みのファイルも同じ TOML の形。置き場所は利用者が選ぶ。
+        services.AddSingleton<IConnectionArchive, TomlConnectionArchive>();
+
         // パスワードは OS のキーリングへ預ける。こちらも実装は OS ごとの
         // 別プロジェクトにあり、実行中の OS のものを SecretStores が選ぶ。
         services.AddSingleton(_ => SecretStores.ForCurrentHost());
@@ -64,6 +67,9 @@ public static class AppServices
         services.AddTransient<TestConnectionUseCase>();
         services.AddTransient<SaveConnectionUseCase>();
         services.AddTransient<OpenConnectionUseCase>();
+        services.AddTransient<DeleteConnectionUseCase>();
+        services.AddTransient<ExportConnectionsUseCase>();
+        services.AddTransient<ImportConnectionsUseCase>();
 
         services.AddSingleton<ListDatabasesUseCase>();
         services.AddSingleton<ListSchemasUseCase>();
@@ -106,6 +112,12 @@ public static class AppServices
     {
         services.AddTransient<SavedConnectionsViewModel>();
         services.AddTransient<ConnectDialogViewModel>();
+
+        // 左ペインの削除・書き出し・取り込みで出すダイアログ。親は接続ダイアログで、
+        // 接続解除のたびに開き直すので、Owner を差し替えられるよう 1 つを共有する。
+        services.AddSingleton<SavedConnectionDialogService>();
+        services.AddSingleton<ISavedConnectionPrompt>(provider =>
+            provider.GetRequiredService<SavedConnectionDialogService>());
 
         // ユーザーの編集ダイアログはメインウィンドウの上にモーダルで出すので、
         // 親ウィンドウが決まったところ（App）で Owner を差せるよう 1 つを共有する。

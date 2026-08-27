@@ -4,7 +4,7 @@
              x:Class="SQLForge.Ui.Views.SavedConnectionsPane"
              x:DataType="vm:ConnectDialogViewModel">
 
-  <!-- 接続ダイアログ左ペイン: 検索・環境タグごとの一覧・新規作成 -->
+  <!-- 接続ダイアログ左ペイン: 検索・環境タグごとの一覧・新規作成・書き出しと取り込み -->
   <Border Background="{DynamicResource BgPanelBrush}"
           BorderBrush="{DynamicResource BorderBrush}"
           BorderThickness="0,0,1,0">
@@ -49,10 +49,18 @@
           </DataTemplate>
 
           <DataTemplate DataType="vm:SavedConnectionItemViewModel">
+            <!-- 背景を敷かないと、行の空いているところで右クリックを拾えない。 -->
             <Grid Height="{DynamicResource ConnectionRowHeight}"
                   Margin="12,0"
                   ColumnDefinitions="Auto,*,Auto"
-                  ColumnSpacing="9">
+                  ColumnSpacing="9"
+                  Background="Transparent">
+              <Grid.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="書き出し…" Command="{Binding ExportCommand}"/>
+                  <MenuItem Header="削除" Command="{Binding DeleteCommand}"/>
+                </ContextMenu>
+              </Grid.ContextMenu>
               <Border Grid.Column="0" Classes="envColor"
                       Classes.critical="{Binding IsCritical}"
                       Classes.elevated="{Binding IsElevated}"
@@ -89,7 +97,7 @@
                  Margin="0,24,0,0"
                  IsVisible="{Binding SavedConnections.IsEmpty}"/>
 
-      <!-- 新しい接続 -->
+      <!-- 新しい接続と、保存済み接続の書き出し・取り込み -->
       <Border Grid.Row="2"
               Height="34"
               Padding="12,0"
@@ -110,13 +118,20 @@
                          VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
-          <Button Grid.Column="1"
-                  Theme="{StaticResource IconButton}"
-                  IsEnabled="False"
-                  ToolTip.Tip="接続情報の取り込み（未実装）">
-            <Path Classes="icon"
-                  Data="{StaticResource IconImport}"/>
-          </Button>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+            <Button Theme="{StaticResource IconButton}"
+                    Command="{Binding SavedConnections.ExportAllCommand}"
+                    ToolTip.Tip="保存済み接続の書き出し">
+              <Path Classes="icon"
+                    Data="{StaticResource IconExport}"/>
+            </Button>
+            <Button Theme="{StaticResource IconButton}"
+                    Command="{Binding SavedConnections.ImportCommand}"
+                    ToolTip.Tip="接続情報の取り込み">
+              <Path Classes="icon"
+                    Data="{StaticResource IconImport}"/>
+            </Button>
+          </StackPanel>
         </Grid>
       </Border>
 

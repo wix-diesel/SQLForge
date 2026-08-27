@@ -69,8 +69,14 @@ public class ConnectDialogViewModelTests
         var connector = new FakeConnector();
         var registry = new DatabaseConnectorRegistry([connector]);
 
+        var archive = new FakeConnectionArchive();
         var dialog = new ConnectDialogViewModel(
-            new SavedConnectionsViewModel(new ListSavedConnectionsUseCase(repository)),
+            new SavedConnectionsViewModel(
+                new ListSavedConnectionsUseCase(repository),
+                new DeleteConnectionUseCase(repository, store),
+                new ExportConnectionsUseCase(repository, store, archive),
+                new ImportConnectionsUseCase(repository, store, archive),
+                new FakeSavedConnectionPrompt()),
             new TestConnectionUseCase(new DriverConnectionProbe(registry), resolver),
             new SaveConnectionUseCase(repository, store),
             new OpenConnectionUseCase(registry, resolver),

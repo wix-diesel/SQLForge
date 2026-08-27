@@ -5,17 +5,38 @@ using SQLForge.Domain.Connections;
 
 namespace SQLForge.Ui.ViewModels;
 
-/// <summary>接続ダイアログ左ペイン。保存済み接続を検索し、環境タグごとに並べる。</summary>
-public sealed partial class SavedConnectionsViewModel(ListSavedConnectionsUseCase listConnections) : ObservableObject
+/// <summary>
+/// 接続ダイアログ左ペイン。保存済み接続を検索し、環境タグごとに並べる。
+/// 削除・書き出し・取り込みは <c>SavedConnectionsViewModel.Management.cs</c> にある。
+/// </summary>
+public sealed partial class SavedConnectionsViewModel : ObservableObject
 {
     /// <summary>打鍵ごとに読み直さないための待ち時間。</summary>
     private static readonly TimeSpan SearchDebounce = TimeSpan.FromMilliseconds(180);
 
-    private readonly ListSavedConnectionsUseCase _listConnections = listConnections;
+    private readonly ListSavedConnectionsUseCase _listConnections;
+    private readonly DeleteConnectionUseCase _deleteConnection;
+    private readonly ExportConnectionsUseCase _exportConnections;
+    private readonly ImportConnectionsUseCase _importConnections;
+    private readonly ISavedConnectionPrompt _prompt;
     private CancellationTokenSource? _searchCancellation;
 
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private SavedConnectionItemViewModel? _selectedItem;
+
+    public SavedConnectionsViewModel(
+        ListSavedConnectionsUseCase listConnections,
+        DeleteConnectionUseCase deleteConnection,
+        ExportConnectionsUseCase exportConnections,
+        ImportConnectionsUseCase importConnections,
+        ISavedConnectionPrompt prompt)
+    {
+        _listConnections = listConnections;
+        _deleteConnection = deleteConnection;
+        _exportConnections = exportConnections;
+        _importConnections = importConnections;
+        _prompt = prompt;
+    }
 
     /// <summary>見出し行と接続行を混ぜた 1 本の一覧。見出しは選択できない。</summary>
     public ObservableCollection<IConnectionListEntry> Entries { get; } = [];
@@ -69,7 +90,7 @@ public sealed partial class SavedConnectionsViewModel(ListSavedConnectionsUseCas
 
             foreach (var profile in group.Profiles)
             {
-                Entries.Add(new SavedConnectionItemViewModel(profile));
+                Entries.Add(new SavedConnectionItemViewModel(profile, this));
             }
         }
 

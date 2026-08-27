@@ -24,6 +24,9 @@
   <!-- 取り込み -->
   <StreamGeometry x:Key="IconImport">M8,10.4 V2.6 M5.2,7.6 L8,10.4 L10.8,7.6 M2.8,12.8 H13.2</StreamGeometry>
 
+  <!-- 書き出し（取り込みの向き違い） -->
+  <StreamGeometry x:Key="IconExport">M8,2.6 V10.4 M5.2,5.4 L8,2.6 L10.8,5.4 M2.8,12.8 H13.2</StreamGeometry>
+
   <!-- パスワードの表示切り替え -->
   <StreamGeometry x:Key="IconEye">M1.6,8 C1.6,8 4,3.8 8,3.8 C12,3.8 14.4,8 14.4,8 C14.4,8 12,12.2 8,12.2 C4,12.2 1.6,8 1.6,8 Z M6.3,8 A1.7,1.7 0 1 0 9.7,8 A1.7,1.7 0 1 0 6.3,8</StreamGeometry>
   <StreamGeometry x:Key="IconEyeOff">M1.6,8 C1.6,8 4,3.8 8,3.8 C12,3.8 14.4,8 14.4,8 C14.4,8 12,12.2 8,12.2 C4,12.2 1.6,8 1.6,8 Z M6.3,8 A1.7,1.7 0 1 0 9.7,8 A1.7,1.7 0 1 0 6.3,8 M2.8,13.2 L13.2,2.8</StreamGeometry>
