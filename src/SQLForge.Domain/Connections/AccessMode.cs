@@ -27,11 +27,28 @@ public enum AuthenticationMethod
     Certificate
 }
 
-/// <summary>TLS の要求レベル。接続 URL の sslmode に対応する。</summary>
+/// <summary>
+/// TLS の要求レベル。接続 URL の sslmode に対応する。
+/// SSMS の [暗号化] （Optional / Mandatory / Strict）と証明書を信頼するかの組み合わせを、
+/// 1 本の並びに畳んである。
+/// </summary>
 public enum TlsMode
 {
+    /// <summary>使わない。クライアントからは必須にしない。</summary>
     Disabled,
+
+    /// <summary>可能なら使う。クライアントからは必須にしない。</summary>
     Prefer,
+
+    /// <summary>必須。証明書は検証しない（SSMS の Mandatory + サーバー証明書を信頼する）。</summary>
     Require,
-    VerifyFull
+
+    /// <summary>必須かつ証明書を検証する（SSMS の Mandatory + 信頼しない）。</summary>
+    VerifyFull,
+
+    /// <summary>
+    /// 厳密（SSMS の Strict）。TDS 8.0 で最初から TLS を張り、証明書は必ず検証する。
+    /// SQL Server 2022 / Azure SQL 以降で使える。
+    /// </summary>
+    Strict
 }

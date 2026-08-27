@@ -11,7 +11,7 @@ public sealed class SaveConnectionUseCase(IConnectionProfileRepository repositor
 
     public async Task<ConnectionValidationResult> ExecuteAsync(
         ConnectionDraft draft,
-        string? secret,
+        ConnectionSecrets? secrets = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(draft);
@@ -22,29 +22,53 @@ public sealed class SaveConnectionUseCase(IConnectionProfileRepository repositor
             return validation;
         }
 
+        var typed = secrets ?? ConnectionSecrets.None;
         var profile = draft.ToProfile();
         await _repository.SaveAsync(profile, cancellationToken).ConfigureAwait(false);
-        await PersistSecretAsync(profile, secret, cancellationToken).ConfigureAwait(false);
+        await PersistSecretsAsync(profile, typed, cancellationToken).ConfigureAwait(false);
 
         return validation;
     }
 
     /// <summary>
-    /// 資格情報を預ける、または預けてあるものを消す。
-    /// 「キーリングに保存」を外した接続とパスワード認証をやめた接続では、
-    /// 古い資格情報が残らないように消す。
-    /// パスワード欄が空のときは、伏せて表示しているだけの可能性があるので既存を残す。
+    /// 資格情報を預ける、または預けてあるものを消す。DB のパスワードと踏み台のぶんを
+    /// それぞれ別の鍵で扱う（踏み台をやめた接続に、古いパスワードを残さないため）。
     /// </summary>
-    private async Task PersistSecretAsync(ConnectionProfile profile, string? secret, CancellationToken cancellationToken)
+    private async Task PersistSecretsAsync(
+        ConnectionProfile profile,
+        ConnectionSecrets secrets,
+        CancellationToken cancellationToken)
     {
         if (!_secretStore.IsAvailable)
         {
             return;
         }
 
-        var key = SecretKeyFor(profile);
+        await PersistAsync(
+            SecretKeyFor(profile),
+            profile.Credentials.StoreSecretInKeyring && profile.Credentials.RequiresSecret,
+            secrets.Password,
+            cancellationToken).ConfigureAwait(false);
 
-        if (!profile.Credentials.StoreSecretInKeyring || !profile.Credentials.RequiresSecret)
+        await PersistAsync(
+            SshSecretKeyFor(profile),
+            profile.Tunnel.StoreSecretInKeyring && profile.Tunnel.IsEnabled,
+            secrets.SshSecret,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 鍵 1 つぶんの預け直し。
+    /// 預けない設定になっていれば消し、入力欄が空のときは伏せて表示しているだけの
+    /// 可能性があるので既存を残す。
+    /// </summary>
+    private async Task PersistAsync(
+        string key,
+        bool wanted,
+        string? secret,
+        CancellationToken cancellationToken)
+    {
+        if (!wanted)
         {
             await _secretStore.DeleteAsync(key, cancellationToken).ConfigureAwait(false);
             return;
@@ -61,4 +85,10 @@ public sealed class SaveConnectionUseCase(IConnectionProfileRepository repositor
 
     /// <summary>接続そのものが手元に無いとき（削除したあとの後始末など）に使う。</summary>
     public static string SecretKeyFor(ConnectionProfileId id) => $"sqlforge:{id}";
+
+    /// <summary>踏み台のパスワード（またはパスフレーズ）の預け先。DB のぶんとは別の鍵にする。</summary>
+    public static string SshSecretKeyFor(ConnectionProfile profile) =>
+        SshSecretKeyFor((profile ?? throw new ArgumentNullException(nameof(profile))).Id);
+
+    public static string SshSecretKeyFor(ConnectionProfileId id) => $"sqlforge:{id}:ssh";
 }

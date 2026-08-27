@@ -163,6 +163,117 @@ public class ConnectionFormViewModelTests
         Assert.Empty(form.ToDraft().ToProfile().Credentials.UserName);
     }
 
+    [Fact]
+    public void タブごとの入力がドラフトに載る()
+    {
+        var form = FilledForm();
+
+        form.Ssh.IsEnabled = true;
+        form.Ssh.Host = " bastion.internal ";
+        form.Ssh.Port = "2222";
+        form.Ssh.User = "alice";
+        form.Ssh.Authentication = SshAuthenticationChoice.For(SshAuthenticationMethod.PrivateKey);
+        form.Ssh.PrivateKeyPath = "~/.ssh/id_ed25519";
+        form.Certificate.HostNameInCertificate = "db.internal";
+        form.Advanced.PacketSize = "8192";
+        form.Advanced.AdditionalParameters = "ApplicationIntent=ReadOnly";
+
+        var draft = form.ToDraft();
+
+        Assert.True(draft.Tunnel.IsEnabled);
+        Assert.Equal("bastion.internal", draft.Tunnel.Host);
+        Assert.Equal(2222, draft.Tunnel.Port);
+        Assert.Equal(SshAuthenticationMethod.PrivateKey, draft.Tunnel.Authentication);
+        Assert.Equal("db.internal", draft.Certificate.HostNameInCertificate);
+        Assert.Equal(8192, draft.Advanced.PacketSize);
+        Assert.Equal("ApplicationIntent=ReadOnly", draft.Advanced.AdditionalParameters);
+    }
+
+    [Fact]
+    public void 保存済み接続を読み込むとタブの入力にも写る()
+    {
+        var form = NewForm();
+        var loaded = FilledForm();
+        loaded.Ssh.IsEnabled = true;
+        loaded.Ssh.Host = "bastion.internal";
+        loaded.Ssh.User = "alice";
+        loaded.Advanced.ConnectTimeout = "30";
+
+        form.Load(loaded.ToDraft());
+
+        Assert.True(form.Ssh.IsEnabled);
+        Assert.Equal("bastion.internal", form.Ssh.Host);
+        Assert.Equal("30", form.Advanced.ConnectTimeout);
+
+        // パスワードと同じで、預けてある秘密は入力欄へは戻さない。
+        Assert.Empty(form.Ssh.Secret);
+    }
+
+    [Fact]
+    public void 手元のポートは空欄なら自動になる()
+    {
+        var form = FilledForm();
+        form.Ssh.IsEnabled = true;
+        form.Ssh.LocalPort = string.Empty;
+
+        Assert.True(form.ToDraft().Tunnel.UsesAutomaticLocalPort);
+    }
+
+    [Fact]
+    public void 一般タブのTLSがTLSタブの表示に追随する()
+    {
+        // 要求レベルは 1 か所（「一般」タブ）でだけ決まる。
+        var form = FilledForm();
+
+        form.Tls = TlsChoice.For(TlsMode.Require);
+        Assert.True(form.Certificate.TrustsServerCertificate);
+
+        form.Tls = TlsChoice.For(TlsMode.Strict);
+
+        Assert.False(form.Certificate.TrustsServerCertificate);
+        Assert.Equal("厳密 (Strict)", form.Certificate.EncryptionName);
+    }
+
+    [Fact]
+    public void 証明書を指定していても検証しない設定なら断り書きを出す()
+    {
+        var form = FilledForm();
+        form.Tls = TlsChoice.For(TlsMode.Require);
+        form.Certificate.HostNameInCertificate = "db.internal";
+
+        Assert.True(form.Certificate.ShowsIgnoredNotice);
+
+        form.Tls = TlsChoice.For(TlsMode.VerifyFull);
+
+        Assert.False(form.Certificate.ShowsIgnoredNotice);
+    }
+
+    [Fact]
+    public void 詳細設定は既定値へ戻せる()
+    {
+        var form = FilledForm();
+        form.Advanced.PacketSize = "8192";
+
+        Assert.False(form.Advanced.IsDefault);
+
+        form.Advanced.ResetCommand.Execute(null);
+
+        Assert.True(form.Advanced.IsDefault);
+        Assert.Equal(AdvancedConnectionSettings.DefaultPacketSize, form.ToDraft().Advanced.PacketSize);
+    }
+
+    [Fact]
+    public void 検証の結果はタブごとの入力欄にも配る()
+    {
+        var form = FilledForm();
+        form.Ssh.IsEnabled = true;
+
+        form.Validation = ConnectionValidator.Validate(form.ToDraft());
+
+        Assert.True(form.Ssh.HasHostError);
+        Assert.True(form.Ssh.HasUserError);
+    }
+
     private static ConnectionFormViewModel NewForm(
         IPlatformProfile? platform = null,
         DatabaseDriver? driver = null)

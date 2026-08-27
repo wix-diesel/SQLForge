@@ -72,24 +72,133 @@ internal static class ConnectionProfileToml
         new("authentication", Authentications.NameOf(profile.Credentials.Method)),
         new("store_secret_in_keyring", profile.Credentials.StoreSecretInKeyring),
         new("tls", TlsModes.NameOf(profile.Target.Tls)),
-        new("access_mode", AccessModes.NameOf(profile.AccessMode))
+        new("access_mode", AccessModes.NameOf(profile.AccessMode)),
+        .. CertificateRows(profile.Target.Certificate),
+        .. TunnelRows(profile.Tunnel),
+        .. AdvancedRows(profile.Advanced)
     ];
+
+    /// <summary>
+    /// 「TLS / SSL」タブ。指定が無いときは行そのものを書かない
+    /// ―― 既定のままの接続を、空文字の行で埋めないため。
+    /// </summary>
+    private static IEnumerable<KeyValuePair<string, object>> CertificateRows(TlsCertificateSettings certificate)
+    {
+        if (certificate.HasHostNameInCertificate)
+        {
+            yield return new("tls_host_name_in_certificate", certificate.HostNameInCertificate);
+        }
+
+        if (certificate.HasServerCertificate)
+        {
+            yield return new("tls_server_certificate", certificate.ServerCertificatePath);
+        }
+    }
+
+    /// <summary>「SSH トンネル」タブ。使わない接続では行を書かない。</summary>
+    private static IEnumerable<KeyValuePair<string, object>> TunnelRows(SshTunnelSettings tunnel)
+    {
+        if (!tunnel.IsEnabled)
+        {
+            yield break;
+        }
+
+        yield return new("ssh_enabled", true);
+        yield return new("ssh_host", tunnel.Host);
+        yield return new("ssh_port", tunnel.Port);
+        yield return new("ssh_user", tunnel.UserName);
+        yield return new("ssh_authentication", SshAuthentications.NameOf(tunnel.Authentication));
+        yield return new("ssh_private_key", tunnel.PrivateKeyPath);
+        yield return new("ssh_local_port", tunnel.LocalPort);
+        yield return new("ssh_store_secret_in_keyring", tunnel.StoreSecretInKeyring);
+    }
+
+    /// <summary>「詳細設定」タブ。既定のままの接続では行を書かない。</summary>
+    private static IEnumerable<KeyValuePair<string, object>> AdvancedRows(AdvancedConnectionSettings advanced)
+    {
+        if (advanced.IsDefault)
+        {
+            yield break;
+        }
+
+        yield return new("network_protocol", NetworkProtocols.NameOf(advanced.Protocol));
+        yield return new("packet_size", advanced.PacketSize);
+        yield return new("connect_timeout", advanced.ConnectTimeoutSeconds);
+        yield return new("execution_timeout", advanced.ExecutionTimeoutSeconds);
+
+        if (advanced.HasAdditionalParameters)
+        {
+            yield return new("additional_parameters", advanced.AdditionalParameters);
+        }
+    }
 
     private static ConnectionProfile ToProfile(IReadOnlyDictionary<string, string> table)
     {
         var driver = Lookup(table, "driver", DatabaseDriver.FromId);
-        var address = new ServerAddress(Text(table, "host"), Lookup(table, "port", ParsePort));
+        var address = new ServerAddress(Text(table, "host"), Lookup(table, "port", ParseInteger));
 
         return new ConnectionProfile(
             Lookup(table, "id", ConnectionProfileId.Parse),
             Text(table, "name"),
             Lookup(table, "environment", EnvironmentTag.FromId),
-            new ConnectionTarget(driver, address, Text(table, "database"), Lookup(table, "tls", TlsModes.FromName)),
+            new ConnectionTarget(
+                driver,
+                address,
+                Text(table, "database"),
+                Lookup(table, "tls", TlsModes.FromName),
+                ToCertificate(table)),
             new ConnectionCredentials(
                 Text(table, "user"),
                 Lookup(table, "authentication", Authentications.FromName),
                 Lookup(table, "store_secret_in_keyring", ParseBool)),
-            Lookup(table, "access_mode", AccessModes.FromName));
+            Lookup(table, "access_mode", AccessModes.FromName),
+            ToTunnel(table),
+            ToAdvanced(table));
+    }
+
+    private static TlsCertificateSettings ToCertificate(IReadOnlyDictionary<string, string> table) => new()
+    {
+        HostNameInCertificate = Optional(table, "tls_host_name_in_certificate") ?? string.Empty,
+        ServerCertificatePath = Optional(table, "tls_server_certificate") ?? string.Empty
+    };
+
+    /// <summary>
+    /// 古い保存ファイル（これらのキーが無いもの）はトンネル無しとして読む。
+    /// 読めなくしてしまうと、更新しただけで保存済み接続が全部消える。
+    /// </summary>
+    private static SshTunnelSettings ToTunnel(IReadOnlyDictionary<string, string> table)
+    {
+        if (OptionalLookup(table, "ssh_enabled", ParseBool) != true)
+        {
+            return SshTunnelSettings.Disabled;
+        }
+
+        return new SshTunnelSettings
+        {
+            IsEnabled = true,
+            Host = Text(table, "ssh_host"),
+            Port = Lookup(table, "ssh_port", ParseInteger),
+            UserName = Text(table, "ssh_user"),
+            Authentication = Lookup(table, "ssh_authentication", SshAuthentications.FromName),
+            PrivateKeyPath = Optional(table, "ssh_private_key") ?? string.Empty,
+            LocalPort = OptionalLookup(table, "ssh_local_port", ParseInteger) ?? 0,
+            StoreSecretInKeyring = OptionalLookup(table, "ssh_store_secret_in_keyring", ParseBool) ?? true
+        };
+    }
+
+    private static AdvancedConnectionSettings ToAdvanced(IReadOnlyDictionary<string, string> table)
+    {
+        var defaults = AdvancedConnectionSettings.Default;
+
+        return new AdvancedConnectionSettings
+        {
+            Protocol = OptionalLookup(table, "network_protocol", NetworkProtocols.FromName) ?? defaults.Protocol,
+            PacketSize = OptionalLookup(table, "packet_size", ParseInteger) ?? defaults.PacketSize,
+            ConnectTimeoutSeconds = OptionalLookup(table, "connect_timeout", ParseInteger) ?? defaults.ConnectTimeoutSeconds,
+            ExecutionTimeoutSeconds =
+                OptionalLookup(table, "execution_timeout", ParseInteger) ?? defaults.ExecutionTimeoutSeconds,
+            AdditionalParameters = Optional(table, "additional_parameters") ?? string.Empty
+        };
     }
 
     private static string Text(IReadOnlyDictionary<string, string> table, string key) =>
@@ -98,6 +207,14 @@ internal static class ConnectionProfileToml
     /// <summary>あってもなくてもよいキー。</summary>
     private static string? Optional(IReadOnlyDictionary<string, string> table, string key) =>
         table.TryGetValue(key, out var value) ? value : null;
+
+    /// <summary>
+    /// あってもなくてもよいキーを読み替える。無ければ null（呼び出し側で既定値に落とす）。
+    /// 途中で足したキーを、古い保存ファイルでも読めるようにするためのもの。
+    /// </summary>
+    private static T? OptionalLookup<T>(IReadOnlyDictionary<string, string> table, string key, Func<string, T> convert)
+        where T : struct =>
+        table.ContainsKey(key) ? Lookup(table, key, convert) : null;
 
     /// <summary>値の読み替えで失敗したときに、どのキーが悪いのかまで含めて伝える。</summary>
     private static T Lookup<T>(IReadOnlyDictionary<string, string> table, string key, Func<string, T> convert)
@@ -114,7 +231,7 @@ internal static class ConnectionProfileToml
         }
     }
 
-    private static int ParsePort(string value) =>
+    private static int ParseInteger(string value) =>
         int.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
 
     private static bool ParseBool(string value) => value switch
@@ -125,6 +242,44 @@ internal static class ConnectionProfileToml
     };
 
     private static FormatException Missing(string key) => new($"{key} がありません。");
+
+    private static class SshAuthentications
+    {
+        public static string NameOf(SshAuthenticationMethod method) => method switch
+        {
+            SshAuthenticationMethod.Password => "password",
+            SshAuthenticationMethod.PrivateKey => "private_key",
+            _ => throw new NotSupportedException($"知らない SSH の認証方式です: {method}")
+        };
+
+        public static SshAuthenticationMethod FromName(string name) => name switch
+        {
+            "password" => SshAuthenticationMethod.Password,
+            "private_key" => SshAuthenticationMethod.PrivateKey,
+            _ => throw new FormatException($"知らない SSH の認証方式です: {name}")
+        };
+    }
+
+    private static class NetworkProtocols
+    {
+        public static string NameOf(NetworkProtocol protocol) => protocol switch
+        {
+            NetworkProtocol.Default => "default",
+            NetworkProtocol.TcpIp => "tcp",
+            NetworkProtocol.NamedPipes => "named_pipes",
+            NetworkProtocol.SharedMemory => "shared_memory",
+            _ => throw new NotSupportedException($"知らないネットワーク プロトコルです: {protocol}")
+        };
+
+        public static NetworkProtocol FromName(string name) => name switch
+        {
+            "default" => NetworkProtocol.Default,
+            "tcp" => NetworkProtocol.TcpIp,
+            "named_pipes" => NetworkProtocol.NamedPipes,
+            "shared_memory" => NetworkProtocol.SharedMemory,
+            _ => throw new FormatException($"知らないネットワーク プロトコルです: {name}")
+        };
+    }
 
     private static class Authentications
     {
@@ -153,6 +308,7 @@ internal static class ConnectionProfileToml
             TlsMode.Prefer => "prefer",
             TlsMode.Require => "require",
             TlsMode.VerifyFull => "verify_full",
+            TlsMode.Strict => "strict",
             _ => throw new NotSupportedException($"知らない TLS の要求レベルです: {tls}")
         };
 
@@ -162,6 +318,7 @@ internal static class ConnectionProfileToml
             "prefer" => TlsMode.Prefer,
             "require" => TlsMode.Require,
             "verify_full" => TlsMode.VerifyFull,
+            "strict" => TlsMode.Strict,
             _ => throw new FormatException($"知らない TLS の要求レベルです: {name}")
         };
     }

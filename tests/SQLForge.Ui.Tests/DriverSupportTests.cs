@@ -40,7 +40,7 @@ public class DriverSupportTests
     [Fact]
     public async Task 未対応ドライバーの接続はセッションを返さない()
     {
-        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver());
+        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver(), NewTunnelOpener());
         var draft = ConnectionDraft.FromProfile(ProfileFor(DatabaseDriver.MySql));
 
         var result = await useCase.ExecuteAsync(draft);
@@ -53,7 +53,7 @@ public class DriverSupportTests
     [Fact]
     public async Task 入力が不正なら接続する前に弾く()
     {
-        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver());
+        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver(), NewTunnelOpener());
         var draft = ConnectionDraft.FromProfile(ProfileFor(DatabaseDriver.SqlServer)) with { Host = string.Empty };
 
         var result = await useCase.ExecuteAsync(draft);
@@ -67,7 +67,7 @@ public class DriverSupportTests
     public async Task ドライバーが受け付けない設定は接続前に理由を返す()
     {
         // 証明書認証は SqlClient の接続文字列に写せないので、接続を試みる前に分かる。
-        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver());
+        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver(), NewTunnelOpener());
         var profile = ProfileFor(DatabaseDriver.SqlServer);
         var draft = ConnectionDraft.FromProfile(profile) with { Authentication = AuthenticationMethod.Certificate };
 
@@ -81,6 +81,8 @@ public class DriverSupportTests
     private static DatabaseConnectorRegistry NewRegistry() => new([new SqlServerConnector()]);
 
     private static ConnectionSecretResolver NewSecretResolver() => new(new InMemorySecretStore());
+
+    private static ConnectionTunnelOpener NewTunnelOpener() => new(new FakeSshTunnelBroker());
 
     private static ConnectionProfile ProfileFor(DatabaseDriver driver) =>
         new(ConnectionProfileId.New(),

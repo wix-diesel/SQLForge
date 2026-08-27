@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             xmlns:pres="using:SQLForge.Ui.Presentation"
+             x:Class="SQLForge.Ui.Views.AdvancedConnectionFormView"
+             x:DataType="vm:ConnectDialogViewModel">
+
+  <!-- 接続ダイアログ「詳細設定」タブ。並びは SSMS の [接続プロパティ] に合わせてある -->
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="18,16,18,16" Spacing="13">
+
+      <!-- ネットワーク プロトコル -->
+      <Grid ColumnDefinitions="220,*" ColumnSpacing="12">
+        <StackPanel Grid.Column="0" Spacing="5">
+          <TextBlock Classes="label" Text="ネットワーク プロトコル"/>
+          <ComboBox ItemsSource="{Binding Form.Advanced.ProtocolChoices}"
+                    SelectedItem="{Binding Form.Advanced.Protocol}"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate DataType="pres:NetworkProtocolChoice">
+                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <TextBlock Grid.Column="1"
+                   Classes="label"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Bottom"
+                   Margin="0,0,0,7"
+                   Text="&lt;既定値&gt; はドライバーに任せます。共有メモリは同じ機械の中でだけ通ります。"/>
+      </Grid>
+
+      <!-- パケット サイズ / 接続タイムアウト / 実行タイムアウト -->
+      <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+        <StackPanel Grid.Column="0" Spacing="5">
+          <TextBlock Classes="label" Text="ネットワーク パケット サイズ (バイト)"/>
+          <TextBox Classes="mono"
+                   Classes.error="{Binding Form.Advanced.HasPacketSizeError}"
+                   Text="{Binding Form.Advanced.PacketSize}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="5">
+          <TextBlock Classes="label" Text="接続タイムアウト (秒)"/>
+          <TextBox Classes="mono"
+                   Classes.error="{Binding Form.Advanced.HasConnectTimeoutError}"
+                   Text="{Binding Form.Advanced.ConnectTimeout}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="5">
+          <TextBlock Classes="label" Text="実行タイムアウト (秒)"/>
+          <TextBox Classes="mono"
+                   Classes.error="{Binding Form.Advanced.HasExecutionTimeoutError}"
+                   Text="{Binding Form.Advanced.ExecutionTimeout}"/>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Classes="label"
+                 TextWrapping="Wrap"
+                 IsVisible="{Binding Form.Advanced.WaitsForExecutionForever}"
+                 Text="実行タイムアウトの 0 は「待ち続ける」です（SSMS と同じ）。長い文面を打ち切りたくないときの既定値。"/>
+
+      <!-- 追加の接続パラメーター -->
+      <StackPanel Spacing="5">
+        <TextBlock Classes="label" Text="追加の接続パラメーター"/>
+        <TextBox Classes="mono editor"
+                 Height="96"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 Text="{Binding Form.Advanced.AdditionalParameters}"
+                 PlaceholderText="ApplicationIntent=ReadOnly;MultiSubnetFailover=True"/>
+        <TextBlock Classes="label"
+                   TextWrapping="Wrap"
+                   Text="「キー=値;」の並びを、組み立てた接続文字列の最後に足します。ここで書いたものが他のタブの指定より優先されます。読めないキーは接続を試みる前に理由が出ます。"/>
+        <TextBlock Foreground="{DynamicResource CautionBrush}"
+                   FontSize="{DynamicResource FontSizeSm}"
+                   TextWrapping="Wrap"
+                   Text="ここに書いた値は保存済み接続のファイルにそのまま残ります。パスワードの類は書かないでください（キーリングを通りません）。"/>
+      </StackPanel>
+
+      <!-- 既定値へ戻す -->
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Theme="{StaticResource SecondaryButton}"
+                Command="{Binding Form.Advanced.ResetCommand}"
+                Content="すべて既定値に戻す"/>
+        <TextBlock Classes="label"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding !Form.Advanced.IsDefault}"
+                   Text="既定と違う指定があります。"/>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

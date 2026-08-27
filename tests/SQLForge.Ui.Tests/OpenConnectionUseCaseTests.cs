@@ -66,7 +66,8 @@ public class OpenConnectionUseCaseTests
         var connector = new FakeConnector();
         var useCase = new OpenConnectionUseCase(
             new DatabaseConnectorRegistry([connector]),
-            new ConnectionSecretResolver(store));
+            new ConnectionSecretResolver(store),
+            new ConnectionTunnelOpener(new FakeSshTunnelBroker()));
 
         var profile = new ConnectionProfile(
             ConnectionProfileId.New(),

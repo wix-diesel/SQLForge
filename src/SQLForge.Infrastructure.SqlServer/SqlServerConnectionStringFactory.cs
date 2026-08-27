@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
@@ -15,11 +16,12 @@ public static class SqlServerConnectionStringFactory
         ArgumentNullException.ThrowIfNull(request);
 
         var target = request.Profile.Target;
-        var credentials = request.Profile.Credentials;
+        var advanced = request.Profile.Advanced;
 
         var builder = new SqlConnectionStringBuilder
         {
-            DataSource = BuildDataSource(target.Address),
+            // SSH トンネルを通す接続では、繋ぎに行く先は踏み台ではなく手元の待ち受け口になる。
+            DataSource = BuildDataSource(request.Endpoint, advanced.Protocol),
             InitialCatalog = target.Database,
             ApplicationName = ConnectionUrl.ApplicationName,
             ConnectTimeout = (int)Math.Ceiling(request.Timeout.TotalSeconds),
@@ -29,8 +31,13 @@ public static class SqlServerConnectionStringFactory
             Pooling = false
         };
 
-        ApplyTls(builder, target.Tls);
-        ApplyCredentials(builder, credentials, request.Secret);
+        ApplyAdvanced(builder, advanced);
+        ApplyTls(builder, target.Tls, target.Certificate);
+        ApplyCredentials(builder, request.Profile.Credentials, request.Secret);
+
+        // 「詳細設定」タブに手で書いたものは、いちばん最後に写して他の欄より優先させる
+        // （SSMS の [追加の接続パラメーター] と同じ）。
+        ApplyAdditionalParameters(builder, advanced);
 
         return builder.ConnectionString;
     }
@@ -38,17 +45,43 @@ public static class SqlServerConnectionStringFactory
     /// <summary>
     /// SQL Server は host,port の形で書く（コロンではない）。既定ポートのときは書かない
     /// ―― 明示すると名前付きインスタンスの解決を邪魔することがある。
+    /// プロトコルを選んでいれば、その接頭辞（tcp: / np: / lpc:）を頭に付ける。
     /// </summary>
-    private static string BuildDataSource(ServerAddress address) =>
-        address.HasPort && address.Port != DatabaseDriver.SqlServer.DefaultPort
+    private static string BuildDataSource(ServerAddress address, NetworkProtocol protocol)
+    {
+        var host = address.HasPort && address.Port != DatabaseDriver.SqlServer.DefaultPort
             ? $"{address.Host},{address.Port}"
             : address.Host;
+
+        return ProtocolPrefix(protocol) + host;
+    }
+
+    private static string ProtocolPrefix(NetworkProtocol protocol) => protocol switch
+    {
+        NetworkProtocol.TcpIp => "tcp:",
+        NetworkProtocol.NamedPipes => "np:",
+        NetworkProtocol.SharedMemory => "lpc:",
+        _ => string.Empty
+    };
+
+    /// <summary>「詳細設定」タブ。名前も既定値も SSMS の [接続プロパティ] に合わせてある。</summary>
+    private static void ApplyAdvanced(SqlConnectionStringBuilder builder, AdvancedConnectionSettings advanced)
+    {
+        builder.PacketSize = advanced.PacketSize;
+
+        // SSMS の「実行タイムアウト」。0 は待ち続ける、で SqlClient も同じ意味。
+        builder.CommandTimeout = advanced.ExecutionTimeoutSeconds;
+    }
 
     /// <summary>
     /// TLS 要求レベルの対応。SqlClient には「証明書は検証しないが暗号化は必須」という
     /// 段があるので、prefer / require / verify-full をそこへ写す。
+    /// 「厳密」は TDS 8.0（Strict）で、証明書を信頼するかの指定はそもそも効かない。
     /// </summary>
-    private static void ApplyTls(SqlConnectionStringBuilder builder, TlsMode tls)
+    private static void ApplyTls(
+        SqlConnectionStringBuilder builder,
+        TlsMode tls,
+        TlsCertificateSettings certificate)
     {
         switch (tls)
         {
@@ -70,10 +103,34 @@ public static class SqlServerConnectionStringFactory
                 builder.TrustServerCertificate = false;
                 break;
 
+            case TlsMode.Strict:
+                builder.Encrypt = SqlConnectionEncryptOption.Strict;
+                builder.TrustServerCertificate = false;
+                break;
+
             default:
                 builder.Encrypt = SqlConnectionEncryptOption.Mandatory;
                 builder.TrustServerCertificate = true;
                 break;
+        }
+
+        ApplyCertificate(builder, certificate);
+    }
+
+    /// <summary>
+    /// 「TLS / SSL」タブ。証明書を検証しない要求レベルでも指定はそのまま写す
+    /// ―― 要求レベルを上げたときに、指定し直さなくても効くようにするため。
+    /// </summary>
+    private static void ApplyCertificate(SqlConnectionStringBuilder builder, TlsCertificateSettings certificate)
+    {
+        if (certificate.HasHostNameInCertificate)
+        {
+            builder.HostNameInCertificate = certificate.HostNameInCertificate;
+        }
+
+        if (certificate.HasServerCertificate)
+        {
+            builder.ServerCertificate = certificate.ServerCertificatePath;
         }
     }
 
@@ -100,6 +157,40 @@ public static class SqlServerConnectionStringFactory
 
             default:
                 throw new NotSupportedException($"未知の認証方式です: {credentials.Method}");
+        }
+    }
+
+    /// <summary>
+    /// 手で書いた「キー=値;」をそのまま写す。読むのは基底の
+    /// <see cref="DbConnectionStringBuilder"/> に任せる ―― 引用符や空白の扱いを
+    /// 自前で数えずに済み、書いたキーだけが取り出せる。
+    /// </summary>
+    private static void ApplyAdditionalParameters(
+        SqlConnectionStringBuilder builder,
+        AdvancedConnectionSettings advanced)
+    {
+        if (!advanced.HasAdditionalParameters)
+        {
+            return;
+        }
+
+        var extra = new DbConnectionStringBuilder();
+
+        try
+        {
+            extra.ConnectionString = advanced.AdditionalParameters;
+
+            foreach (var keyword in extra.Keys.Cast<string>())
+            {
+                builder[keyword] = extra[keyword];
+            }
+        }
+        catch (Exception exception) when (exception is ArgumentException or FormatException)
+        {
+            // 知らないキーや壊れた書き方。接続を試みる前にここで分かる。
+            throw new NotSupportedException(
+                $"追加の接続パラメーターを読めません: {exception.Message}",
+                exception);
         }
     }
 }

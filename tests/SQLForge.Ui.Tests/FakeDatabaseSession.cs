@@ -35,6 +35,9 @@ public sealed class FakeDatabaseSession : IDatabaseSession
     /// <summary>読み込み時に投げる例外。失敗の見え方を確かめるために差し込む。</summary>
     public Exception? Failure { get; set; }
 
+    /// <summary>この接続が乗っている経路（SSH トンネル）。閉じるときに一緒に閉じる。</summary>
+    public IAsyncDisposable? Route { get; set; }
+
     public int DatabaseCallCount { get; private set; }
 
     public bool IsDisposed { get; private set; }
@@ -711,9 +714,13 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         return EditFailure is not null ? Task.FromException<int>(EditFailure) : Task.FromResult(DeletedRows);
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         IsDisposed = true;
-        return ValueTask.CompletedTask;
+
+        if (Route is { } route)
+        {
+            await route.DisposeAsync();
+        }
     }
 }

@@ -68,23 +68,26 @@
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
                 <DataTemplate DataType="vm:DialogTabViewModel">
-                  <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                  <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                    <!-- 既定と違う指定をしているタブに付く印 -->
+                    <Border Width="6" Height="6" CornerRadius="3"
+                            Background="{DynamicResource SuccessBrush}"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding HasBadge}"
+                            ToolTip.Tip="{Binding Badge}"/>
+                  </StackPanel>
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
           </Border>
 
-          <!-- タブの中身 -->
+          <!-- タブの中身。どれを出すかは選ばれているタブが決める -->
           <Panel Grid.Row="1">
-            <views:ConnectionFormView IsVisible="{Binding SelectedTab.IsImplemented}"/>
-            <TextBlock IsVisible="{Binding !SelectedTab.IsImplemented}"
-                       Text="{Binding SelectedTab.Placeholder}"
-                       Foreground="{DynamicResource TextFaintBrush}"
-                       TextWrapping="Wrap"
-                       MaxWidth="380"
-                       TextAlignment="Center"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
+            <views:ConnectionFormView IsVisible="{Binding SelectedTab.IsGeneral}"/>
+            <views:SshTunnelFormView IsVisible="{Binding SelectedTab.IsSshTunnel}"/>
+            <views:TlsCertificateFormView IsVisible="{Binding SelectedTab.IsTls}"/>
+            <views:AdvancedConnectionFormView IsVisible="{Binding SelectedTab.IsAdvanced}"/>
           </Panel>
         </Grid>
       </Grid>

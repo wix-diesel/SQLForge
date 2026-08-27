@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SQLForge.Application.Abstractions;
+using SQLForge.Application.Connections;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Ui.Composition;
 using SQLForge.Ui.ViewModels;
@@ -56,6 +57,20 @@ public class AppServicesTests
             provider.GetRequiredService<SavedConnectionDialogService>(),
             provider.GetRequiredService<ISavedConnectionPrompt>());
         Assert.NotNull(provider.GetRequiredService<SavedConnectionsViewModel>());
+    }
+
+    [Fact]
+    public void SSHトンネルとファイル選択を組み立てられる()
+    {
+        // 「SSH トンネル」タブと、秘密鍵・証明書の「参照…」は差し込み忘れると
+        // 起動してタブを開いた瞬間に落ちる。
+        using var provider = BuildProvider();
+
+        Assert.IsType<SshTunnelBroker>(provider.GetRequiredService<ISshTunnelBroker>());
+        Assert.NotNull(provider.GetRequiredService<ConnectionTunnelOpener>());
+        Assert.Same(
+            provider.GetRequiredService<SavedConnectionDialogService>(),
+            provider.GetRequiredService<IConnectionFilePrompt>());
     }
 
     [Fact]

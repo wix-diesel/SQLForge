@@ -45,6 +45,9 @@ public static class AppServices
         services.AddSingleton<IDatabaseConnectorRegistry, DatabaseConnectorRegistry>();
         services.AddSingleton<IConnectionProbe, DriverConnectionProbe>();
 
+        // SSH の踏み台ごしの経路。DBMS にも OS にも依らないので共通のインフラに置く。
+        services.AddSingleton<ISshTunnelBroker, SshTunnelBroker>();
+
         // OS ごとの体裁も OS ごとに別プロジェクト（SQLForge.Infrastructure.<OS>）へ置き、
         // 実行中の OS のものだけをここで差し込む。並びは PlatformProfiles にある。
         services.AddSingleton(_ => PlatformProfiles.ForCurrentHost());
@@ -63,6 +66,7 @@ public static class AppServices
     private static void AddUseCases(IServiceCollection services)
     {
         services.AddSingleton<ConnectionSecretResolver>();
+        services.AddSingleton<ConnectionTunnelOpener>();
         services.AddTransient<ListSavedConnectionsUseCase>();
         services.AddTransient<TestConnectionUseCase>();
         services.AddTransient<SaveConnectionUseCase>();
@@ -117,6 +121,10 @@ public static class AppServices
         // 接続解除のたびに開き直すので、Owner を差し替えられるよう 1 つを共有する。
         services.AddSingleton<SavedConnectionDialogService>();
         services.AddSingleton<ISavedConnectionPrompt>(provider =>
+            provider.GetRequiredService<SavedConnectionDialogService>());
+
+        // 「参照…」のファイル選択も、親ウィンドウを持っている同じサービスから借りる。
+        services.AddSingleton<IConnectionFilePrompt>(provider =>
             provider.GetRequiredService<SavedConnectionDialogService>());
 
         // ユーザーの編集ダイアログはメインウィンドウの上にモーダルで出すので、

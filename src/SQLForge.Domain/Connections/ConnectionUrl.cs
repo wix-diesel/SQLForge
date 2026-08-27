@@ -52,6 +52,7 @@ public static class ConnectionUrl
         TlsMode.Prefer => "prefer",
         TlsMode.Require => "require",
         TlsMode.VerifyFull => "verify-full",
+        TlsMode.Strict => "strict",
         _ => "prefer"
     };
 }

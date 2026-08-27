@@ -22,6 +22,10 @@ public sealed class DeleteConnectionUseCase(IConnectionProfileRepository reposit
         {
             await _secretStore.DeleteAsync(SaveConnectionUseCase.SecretKeyFor(id), cancellationToken)
                 .ConfigureAwait(false);
+
+            // 踏み台のぶんも同じ理由で始末する。
+            await _secretStore.DeleteAsync(SaveConnectionUseCase.SshSecretKeyFor(id), cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

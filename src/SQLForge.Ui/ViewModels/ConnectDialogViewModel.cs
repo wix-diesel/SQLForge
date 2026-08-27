@@ -33,7 +33,8 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         SaveConnectionUseCase saveConnection,
         OpenConnectionUseCase openConnection,
         ISecretStore secretStore,
-        IPlatformProfile platform)
+        IPlatformProfile platform,
+        IConnectionFilePrompt? files = null)
     {
         SavedConnections = savedConnections;
         _testConnection = testConnection;
@@ -42,9 +43,15 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         _secretStore = secretStore;
 
         // OS 統合認証で名乗るアカウント名を出すために、入力欄も OS の体裁を知る必要がある。
-        Form = new ConnectionFormViewModel(platform);
+        // ファイル選択（秘密鍵・サーバー証明書の「参照…」）は親ウィンドウを持っている側から借りる。
+        Form = new ConnectionFormViewModel(platform, files);
         Tabs = CreateTabs();
         _selectedTab = Tabs[0];
+
+        // タブの見出しに出す印は、そのタブの入力が変わるたびに付け直す。
+        Form.Ssh.PropertyChanged += (_, _) => RefreshBadges();
+        Form.Certificate.PropertyChanged += (_, _) => RefreshBadges();
+        Form.Advanced.PropertyChanged += (_, _) => RefreshBadges();
 
         SavedConnections.ProfileSelected += (_, profile) => OnProfileSelected(profile);
         SavedConnections.ProfileActivated += (_, profile) => _ = ConnectStoredAsync(profile);
@@ -97,7 +104,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     {
         await RunAsync(async () =>
         {
-            var result = await _testConnection.ExecuteAsync(Form.ToDraft(), Form.Password, cancellationToken).ConfigureAwait(true);
+            var result = await _testConnection.ExecuteAsync(Form.ToDraft(), TypedSecrets(), cancellationToken).ConfigureAwait(true);
             Form.Validation = ConnectionValidator.Validate(Form.ToDraft());
             SetStatus(result.Succeeded, result.Headline, result.Detail);
         }).ConfigureAwait(true);
@@ -109,7 +116,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         await RunAsync(async () =>
         {
             var draft = Form.ToDraft();
-            var validation = await _saveConnection.ExecuteAsync(draft, Form.Password, cancellationToken).ConfigureAwait(true);
+            var validation = await _saveConnection.ExecuteAsync(draft, TypedSecrets(), cancellationToken).ConfigureAwait(true);
             Form.Validation = validation;
 
             if (validation.IsValid)
@@ -128,7 +135,7 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
     {
         await RunAsync(async () =>
         {
-            var result = await _openConnection.ExecuteAsync(Form.ToDraft(), Form.Password, cancellationToken).ConfigureAwait(true);
+            var result = await _openConnection.ExecuteAsync(Form.ToDraft(), TypedSecrets(), cancellationToken).ConfigureAwait(true);
             Form.Validation = result.Validation;
             SetStatus(result.Succeeded, result.Headline, result.Detail);
 
@@ -141,15 +148,19 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
 
     /// <summary>
     /// 左ペインで押された保存済み接続をそのまま開く。
-    /// 入力欄にパスワードが打たれていればそれを使い、無ければキーリングに預けたものを使う。
+    /// 入力欄に秘密が打たれていればそれを使い、無ければキーリングに預けたものを使う。
     /// どちらも無ければ接続は試みず、入力を促す。
+    ///
+    /// 打たれているかどうかは DB のパスワードと踏み台のぶんの両方で見る
+    /// （踏み台のパスワードだけを打った、という開き方も通るようにするため）。
     /// </summary>
     private Task ConnectStoredAsync(ConnectionProfile profile) =>
         RunAsync(async () =>
         {
-            var result = string.IsNullOrEmpty(Form.Password)
+            var typed = TypedSecrets();
+            var result = string.IsNullOrEmpty(typed.Password) && string.IsNullOrEmpty(typed.SshSecret)
                 ? await _openConnection.ExecuteStoredAsync(profile).ConfigureAwait(true)
-                : await _openConnection.ExecuteAsync(Form.ToDraft(), Form.Password).ConfigureAwait(true);
+                : await _openConnection.ExecuteAsync(Form.ToDraft(), typed).ConfigureAwait(true);
 
             Form.Validation = result.Validation;
             SetStatus(result.Succeeded, result.Headline, result.Detail);
@@ -221,11 +232,29 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         HasStatus = false;
     }
 
+    /// <summary>入力欄に打たれている秘密。DB のぶんと踏み台のぶんを 1 つにまとめて渡す。</summary>
+    private ConnectionSecrets TypedSecrets() => new(Form.Password, Form.Ssh.Secret);
+
+    /// <summary>既定と違う指定をしているタブの見出しに印を出す。</summary>
+    private void RefreshBadges()
+    {
+        foreach (var tab in Tabs)
+        {
+            tab.Badge = tab.Kind switch
+            {
+                ConnectionDialogTab.SshTunnel => Form.Ssh.Badge,
+                ConnectionDialogTab.Tls => Form.Certificate.Badge,
+                ConnectionDialogTab.Advanced => Form.Advanced.Badge,
+                _ => string.Empty
+            };
+        }
+    }
+
     private static IReadOnlyList<DialogTabViewModel> CreateTabs() =>
     [
-        new("一般", true),
-        new("SSH トンネル", false, "SSH 経由の接続はフェーズ 1 の後半で対応します。"),
-        new("TLS / SSL", false, "証明書の指定はフェーズ 1 の後半で対応します。現状は「一般」タブの TLS 設定のみ有効です。"),
-        new("詳細設定", false, "接続タイムアウトや文字コードの指定はフェーズ 1 の後半で対応します。")
+        new(ConnectionDialogTab.General, "一般"),
+        new(ConnectionDialogTab.SshTunnel, "SSH トンネル"),
+        new(ConnectionDialogTab.Tls, "TLS / SSL"),
+        new(ConnectionDialogTab.Advanced, "詳細設定")
     ];
 }

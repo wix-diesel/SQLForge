@@ -37,7 +37,8 @@ public sealed class DriverConnectionProbe(IDatabaseConnectorRegistry registry) :
             return ConnectionProbeResult.Success(
                 session.Server.Description,
                 DescribeTls(session.Server, request.Profile.Target.Tls),
-                (int)watch.ElapsedMilliseconds);
+                (int)watch.ElapsedMilliseconds,
+                request.Tunnel?.Description ?? string.Empty);
         }
         catch (DbException exception)
         {
@@ -67,6 +68,7 @@ public sealed class DriverConnectionProbe(IDatabaseConnectorRegistry registry) :
         TlsMode.Prefer => "prefer",
         TlsMode.Require => "require",
         TlsMode.VerifyFull => "verify-full",
+        TlsMode.Strict => "strict",
         _ => "prefer"
     };
 }

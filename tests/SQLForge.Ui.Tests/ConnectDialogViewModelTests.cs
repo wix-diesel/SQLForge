@@ -70,6 +70,7 @@ public class ConnectDialogViewModelTests
         var registry = new DatabaseConnectorRegistry([connector]);
 
         var archive = new FakeConnectionArchive();
+        var tunnels = new ConnectionTunnelOpener(new FakeSshTunnelBroker());
         var dialog = new ConnectDialogViewModel(
             new SavedConnectionsViewModel(
                 new ListSavedConnectionsUseCase(repository),
@@ -77,9 +78,9 @@ public class ConnectDialogViewModelTests
                 new ExportConnectionsUseCase(repository, store, archive),
                 new ImportConnectionsUseCase(repository, store, archive),
                 new FakeSavedConnectionPrompt()),
-            new TestConnectionUseCase(new DriverConnectionProbe(registry), resolver),
+            new TestConnectionUseCase(new DriverConnectionProbe(registry), resolver, tunnels),
             new SaveConnectionUseCase(repository, store),
-            new OpenConnectionUseCase(registry, resolver),
+            new OpenConnectionUseCase(registry, resolver, tunnels),
             store,
             new LinuxPlatformProfile());
 

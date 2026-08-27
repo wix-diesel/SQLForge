@@ -3,6 +3,9 @@
     <RootNamespace>SQLForge.Infrastructure</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="SSH.NET" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\SQLForge.Application\SQLForge.Application.csproj" />
   </ItemGroup>
 </Project>

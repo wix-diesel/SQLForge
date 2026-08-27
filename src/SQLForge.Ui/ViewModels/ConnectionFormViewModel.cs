@@ -8,10 +8,16 @@ using SQLForge.Ui.Presentation;
 namespace SQLForge.Ui.ViewModels;
 
 /// <summary>
-/// 接続ダイアログ「一般」タブの入力欄。編集中の値をドラフトとして保持し、
+/// 接続ダイアログの入力欄。編集中の値をドラフトとして保持し、
 /// エンティティへの変換は検証を通ったあと（ユースケース側）で行う。
+///
+/// 「一般」タブの欄はここが直に持ち、残り 3 枚のタブは
+/// タブごとのビューモデル（<see cref="Ssh"/>・<see cref="Certificate"/>・<see cref="Advanced"/>）に
+/// 預けてある。1 枚ぶんずつ読み書きできるので、ドラフトへの組み立てもここで束ねるだけで済む。
 /// </summary>
-public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) : ObservableObject
+public sealed partial class ConnectionFormViewModel(
+    IPlatformProfile platform,
+    IConnectionFilePrompt? files = null) : ObservableObject
 {
     private static readonly string[] UrlAffectingProperties =
     [
@@ -37,6 +43,15 @@ public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) :
     [ObservableProperty] private bool _storeInKeyring = true;
     [ObservableProperty] private bool _isReadOnly;
     [ObservableProperty] private ConnectionValidationResult _validation = ConnectionValidationResult.Valid;
+
+    /// <summary>「SSH トンネル」タブ。</summary>
+    public SshTunnelFormViewModel Ssh { get; } = new(files);
+
+    /// <summary>「TLS / SSL」タブ。</summary>
+    public TlsCertificateFormViewModel Certificate { get; } = new(files);
+
+    /// <summary>「詳細設定」タブ。</summary>
+    public AdvancedConnectionFormViewModel Advanced { get; } = new();
 
     public IReadOnlyList<EnvironmentChoiceViewModel> EnvironmentChoices => EnvironmentChoiceViewModel.All;
 
@@ -122,6 +137,10 @@ public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) :
             IsReadOnly = draft.AccessMode == AccessMode.ReadOnly;
             Password = string.Empty;
             Validation = ConnectionValidationResult.Valid;
+
+            Ssh.Load(draft.Tunnel);
+            Certificate.Load(draft.Certificate);
+            Advanced.Load(draft.Advanced);
         }
         finally
         {
@@ -147,7 +166,10 @@ public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) :
         Authentication = Authentication.Method,
         StoreSecretInKeyring = StoreInKeyring,
         Tls = Tls.Mode,
-        AccessMode = IsReadOnly ? AccessMode.ReadOnly : AccessMode.ReadWrite
+        AccessMode = IsReadOnly ? AccessMode.ReadOnly : AccessMode.ReadWrite,
+        Certificate = Certificate.ToSettings(),
+        Tunnel = Ssh.ToSettings(),
+        Advanced = Advanced.ToSettings()
     };
 
     private int ParsePort()
@@ -193,8 +215,17 @@ public sealed partial class ConnectionFormViewModel(IPlatformProfile platform) :
         OnPropertyChanged(nameof(ShowsKerberosNotice));
     }
 
+    // 「TLS / SSL」タブは要求レベルを変えられないが、今どの段なのかは出す。
+    partial void OnTlsChanged(TlsChoice value) => Certificate.Tls = value.Mode;
+
     // 検証結果が変わったら、そこから導かれるエラー表示をまとめて更新する。
-    partial void OnValidationChanged(ConnectionValidationResult value) => OnPropertyChanged(string.Empty);
+    // 別タブの欄のエラーも同じ検証結果から出すので、タブごとのビューモデルへも配る。
+    partial void OnValidationChanged(ConnectionValidationResult value)
+    {
+        Ssh.Validation = value;
+        Advanced.Validation = value;
+        OnPropertyChanged(string.Empty);
+    }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {

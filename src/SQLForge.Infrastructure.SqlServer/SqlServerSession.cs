@@ -12,8 +12,12 @@ namespace SQLForge.Infrastructure.SqlServer;
 /// SQL Server は 3 部名（db.sys.tables）で他のデータベースのカタログを読めるので、
 /// データベースを切り替えるのに接続を張り直す必要がない。
 /// </summary>
-public sealed partial class SqlServerSession(ConnectionProfile profile, DbConnection connection, ServerInfo server)
-    : AdoDatabaseSession(profile, connection, server)
+public sealed partial class SqlServerSession(
+    ConnectionProfile profile,
+    DbConnection connection,
+    ServerInfo server,
+    IAsyncDisposable? route = null)
+    : AdoDatabaseSession(profile, connection, server, route)
 {
     /// <summary>
     /// USE で切り替える。カタログの照会は 3 部名で読むのでこの状態に依らないが、
