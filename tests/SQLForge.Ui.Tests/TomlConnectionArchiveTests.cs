@@ -108,6 +108,48 @@ public class TomlConnectionArchiveTests : IDisposable
     }
 
     [Fact]
+    public async Task 中身を書く前に本人だけが読める権限にする()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        // 作ってから絞ると、その隙間（umask 次第では他人も読める権限のまま）に
+        // パスワードを覗かれうる。書き込みを断られた時点でファイルがもう 0600 に
+        // なっていることで、「絞ってから書く」順になっていることを確かめる。
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new TomlConnectionArchive()
+            .WriteAsync(ArchivePath(), [new ArchivedConnection(NewProfile("prod-sales"), "s3cret")], cancellation.Token));
+
+        Assert.True(File.Exists(ArchivePath()), "中身より先にファイルを作っていること。");
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(ArchivePath()));
+        Assert.Empty(await File.ReadAllTextAsync(ArchivePath()));
+    }
+
+    [Fact]
+    public async Task すでにあるファイルへ書き直しても本人だけが読める権限になる()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        // 誰でも読めるファイルへ上書きするとき、中身を書いてから絞ると
+        // その隙間にパスワードを覗かれうる。書く前に絞れていること。
+        await File.WriteAllTextAsync(ArchivePath(), string.Empty);
+        File.SetUnixFileMode(
+            ArchivePath(),
+            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+
+        await new TomlConnectionArchive().WriteAsync(ArchivePath(), [new ArchivedConnection(NewProfile("prod-sales"), "s3cret")]);
+
+        Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(ArchivePath()));
+    }
+
+    [Fact]
     public async Task Unixでは本人だけが読める権限で置く()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

@@ -31,6 +31,8 @@ public sealed partial class SavedConnectionsViewModel
             }
 
             await _deleteConnection.ExecuteAsync(profile.Id, cancellationToken).ConfigureAwait(true);
+
+            CancelSearchReload();
             await LoadAsync(cancellationToken).ConfigureAwait(true);
 
             Report(true, "削除しました", $"{profile.Name} を保存済み接続から削除しました。");
@@ -67,6 +69,8 @@ public sealed partial class SavedConnectionsViewModel
             }
 
             var imported = await _importConnections.ApplyAsync(accepted, cancellationToken).ConfigureAwait(true);
+
+            CancelSearchReload();
             await LoadAsync(cancellationToken).ConfigureAwait(true);
 
             Report(true, "取り込みました", Describe(imported, candidates.Count - imported));

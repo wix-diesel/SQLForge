@@ -129,6 +129,13 @@ public sealed partial class SavedConnectionsViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// 走っている検索の読み直しを取り消す。削除や取り込みのあとに読み直すとき、
+    /// 遅れて返ってきた検索結果で一覧を上書きされないようにするため
+    /// （消したはずの行が戻って見える）。
+    /// </summary>
+    private void CancelSearchReload() => Cancel(Interlocked.Exchange(ref _searchCancellation, null));
+
     private static void Cancel(CancellationTokenSource? cancellation)
     {
         cancellation?.Cancel();

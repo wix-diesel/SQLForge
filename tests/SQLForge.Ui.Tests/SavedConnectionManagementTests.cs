@@ -1,3 +1,4 @@
+using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
@@ -194,12 +195,36 @@ public class SavedConnectionManagementTests
         Assert.Contains("3 行目", context.LastOutcome?.Detail, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task 削除の読み直しは走っている検索の読み直しを追い越されない()
+    {
+        // 検索の読み直しが遅れて返ってくると、消したはずの行が一覧へ戻って見えてしまう。
+        var profile = Profile("prod-sales");
+        var repository = new GatedRepository([profile]);
+        var (viewModel, _) = Setup(repository);
+
+        // 検索の読み直しを、消す前の中身を抱えたまま止めておく。
+        viewModel.SearchText = "prod";
+        await repository.Entered;
+
+        await viewModel.DeleteAsync(profile);
+        Assert.Empty(viewModel.Entries.OfType<SavedConnectionItemViewModel>());
+
+        // 止めていた読み直しを進めても、消したあとの一覧を書き換えない。
+        repository.Release();
+        await Task.Delay(100);
+
+        Assert.Empty(viewModel.Entries.OfType<SavedConnectionItemViewModel>());
+    }
+
     private static SavedConnectionItemViewModel Row(SavedConnectionsViewModel viewModel, string name) =>
         viewModel.Entries.OfType<SavedConnectionItemViewModel>().First(item => item.Name == name);
 
-    private static (SavedConnectionsViewModel ViewModel, Context Context) Setup(IReadOnlyList<ConnectionProfile> profiles)
+    private static (SavedConnectionsViewModel ViewModel, Context Context) Setup(IReadOnlyList<ConnectionProfile> profiles) =>
+        Setup(InMemoryConnectionProfileRepository.With(profiles));
+
+    private static (SavedConnectionsViewModel ViewModel, Context Context) Setup(IConnectionProfileRepository repository)
     {
-        var repository = InMemoryConnectionProfileRepository.With(profiles);
         var store = new InMemorySecretStore();
         var context = new Context(new FakeConnectionArchive(), new FakeSavedConnectionPrompt());
 
@@ -229,5 +254,46 @@ public class SavedConnectionManagementTests
     private sealed record Context(FakeConnectionArchive Archive, FakeSavedConnectionPrompt Prompt)
     {
         public SavedConnectionOutcome? LastOutcome { get; set; }
+    }
+
+    /// <summary>
+    /// 最初の <see cref="ListAsync"/> だけを合図まで返さない台帳。
+    /// 読み直しの追い越しを狙って起こすのに使う。
+    /// </summary>
+    private sealed class GatedRepository(IReadOnlyList<ConnectionProfile> profiles) : IConnectionProfileRepository
+    {
+        private readonly InMemoryConnectionProfileRepository _inner = InMemoryConnectionProfileRepository.With(profiles);
+        private readonly TaskCompletionSource _entered = new();
+        private readonly TaskCompletionSource _released = new();
+        private bool _gated = true;
+
+        /// <summary>止めたところまで来たことを伝える。</summary>
+        public Task Entered => _entered.Task;
+
+        public void Release() => _released.TrySetResult();
+
+        public async Task<IReadOnlyList<ConnectionProfile>> ListAsync(CancellationToken cancellationToken = default)
+        {
+            // 止める前の中身を捕まえておく（これが遅れて返ってくる「古い検索結果」）。
+            var snapshot = await _inner.ListAsync(cancellationToken).ConfigureAwait(false);
+
+            if (_gated)
+            {
+                _gated = false;
+                _entered.TrySetResult();
+                await _released.Task.ConfigureAwait(false);
+            }
+
+            return snapshot;
+        }
+
+        public Task<ConnectionProfile?> FindAsync(ConnectionProfileId id, CancellationToken cancellationToken = default) =>
+            _inner.FindAsync(id, cancellationToken);
+
+        public Task SaveAsync(ConnectionProfile profile, CancellationToken cancellationToken = default) =>
+            _inner.SaveAsync(profile, cancellationToken);
+
+        public Task DeleteAsync(ConnectionProfileId id, CancellationToken cancellationToken = default) =>
+            _inner.DeleteAsync(id, cancellationToken);
     }
 }

@@ -24,9 +24,11 @@ public sealed class TomlConnectionArchive : IConnectionArchive
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(connections);
 
-        await File.WriteAllTextAsync(path, ConnectionProfileToml.WriteArchive(connections), cancellationToken)
-            .ConfigureAwait(false);
-        Restrict(path);
+        var text = ConnectionProfileToml.WriteArchive(connections);
+
+        await using var stream = Create(path);
+        await using var writer = new StreamWriter(stream);
+        await writer.WriteAsync(text.AsMemory(), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<ArchivedConnection>> ReadAsync(
@@ -48,11 +50,32 @@ public sealed class TomlConnectionArchive : IConnectionArchive
         }
     }
 
-    private static void Restrict(string path)
+    /// <summary>
+    /// 中身を書く前に権限を決める。作ってから絞ると、その隙間（umask 次第では
+    /// 他人も読める権限のまま）にパスワードを覗かれうる。
+    /// Windows の権限は継承した ACL に任せる。
+    /// </summary>
+    private static FileStream Create(string path)
     {
-        if (!OperatingSystem.IsWindows())
+        var options = new FileStreamOptions
         {
-            File.SetUnixFileMode(path, OwnerOnlyFile);
+            Mode = FileMode.Create,
+            Access = FileAccess.Write,
+            Options = FileOptions.Asynchronous
+        };
+
+        if (OperatingSystem.IsWindows())
+        {
+            return new FileStream(path, options);
         }
+
+        options.UnixCreateMode = OwnerOnlyFile;
+        var stream = new FileStream(path, options);
+
+        // UnixCreateMode が効くのは作るときだけなので、すでにあったファイルは
+        // 空にしたところ（まだ何も書いていないうち）で絞り直す。
+        File.SetUnixFileMode(stream.SafeFileHandle, OwnerOnlyFile);
+
+        return stream;
     }
 }
