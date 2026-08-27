@@ -6,6 +6,7 @@
 -->
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:edit="using:AvaloniaEdit"
         xmlns:presentation="using:SQLForge.Ui.Presentation">
   <Styles.Resources>
 
@@ -647,19 +648,21 @@
   </Style>
 
   <!-- ===== クエリエディタ =====
-       高さだけは QueryWorkspacePane の後ろで外す（既定スタイルが 1 行ぶんを与えるため）。 -->
-  <Style Selector="TextBox.editor">
-    <Setter Property="MinHeight"                 Value="0"/>
-    <Setter Property="Padding"                   Value="10,8"/>
-    <Setter Property="VerticalAlignment"         Value="Stretch"/>
-    <Setter Property="HorizontalAlignment"       Value="Stretch"/>
-    <Setter Property="VerticalContentAlignment"  Value="Top"/>
-    <Setter Property="Background"                Value="Transparent"/>
-    <Setter Property="BorderThickness"           Value="0"/>
-    <Setter Property="CornerRadius"              Value="0"/>
-    <Setter Property="FontFamily"                Value="{DynamicResource FontFamilyMono}"/>
-    <Setter Property="FontSize"                  Value="{DynamicResource FontSizeMono}"/>
-    <Setter Property="TextWrapping"              Value="NoWrap"/>
+       AvaloniaEdit の TextEditor。色分けは SqlColorizer が字句ごとに当てるので、
+       ここで決めるのは器の見た目（余白・等幅フォント・行番号の色）だけ。
+       既定の文字色は識別子と同じにして、色の付かない字句が浮かないようにする。 -->
+  <Style Selector="edit|TextEditor.editor">
+    <Setter Property="Padding"                     Value="10,8"/>
+    <Setter Property="Background"                  Value="Transparent"/>
+    <Setter Property="Foreground"                  Value="{DynamicResource SyntaxIdentifierBrush}"/>
+    <Setter Property="BorderThickness"             Value="0"/>
+    <Setter Property="CornerRadius"                Value="0"/>
+    <Setter Property="FontFamily"                  Value="{DynamicResource FontFamilyMono}"/>
+    <Setter Property="FontSize"                    Value="{DynamicResource FontSizeMono}"/>
+    <Setter Property="LineNumbersForeground"       Value="{DynamicResource TextFaintBrush}"/>
+    <Setter Property="LineNumbersMargin"           Value="0,0,12,0"/>
+    <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="VerticalScrollBarVisibility"   Value="Auto"/>
   </Style>
 
   <!-- ===== 結果グリッドのセル =====

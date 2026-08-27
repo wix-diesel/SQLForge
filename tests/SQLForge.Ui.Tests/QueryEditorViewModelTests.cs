@@ -259,6 +259,45 @@ public class QueryEditorViewModelTests
             [new string?[] { "1" }],
             isTruncated: true);
 
+    [Fact]
+    public void 整形すると文面が整う()
+    {
+        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
+        editor.OpenNewQuery(SalesDb);
+        editor.Sql = "select a, b from dbo.orders";
+
+        editor.FormatCommand.Execute(null);
+
+        Assert.Equal("SELECT\n    a,\n    b\nFROM dbo.orders", editor.Sql);
+    }
+
+    [Fact]
+    public void 文面が空のあいだは整形も実行もできない()
+    {
+        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
+        editor.OpenNewQuery(SalesDb);
+
+        Assert.False(editor.FormatCommand.CanExecute(null));
+        Assert.False(editor.RunCommand.CanExecute(null));
+
+        editor.Sql = "SELECT 1";
+
+        Assert.True(editor.FormatCommand.CanExecute(null));
+        Assert.True(editor.RunCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task 補完の口を渡していなければ候補は出ない()
+    {
+        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
+        editor.OpenNewQuery(SalesDb);
+        editor.Sql = "SELECT * FROM ";
+
+        var result = await editor.CompleteAsync(editor.Sql.Length);
+
+        Assert.True(result.IsEmpty);
+    }
+
     private static FakeDatabaseSession ReadWriteSession()
     {
         var profile = SeedConnections.Create().First(candidate => candidate.AccessMode == AccessMode.ReadWrite);

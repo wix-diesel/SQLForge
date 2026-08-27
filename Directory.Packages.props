@@ -8,6 +8,12 @@
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Skia" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <!-- クエリエディタ。素の TextBox では文字ごとに色を変えられないため入れる。
+         12.0.0 は net10.0 ターゲットで Avalonia 12.0.0 依存なので 12.1 系と同居できる。
+         色分けは TextMate ではなく自前の SqlLexer + SqlColorizer で行うので、
+         AvaloniaEdit.TextMate / TextMateSharp.Grammars は入れない
+         （テーマの色は Themes/Tokens.axaml の Syntax*Brush に合わせる）。 -->
+    <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />

@@ -13,6 +13,8 @@ UI は Avalonia 12、実行基盤は .NET 10。詳しい機能状況・使い方
 - 言語: C# (`LangVersion` = latest, `Nullable` = enable, `ImplicitUsings` = enable)
 - ランタイム: .NET 10（`global.json` で `10.0.100` に固定、`rollForward: latestFeature`）
 - UI フレームワーク: Avalonia 12.1 系（`CommunityToolkit.Mvvm` で MVVM）
+- クエリエディタ: `Avalonia.AvaloniaEdit` 12 系。構文の色分け・補完・整形は
+  `SQLForge.Domain/Sql/` の字句解析器を使う自前の実装（TextMate は入れていない）
 - DI: `Microsoft.Extensions.DependencyInjection`
 - DB アクセス: ADO.NET 系ドライバー（現状は `Microsoft.Data.SqlClient` のみ実装）
 - テスト: xUnit v3（`tests/SQLForge.Ui.Tests`）。ヘッドレス描画テストを含む。

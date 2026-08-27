@@ -84,6 +84,9 @@
   <StreamGeometry x:Key="IconPlay">M5.2,3.4 L12.2,8 L5.2,12.6 Z</StreamGeometry>
 
   <!-- 停止（四角） -->
+  <!-- 整形（字下げの揃った行） -->
+  <StreamGeometry x:Key="IconFormat">M3,3.6 H13 M6,6.8 H13 M6,10 H11 M3,13.2 H13</StreamGeometry>
+
   <StreamGeometry x:Key="IconStop">M4.8,4.8 H11.2 V11.2 H4.8 Z</StreamGeometry>
 
   <!-- クエリ（SQL のファイル） -->

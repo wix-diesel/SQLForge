@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:edit="using:AvaloniaEdit"
              xmlns:vm="using:SQLForge.Ui.ViewModels"
              xmlns:workspace="using:SQLForge.Ui.ViewModels.Workspace"
              x:Class="SQLForge.Ui.Views.QueryWorkspacePane"
@@ -12,6 +13,8 @@
     <!-- SSMS と同じで F5。エディタに入力しているときも効くように、ペイン側で受ける。 -->
     <KeyBinding Gesture="F5" Command="{Binding Query.RunCommand}"/>
     <KeyBinding Gesture="Ctrl+Return" Command="{Binding Query.RunCommand}"/>
+    <!-- 整形は VS Code と同じ Ctrl+Shift+F。 -->
+    <KeyBinding Gesture="Ctrl+Shift+F" Command="{Binding Query.FormatCommand}"/>
   </UserControl.KeyBindings>
 
   <Grid RowDefinitions="Auto,2*,6,3*" Background="{DynamicResource BgAppBrush}">
@@ -23,7 +26,7 @@
             Background="{DynamicResource BgPanelBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
 
         <!-- 実行先のデータベース -->
         <Border Grid.Column="0"
@@ -72,22 +75,33 @@
           </StackPanel>
         </Button>
 
-        <Border Grid.Column="4" Theme="{StaticResource VerticalDivider}"/>
+        <!-- 整形 -->
+        <Button Grid.Column="4"
+                Theme="{StaticResource ToolbarButton}"
+                Command="{Binding Query.FormatCommand}"
+                ToolTip.Tip="文面を整える（Ctrl+Shift+F）">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon" Data="{StaticResource IconFormat}" VerticalAlignment="Center"/>
+            <TextBlock Text="整形" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <Border Grid.Column="5" Theme="{StaticResource VerticalDivider}"/>
 
         <!-- 取得上限。まだ変えられないので、値だけを見せる。 -->
-        <TextBlock Grid.Column="5"
+        <TextBlock Grid.Column="6"
                    Classes="label"
                    Text="{Binding Query.MaxRowsLabel}"
                    VerticalAlignment="Center"
                    ToolTip.Tip="結果セットごとに読む行数の上限（変更は未実装）"/>
 
         <!-- 実行結果の一行 -->
-        <TextBlock Grid.Column="7"
+        <TextBlock Grid.Column="8"
                    Classes="runStatus"
                    Classes.failure="{Binding Query.HasFailed}"
                    Text="{Binding Query.Status}"/>
 
-        <Button Grid.Column="8"
+        <Button Grid.Column="9"
                 Theme="{StaticResource IconButton}"
                 Command="{Binding Query.CloseCommand}"
                 ToolTip.Tip="クエリを閉じる">
@@ -97,16 +111,15 @@
     </Border>
 
     <!-- ===== エディタ =====
-         AvaloniaEdit ではなく素の TextBox。構文の色分けと補完はフェーズ 1 の残り。 -->
+         AvaloniaEdit。色分けは TextMate ではなく自前の SqlLexer を SqlColorizer で流し込み、
+         色は Tokens.axaml の Syntax*Brush から引く（テーマの切り替えにそのまま追従する）。
+         補完のポップアップの出し入れは QueryWorkspacePane.axaml.cs が受け持つ。 -->
     <Border Grid.Row="1" Background="{DynamicResource BgSurfaceBrush}">
-      <TextBox Name="Editor"
-               Classes="editor"
-               Text="{Binding Query.Sql, Mode=TwoWay}"
-               AcceptsReturn="True"
-               AcceptsTab="True"
-               PlaceholderText="SELECT ... と入力して 実行（F5）を押す"
-               ScrollViewer.HorizontalScrollBarVisibility="Auto"
-               ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+      <edit:TextEditor Name="Editor"
+                       Classes="editor"
+                       Document="{Binding Query.Document}"
+                       ShowLineNumbers="True"
+                       Watermark="SELECT ... と入力して 実行（F5）を押す"/>
     </Border>
 
     <!-- エディタと結果の境目 -->
