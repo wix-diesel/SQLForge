@@ -89,6 +89,20 @@ internal abstract class StubAdoSession(DbConnection connection)
         TableCellUpdate update) =>
         new(string.Empty, []);
 
+    protected override ParameterizedStatement BuildRowInsert(
+        SchemaName schema,
+        string table,
+        IReadOnlyList<EditableColumn> columns,
+        TableRowInsert insert) =>
+        new(string.Empty, []);
+
+    protected override ParameterizedStatement BuildRowDelete(
+        SchemaName schema,
+        string table,
+        IReadOnlyList<EditableColumn> columns,
+        TableRowDelete delete) =>
+        new(string.Empty, []);
+
     protected override Task<IReadOnlyList<DatabaseUserDescriptor>> ReadDatabaseUsersAsync(
         DbConnection connection,
         DatabaseName database,

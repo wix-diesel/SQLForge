@@ -9,6 +9,7 @@ using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Security;
+using SQLForge.Ui.ViewModels.Workspace;
 using SQLForge.Ui.Views;
 
 namespace SQLForge.Ui.Composition;
@@ -74,6 +75,8 @@ public static class AppServices
 
         services.AddSingleton<EditTableRowsUseCase>();
         services.AddSingleton<UpdateTableCellUseCase>();
+        services.AddSingleton<InsertTableRowUseCase>();
+        services.AddSingleton<DeleteTableRowUseCase>();
 
         services.AddSingleton<ListDatabaseUsersUseCase>();
         services.AddSingleton<ListDatabaseRolesUseCase>();
@@ -127,6 +130,11 @@ public static class AppServices
         services.AddSingleton<SchemaDialogService>();
         services.AddSingleton<ISchemaEditor>(provider =>
             provider.GetRequiredService<SchemaDialogService>());
+
+        // 編集グリッドの「行の削除」の確認も、同じ理由で 1 つを共有する。
+        services.AddSingleton<TableRowDeleteDialogService>();
+        services.AddSingleton<IRowDeletionPrompt>(provider =>
+            provider.GetRequiredService<TableRowDeleteDialogService>());
 
         // メインウィンドウは開いたセッションを渡して組み立てるので、工場ごしに作る。
         services.AddSingleton<MainWindowViewModelFactory>();

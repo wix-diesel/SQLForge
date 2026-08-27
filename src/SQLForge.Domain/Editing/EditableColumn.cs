@@ -24,6 +24,10 @@ namespace SQLForge.Domain.Editing;
 /// 文字列の列か。空欄を確定したときに、空文字列と NULL のどちらにするかを分ける
 /// （文字列なら空文字列、それ以外なら NULL。SSMS と同じ）。
 /// </param>
+/// <param name="IsIdentity">
+/// サーバーが採番する列か（IDENTITY など）。<see cref="IsReadOnly"/> にも含まれるが、
+/// 行を足したあとに「いま入った行」を読み直す条件を組むのに、採番かどうかだけを別に持つ。
+/// </param>
 public sealed record EditableColumn(
     string Name,
     string DataType,
@@ -31,4 +35,5 @@ public sealed record EditableColumn(
     bool IsKey,
     bool IsReadOnly,
     bool IsNumeric,
-    bool IsText);
+    bool IsText,
+    bool IsIdentity = false);

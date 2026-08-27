@@ -216,7 +216,13 @@ public class MainWindowRenderTests
     private static MainWindowViewModel NewViewModel(FakeDatabaseSession session)
     {
         var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        var tableEditor = new TableEditorViewModel(session, new EditTableRowsUseCase(), new UpdateTableCellUseCase());
+        var tableEditor = new TableEditorViewModel(
+            session,
+            new EditTableRowsUseCase(),
+            new UpdateTableCellUseCase(),
+            new InsertTableRowUseCase(),
+            new DeleteTableRowUseCase(),
+            new FakeRowDeletionPrompt());
 
         return new MainWindowViewModel(
             session,

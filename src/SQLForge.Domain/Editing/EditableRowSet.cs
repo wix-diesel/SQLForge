@@ -36,4 +36,16 @@ public sealed class EditableRowSet
 
     /// <summary>グリッドで値を書き換えられるか。</summary>
     public bool CanEdit => HasKey && HasEditableColumn;
+
+    /// <summary>
+    /// 行を足せるか。足すだけなら行を特定する必要がないので、鍵は要らない
+    /// （SSMS も、主キーの無いテーブルへ行を足すことはできる）。
+    /// </summary>
+    public bool CanInsert => HasEditableColumn;
+
+    /// <summary>
+    /// 行を消せるか。どの行を消すのかを決められることだけが要る
+    /// （書き換えられる列が 1 つも無いテーブルでも、行ごとなら消せる）。
+    /// </summary>
+    public bool CanDelete => HasKey;
 }

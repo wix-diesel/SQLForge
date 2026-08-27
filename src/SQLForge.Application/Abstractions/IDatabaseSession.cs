@@ -269,4 +269,31 @@ public interface IDatabaseSession : IAsyncDisposable
         string table,
         TableCellUpdate update,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 編集グリッドの新しい行を 1 つ足す。行と、足したあとの読み直しは
+    /// 1 つの操作として扱う（途中で失敗したら何も残さない）。
+    /// </summary>
+    /// <returns>
+    /// 足したあとの行の値（列の並びと同じ）。IDENTITY や既定値でサーバーが決めた値を
+    /// 画面へ写すのに使う。読み直す条件を組めないとき（採番でない鍵を打ち込まずに足したときなど）は null。
+    /// </returns>
+    Task<IReadOnlyList<string?>?> InsertTableRowAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableRowInsert insert,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 編集グリッドの行 1 つを消す。<see cref="UpdateTableCellAsync"/> と同じで、
+    /// ちょうど 1 行に当たらない削除は成立させず、何も残さないのは実装側の責務。
+    /// </summary>
+    /// <returns>実際に消した行数。</returns>
+    Task<int> DeleteTableRowAsync(
+        DatabaseName database,
+        SchemaName schema,
+        string table,
+        TableRowDelete delete,
+        CancellationToken cancellationToken = default);
 }

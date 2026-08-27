@@ -140,15 +140,25 @@
                    Background="Transparent"
                    BorderThickness="0"
                    Padding="0"
+                   KeyDown="OnGridKeyDown"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="workspace:EditableRowViewModel">
                 <StackPanel Orientation="Horizontal">
+                  <!-- 行ヘッダー。行番号（新しい行は *）と、行そのものへの右クリック。 -->
                   <Border Width="{DynamicResource GridGutterWidth}"
                           Padding="0,0,8,0"
                           Background="{DynamicResource BgPanelBrush}"
                           BorderBrush="{DynamicResource BorderBrush}"
                           BorderThickness="0,0,1,0">
+                    <Border.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="行の削除" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}"/>
+                        <MenuItem Header="新しい行を取り消す (Esc)"
+                                  Command="{Binding CancelCommand}"
+                                  IsVisible="{Binding IsNewRow}"/>
+                      </ContextMenu>
+                    </Border.ContextMenu>
                     <TextBlock Text="{Binding Number}"
                                FontFamily="{DynamicResource FontFamilyMono}"
                                FontSize="{DynamicResource FontSizeMonoSm}"
@@ -173,6 +183,13 @@
                           <Border.ContextMenu>
                             <ContextMenu>
                               <MenuItem Header="NULL を設定 (Ctrl+0)" Command="{Binding SetNullCommand}"/>
+                              <Separator/>
+                              <MenuItem Header="行の削除"
+                                        Command="{Binding Row.DeleteCommand}"
+                                        IsVisible="{Binding Row.CanDelete}"/>
+                              <MenuItem Header="新しい行を取り消す (Esc)"
+                                        Command="{Binding Row.CancelCommand}"
+                                        IsVisible="{Binding Row.IsNewRow}"/>
                             </ContextMenu>
                           </Border.ContextMenu>
                           <Panel>

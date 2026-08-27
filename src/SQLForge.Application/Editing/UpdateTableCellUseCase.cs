@@ -21,7 +21,8 @@ public sealed class UpdateTableCellUseCase
         ArgumentNullException.ThrowIfNull(request);
 
         var column = Target(request);
-        var update = new TableCellUpdate(column.Name, request.NewValue, Criteria(request));
+        var update = new TableCellUpdate(
+            column.Name, request.NewValue, RowCriteria.From(request.Columns, request.Row));
 
         var affected = await session
             .UpdateTableCellAsync(request.Database, request.Schema, request.Table, update, cancellationToken)
@@ -40,10 +41,7 @@ public sealed class UpdateTableCellUseCase
     /// <summary>書き換える列を取り出しつつ、そもそも書き換えてよい列かを見る。</summary>
     private static EditableColumn Target(TableCellEditRequest request)
     {
-        if (request.Columns.Count == 0 || request.Row.Count != request.Columns.Count)
-        {
-            throw new TableEditRejectedException("行の形が列の並びと合いません。読み直してください。");
-        }
+        RowCriteria.EnsureShape(request.Columns, request.Row);
 
         if (request.Ordinal < 0 || request.Ordinal >= request.Columns.Count)
         {
@@ -64,27 +62,5 @@ public sealed class UpdateTableCellUseCase
         }
 
         return column;
-    }
-
-    /// <summary>行を特定する条件。鍵になる列の、変更前の値だけを並べる。</summary>
-    private static IReadOnlyList<RowCriterion> Criteria(TableCellEditRequest request)
-    {
-        var criteria = new List<RowCriterion>();
-
-        for (var ordinal = 0; ordinal < request.Columns.Count; ordinal++)
-        {
-            if (request.Columns[ordinal].IsKey)
-            {
-                criteria.Add(new RowCriterion(request.Columns[ordinal].Name, request.Row[ordinal]));
-            }
-        }
-
-        if (criteria.Count == 0)
-        {
-            throw new TableEditRejectedException(
-                "行を 1 件に特定できないため、このテーブルは編集できません（主キーがありません）。");
-        }
-
-        return criteria;
     }
 }

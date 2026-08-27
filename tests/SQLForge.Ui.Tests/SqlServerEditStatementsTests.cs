@@ -86,9 +86,12 @@ public class SqlServerEditStatementsTests
         Assert.Contains("int", rejected.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>id（IDENTITY・主キー）と status（nvarchar）。</summary>
     private static IReadOnlyList<EditableColumn> Columns() =>
     [
-        new EditableColumn("id", "int", IsNullable: false, IsKey: true, IsReadOnly: true, IsNumeric: true, IsText: false),
+        new EditableColumn(
+            "id", "int", IsNullable: false, IsKey: true, IsReadOnly: true, IsNumeric: true, IsText: false,
+            IsIdentity: true),
         new EditableColumn(
             "status", "nvarchar(20)", IsNullable: true, IsKey: false, IsReadOnly: false, IsNumeric: false, IsText: true)
     ];
@@ -97,6 +100,102 @@ public class SqlServerEditStatementsTests
     private static IReadOnlyList<EditableColumn> EditableKeyColumns() =>
     [
         new EditableColumn("id", "int", IsNullable: false, IsKey: true, IsReadOnly: false, IsNumeric: true, IsText: false)
+    ];
+
+    [Fact]
+    public void 行の追加は打ち込まれた列だけを並べる()
+    {
+        // 触っていない列を NULL として並べると、サーバーの既定値が効かなくなる。
+        var insert = new TableRowInsert([new TableCellValue("status", "shipped")]);
+
+        var statement = SqlServerEditStatements.RowInsert(Dbo, "orders", Columns(), insert);
+
+        Assert.StartsWith(
+            "INSERT INTO [dbo].[orders] ([status]) VALUES (@p0);",
+            statement.Text,
+            StringComparison.Ordinal);
+        Assert.Equal(["shipped"], statement.Parameters);
+    }
+
+    [Fact]
+    public void 採番される鍵はSCOPEIDENTITYで読み直す()
+    {
+        // IDENTITY の値は足してみるまで分からない。同じ文面の中で読み直して画面へ写す。
+        var insert = new TableRowInsert([new TableCellValue("status", "shipped")]);
+
+        var statement = SqlServerEditStatements.RowInsert(Dbo, "orders", Columns(), insert);
+
+        Assert.EndsWith(
+            " SELECT TOP (1) [id], [status] FROM [dbo].[orders] WHERE [id] = SCOPE_IDENTITY();",
+            statement.Text,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void 打ち込まれた鍵はその値で読み直す()
+    {
+        var insert = new TableRowInsert(
+            [new TableCellValue("code", "A-1"), new TableCellValue("status", "shipped")]);
+
+        var statement = SqlServerEditStatements.RowInsert(Dbo, "orders", KeyedColumns(), insert);
+
+        Assert.EndsWith(
+            " SELECT TOP (1) [code], [status] FROM [dbo].[orders] WHERE [code] = @p2;",
+            statement.Text,
+            StringComparison.Ordinal);
+        Assert.Equal(["A-1", "shipped", "A-1"], statement.Parameters);
+    }
+
+    [Fact]
+    public void 何が入るか分からない鍵では読み直さない()
+    {
+        // 既定値で決まる主キー（newid() など）は、足したあとに当てにいけない。
+        var insert = new TableRowInsert([new TableCellValue("status", "shipped")]);
+
+        var statement = SqlServerEditStatements.RowInsert(Dbo, "orders", KeyedColumns(), insert);
+
+        Assert.EndsWith("VALUES (@p0);", statement.Text, StringComparison.Ordinal);
+        Assert.Single(statement.Parameters);
+    }
+
+    [Fact]
+    public void 値を指定できない列は文面を組む前に弾く()
+    {
+        var insert = new TableRowInsert([new TableCellValue("id", "8")]);
+
+        Assert.Throws<TableEditRejectedException>(
+            () => SqlServerEditStatements.RowInsert(Dbo, "orders", Columns(), insert));
+    }
+
+    [Fact]
+    public void 削除は主キーを条件にして値をパラメータで渡す()
+    {
+        var delete = new TableRowDelete([new RowCriterion("id", "7")]);
+
+        var statement = SqlServerEditStatements.RowDelete(Dbo, "orders", Columns(), delete);
+
+        Assert.Equal("DELETE FROM [dbo].[orders] WHERE [id] = @p0;", statement.Text);
+        Assert.Equal([7L], statement.Parameters);
+    }
+
+    [Fact]
+    public void 削除でも変更前がNULLの条件はISNULLで比べる()
+    {
+        var delete = new TableRowDelete([new RowCriterion("id", "7"), new RowCriterion("status", null)]);
+
+        var statement = SqlServerEditStatements.RowDelete(Dbo, "orders", Columns(), delete);
+
+        Assert.EndsWith("WHERE [id] = @p0 AND [status] IS NULL;", statement.Text, StringComparison.Ordinal);
+        Assert.Single(statement.Parameters);
+    }
+
+    /// <summary>採番されない主キー（code）を持つテーブル。</summary>
+    private static IReadOnlyList<EditableColumn> KeyedColumns() =>
+    [
+        new EditableColumn(
+            "code", "nvarchar(10)", IsNullable: false, IsKey: true, IsReadOnly: false, IsNumeric: false, IsText: true),
+        new EditableColumn(
+            "status", "nvarchar(20)", IsNullable: true, IsKey: false, IsReadOnly: false, IsNumeric: false, IsText: true)
     ];
 
     private static IReadOnlyList<EditableColumn> ReadOnlyColumns() =>

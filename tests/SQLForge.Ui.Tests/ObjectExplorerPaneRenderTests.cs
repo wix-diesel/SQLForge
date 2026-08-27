@@ -193,7 +193,13 @@ public class ObjectExplorerPaneRenderTests
                 new DatabaseName("sales_db")));
 
         var query = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        var tableEditor = new TableEditorViewModel(session, new EditTableRowsUseCase(), new UpdateTableCellUseCase());
+        var tableEditor = new TableEditorViewModel(
+            session,
+            new EditTableRowsUseCase(),
+            new UpdateTableCellUseCase(),
+            new InsertTableRowUseCase(),
+            new DeleteTableRowUseCase(),
+            new FakeRowDeletionPrompt());
 
         return new MainWindowViewModel(
             session,

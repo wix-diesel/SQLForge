@@ -15,12 +15,16 @@ namespace SQLForge.Ui.ViewModels.Workspace;
 ///
 /// 保存ボタンは持たない。セルを確定するたびにその 1 セルだけを書き戻し、
 /// 通ったかどうかをその場で見せる（SSMS の編集グリッドと同じ）。
+/// 行の追加と削除は <see cref="TableEditorViewModel"/> のもう一枚（RowEditing）にある。
 /// </summary>
 public sealed partial class TableEditorViewModel : ObservableObject, ITableEditorLauncher
 {
     private readonly IDatabaseSession _session;
     private readonly EditTableRowsUseCase _editRows;
     private readonly UpdateTableCellUseCase _updateCell;
+    private readonly InsertTableRowUseCase _insertRow;
+    private readonly DeleteTableRowUseCase _deleteRow;
+    private readonly IRowDeletionPrompt _deletionPrompt;
 
     private DatabaseName? _database;
     private SchemaName? _schema;
@@ -42,6 +46,12 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
     /// <summary>グリッドで値を書き換えられるか。</summary>
     [ObservableProperty] private bool _canEdit;
 
+    /// <summary>行を足せるか。足すだけなら鍵は要らないので、書き換えとは別に持つ。</summary>
+    [ObservableProperty] private bool _canInsert;
+
+    /// <summary>行を消せるか。どの行かを決められること（鍵があること）だけが要る。</summary>
+    [ObservableProperty] private bool _canDelete;
+
     /// <summary>書き換えられないときの理由。読めるだけの状態で開いたことを画面に出す。</summary>
     [ObservableProperty] private string? _readOnlyReason;
 
@@ -50,13 +60,20 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
     public TableEditorViewModel(
         IDatabaseSession session,
         EditTableRowsUseCase editRows,
-        UpdateTableCellUseCase updateCell)
+        UpdateTableCellUseCase updateCell,
+        InsertTableRowUseCase insertRow,
+        DeleteTableRowUseCase deleteRow,
+        IRowDeletionPrompt deletionPrompt)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _editRows = editRows ?? throw new ArgumentNullException(nameof(editRows));
         _updateCell = updateCell ?? throw new ArgumentNullException(nameof(updateCell));
+        _insertRow = insertRow ?? throw new ArgumentNullException(nameof(insertRow));
+        _deleteRow = deleteRow ?? throw new ArgumentNullException(nameof(deleteRow));
+        _deletionPrompt = deletionPrompt ?? throw new ArgumentNullException(nameof(deletionPrompt));
     }
 
+    /// <summary>グリッドの行。行を足せるときは、いちばん下に新しい行（<c>*</c>）が並ぶ。</summary>
     public ObservableCollection<EditableRowViewModel> Rows { get; } = [];
 
     public string MaxRowsLabel =>
@@ -189,6 +206,8 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
     {
         _definitions = rows.Columns;
         CanEdit = rows.CanEdit && !IsReadOnlyConnection;
+        CanInsert = rows.CanInsert && !IsReadOnlyConnection;
+        CanDelete = rows.CanDelete && !IsReadOnlyConnection;
         ReadOnlyReason = DescribeReadOnly(rows);
         Columns = BuildColumns(rows);
 
@@ -198,6 +217,8 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
         {
             Rows.Add(new EditableRowViewModel(this, index + 1, Columns, rows.Rows[index]));
         }
+
+        AppendNewRow();
 
         Status = DescribeStatus(rows);
         HasFailed = false;
@@ -224,7 +245,8 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
                     column.Name,
                     column.DataType,
                     rows.Rows.Select(row => position < row.Count ? row[position] : null)),
-                CanEdit));
+                CanEdit,
+                CanInsert));
         }
 
         return columns;
@@ -240,7 +262,7 @@ public sealed partial class TableEditorViewModel : ObservableObject, ITableEdito
 
         if (!rows.HasKey)
         {
-            return "行を 1 件に特定できる列が無いため、値は変更できません（主キーがありません）。";
+            return "行を 1 件に特定できる列が無いため、値の変更と行の削除はできません（主キーがありません）。";
         }
 
         return rows.HasEditableColumn ? null : "書き換えられる列がありません。";
