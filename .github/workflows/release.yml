@@ -6,10 +6,33 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore SQLForge.sln
+
+      - name: Build
+        run: dotnet build SQLForge.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test SQLForge.sln --configuration Release --no-build
+
   publish:
     name: Publish (${{ matrix.rid }})
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       matrix:
