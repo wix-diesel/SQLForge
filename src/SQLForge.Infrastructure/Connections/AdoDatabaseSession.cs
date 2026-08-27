@@ -19,15 +19,28 @@ namespace SQLForge.Infrastructure.Connections;
 /// </summary>
 public abstract partial class AdoDatabaseSession : IDatabaseSession
 {
+    /// <summary>閉じるときに、走っている照会が終わるのを待つ上限。</summary>
+    private static readonly TimeSpan DisposeGrace = TimeSpan.FromSeconds(5);
+
     private readonly DbConnection _connection;
+    private readonly IAsyncDisposable? _route;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _disposed;
 
-    protected AdoDatabaseSession(ConnectionProfile profile, DbConnection connection, ServerInfo server)
+    /// <param name="route">
+    /// 接続がその上に乗っている経路（SSH トンネルなど）。セッションを閉じるときに
+    /// 一緒に閉じる。経路を挟まない接続では null。
+    /// </param>
+    protected AdoDatabaseSession(
+        ConnectionProfile profile,
+        DbConnection connection,
+        ServerInfo server,
+        IAsyncDisposable? route = null)
     {
         Profile = profile ?? throw new ArgumentNullException(nameof(profile));
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         Server = server ?? throw new ArgumentNullException(nameof(server));
+        _route = route;
     }
 
     public ConnectionProfile Profile { get; }
@@ -251,15 +264,26 @@ public abstract partial class AdoDatabaseSession : IDatabaseSession
         // 先に閉じたことにして、以降の照会は門を待たずに弾く。
         _disposed = true;
 
-        // 実行中の照会はコマンドのタイムアウトで必ず終わるので、ここで止まり続けることはない。
-        await _gate.WaitAsync().ConfigureAwait(false);
+        // 実行の待ち時間は「詳細設定」タブで 0（待ち続ける）にもできるので、
+        // 走っている照会が終わるのを待ち続けない。待っても空かないときはそのまま閉じる
+        // ―― 走っていた文面は接続ごと切れる。閉じられずに残るほうが困る。
+        var entered = await _gate.WaitAsync(DisposeGrace).ConfigureAwait(false);
         try
         {
             await _connection.DisposeAsync().ConfigureAwait(false);
+
+            // 経路は接続より先に閉じない。閉じると、まだ残っている後始末の通信が行き先を失う。
+            if (_route is { } route)
+            {
+                await route.DisposeAsync().ConfigureAwait(false);
+            }
         }
         finally
         {
-            _gate.Release();
+            if (entered)
+            {
+                _gate.Release();
+            }
         }
 
         GC.SuppressFinalize(this);

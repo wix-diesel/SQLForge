@@ -6,6 +6,8 @@ namespace SQLForge.Application.Connections;
 /// <summary>
 /// 接続に使うパスワードを決める。入力欄に打たれた値を最優先し、
 /// 空のとき（保存済み接続を開いた直後など）だけキーリングに預けたものを使う。
+///
+/// SSH トンネルを通す接続では、踏み台のぶんも同じ決め方で別の鍵から読む。
 /// </summary>
 public sealed class ConnectionSecretResolver(ISecretStore secretStore)
 {
@@ -13,12 +15,19 @@ public sealed class ConnectionSecretResolver(ISecretStore secretStore)
 
     public async Task<ConnectionRequest> ResolveAsync(
         ConnectionProfile profile,
-        string? typedSecret,
+        ConnectionSecrets? typed = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        return new ConnectionRequest(profile, await ResolveSecretAsync(profile, typedSecret, cancellationToken).ConfigureAwait(false));
+        var secrets = typed ?? ConnectionSecrets.None;
+
+        return new ConnectionRequest(
+            profile,
+            await ResolveSecretAsync(profile, secrets.Password, cancellationToken).ConfigureAwait(false))
+        {
+            SshSecret = await ResolveSshSecretAsync(profile, secrets.SshSecret, cancellationToken).ConfigureAwait(false)
+        };
     }
 
     private async Task<string?> ResolveSecretAsync(
@@ -31,17 +40,50 @@ public sealed class ConnectionSecretResolver(ISecretStore secretStore)
             return null;
         }
 
+        return await ResolveAsync(
+            typedSecret,
+            profile.Credentials.StoreSecretInKeyring,
+            SaveConnectionUseCase.SecretKeyFor(profile),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 踏み台のぶん。秘密鍵にパスフレーズが掛かっていないこともあるので、
+    /// 「無い」ことは失敗にせず null のまま返す。
+    /// </summary>
+    private async Task<string?> ResolveSshSecretAsync(
+        ConnectionProfile profile,
+        string? typedSecret,
+        CancellationToken cancellationToken)
+    {
+        if (!profile.Tunnel.IsEnabled)
+        {
+            return null;
+        }
+
+        return await ResolveAsync(
+            typedSecret,
+            profile.Tunnel.StoreSecretInKeyring,
+            SaveConnectionUseCase.SshSecretKeyFor(profile),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<string?> ResolveAsync(
+        string? typedSecret,
+        bool storedInKeyring,
+        string key,
+        CancellationToken cancellationToken)
+    {
         if (!string.IsNullOrEmpty(typedSecret))
         {
             return typedSecret;
         }
 
-        if (!profile.Credentials.StoreSecretInKeyring || !_secretStore.IsAvailable)
+        if (!storedInKeyring || !_secretStore.IsAvailable)
         {
             return null;
         }
 
-        var key = SaveConnectionUseCase.SecretKeyFor(profile);
         return await _secretStore.ReadAsync(key, cancellationToken).ConfigureAwait(false);
     }
 }

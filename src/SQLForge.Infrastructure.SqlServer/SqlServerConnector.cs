@@ -27,7 +27,9 @@ public sealed class SqlServerConnector : IDatabaseConnector
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             var server = await ReadServerInfoAsync(connection, cancellationToken).ConfigureAwait(false);
 
-            return new SqlServerSession(request.Profile, connection, server);
+            // 開いた時点で、SSH トンネルの後始末もこのセッションの持ち物になる
+            // （開けなかったときに閉じるのは、トンネルを開いた呼び出し側の受け持ち）。
+            return new SqlServerSession(request.Profile, connection, server, request.Tunnel);
         }
         catch
         {

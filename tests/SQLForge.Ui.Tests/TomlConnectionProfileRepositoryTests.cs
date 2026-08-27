@@ -125,6 +125,120 @@ public class TomlConnectionProfileRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task SSHトンネルとTLS証明書と詳細設定も読み直せる()
+    {
+        var profile = new ConnectionProfile(
+            ConnectionProfileId.New(),
+            "prod-sales-tunneled",
+            EnvironmentTag.Production,
+            new ConnectionTarget(
+                DatabaseDriver.SqlServer,
+                new ServerAddress("db.internal", 1433),
+                "sales_db",
+                TlsMode.Strict,
+                new TlsCertificateSettings
+                {
+                    HostNameInCertificate = "db.internal",
+                    ServerCertificatePath = "/etc/ssl/certs/sqlserver.pem"
+                }),
+            new ConnectionCredentials("analyst_ro", AuthenticationMethod.Password, storeSecretInKeyring: true),
+            AccessMode.ReadOnly,
+            new SshTunnelSettings
+            {
+                IsEnabled = true,
+                Host = "bastion.internal",
+                Port = 2222,
+                UserName = "alice",
+                Authentication = SshAuthenticationMethod.PrivateKey,
+                PrivateKeyPath = "~/.ssh/id_ed25519",
+                LocalPort = 15433,
+                StoreSecretInKeyring = false
+            },
+            new AdvancedConnectionSettings
+            {
+                Protocol = NetworkProtocol.TcpIp,
+                PacketSize = 8192,
+                ConnectTimeoutSeconds = 30,
+                ExecutionTimeoutSeconds = 45,
+                AdditionalParameters = "ApplicationIntent=ReadOnly"
+            });
+        await NewRepository().SaveAsync(profile);
+
+        var restored = Assert.Single(await NewRepository().ListAsync());
+
+        Assert.Equal(TlsMode.Strict, restored.Target.Tls);
+        Assert.Equal("db.internal", restored.Target.Certificate.HostNameInCertificate);
+        Assert.Equal("/etc/ssl/certs/sqlserver.pem", restored.Target.Certificate.ServerCertificatePath);
+        Assert.Equal(profile.Tunnel, restored.Tunnel);
+        Assert.Equal(profile.Advanced, restored.Advanced);
+    }
+
+    [Fact]
+    public async Task 踏み台のパスワードもファイルには書かれない()
+    {
+        var profile = new ConnectionProfile(
+            ConnectionProfileId.New(),
+            "prod-sales-tunneled",
+            EnvironmentTag.Production,
+            new ConnectionTarget(DatabaseDriver.SqlServer, new ServerAddress("db.internal", 1433), "sales_db"),
+            new ConnectionCredentials("analyst_ro", AuthenticationMethod.Password, storeSecretInKeyring: true),
+            AccessMode.ReadOnly,
+            new SshTunnelSettings { IsEnabled = true, Host = "bastion.internal", UserName = "alice" });
+        await NewRepository().SaveAsync(profile);
+
+        var text = await File.ReadAllTextAsync(NewRepository().FilePath);
+
+        Assert.Contains("ssh_host", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("ssh_password", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("passphrase", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task 既定のままの接続には新しい行を書かない()
+    {
+        // 既定値ばかりの行でファイルを埋めない（手で読んで直せる形を保つ）。
+        await NewRepository().SaveAsync(NewProfile("prod-sales"));
+
+        var text = await File.ReadAllTextAsync(NewRepository().FilePath);
+
+        Assert.DoesNotContain("ssh_", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("packet_size", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("tls_host_name_in_certificate", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task 新しいキーの無い古いファイルもそのまま読める()
+    {
+        // 更新しただけで保存済み接続が読めなくなる、ということが起きないこと。
+        Directory.CreateDirectory(_directory);
+        await File.WriteAllTextAsync(
+            NewRepository().FilePath,
+            """
+            [[connection]]
+            id = "0f9f4d1a-9d5a-4a2f-9a1b-2c3d4e5f6071"
+            name = "prod-sales"
+            environment = "production"
+            driver = "sqlserver"
+            host = "db.internal"
+            port = 1433
+            database = "sales_db"
+            user = "analyst_ro"
+            authentication = "password"
+            store_secret_in_keyring = true
+            tls = "require"
+            access_mode = "read_only"
+
+            """);
+
+        var restored = Assert.Single(await NewRepository().ListAsync());
+
+        Assert.Equal("prod-sales", restored.Name);
+        Assert.False(restored.Tunnel.IsEnabled);
+        Assert.True(restored.Advanced.IsDefault);
+        Assert.False(restored.Target.Certificate.IsConfigured);
+    }
+
+    [Fact]
     public async Task 壊れたファイルは理由付きで失敗する()
     {
         // 黙って捨てると利用者の接続情報が消えたように見えるので、読めないことを伝える。

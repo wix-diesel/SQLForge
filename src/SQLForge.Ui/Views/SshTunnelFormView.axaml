@@ -1,0 +1,171 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SQLForge.Ui.ViewModels"
+             xmlns:pres="using:SQLForge.Ui.Presentation"
+             x:Class="SQLForge.Ui.Views.SshTunnelFormView"
+             x:DataType="vm:ConnectDialogViewModel">
+
+  <!-- 接続ダイアログ「SSH トンネル」タブ -->
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="18,16,18,16" Spacing="13">
+
+      <!-- 使う / 使わない -->
+      <Border Padding="12,10"
+              Background="{DynamicResource BgPanelBrush}"
+              BorderBrush="{DynamicResource BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="{DynamicResource RadiusLg}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <ToggleButton Grid.Column="0"
+                        Theme="{StaticResource SwitchToggle}"
+                        IsChecked="{Binding Form.Ssh.IsEnabled}"
+                        VerticalAlignment="Top"
+                        Margin="0,2,0,0"/>
+          <StackPanel Grid.Column="1" Spacing="2">
+            <TextBlock Text="SSH の踏み台ごしに接続する"
+                       Foreground="{DynamicResource TextHighBrush}"/>
+            <TextBlock Classes="label"
+                       TextWrapping="Wrap"
+                       Text="踏み台へ繋いでから、この機械の 127.0.0.1 に開いた口を「一般」タブの繋ぎ先へ流します。待ち受けは外へは開きません。"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <StackPanel Spacing="13" IsEnabled="{Binding Form.Ssh.IsEnabled}">
+
+        <!-- 踏み台のホスト / ポート -->
+        <Grid ColumnDefinitions="*,100" ColumnSpacing="12">
+          <StackPanel Grid.Column="0" Spacing="5">
+            <TextBlock Classes="label" Text="踏み台のホスト"/>
+            <TextBox Classes="mono"
+                     Classes.error="{Binding Form.Ssh.HasHostError}"
+                     Text="{Binding Form.Ssh.Host}"
+                     PlaceholderText="bastion.internal"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="5">
+            <TextBlock Classes="label" Text="ポート"/>
+            <TextBox Classes="mono"
+                     Classes.error="{Binding Form.Ssh.HasPortError}"
+                     Text="{Binding Form.Ssh.Port}"/>
+          </StackPanel>
+        </Grid>
+
+        <!-- 利用者名 / 認証方式 -->
+        <Grid ColumnDefinitions="*,200" ColumnSpacing="12">
+          <StackPanel Grid.Column="0" Spacing="5">
+            <TextBlock Classes="label" Text="踏み台の利用者名"/>
+            <TextBox Classes="mono"
+                     Classes.error="{Binding Form.Ssh.HasUserError}"
+                     Text="{Binding Form.Ssh.User}"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="5">
+            <TextBlock Classes="label" Text="認証方式"/>
+            <ComboBox ItemsSource="{Binding Form.Ssh.AuthenticationChoices}"
+                      SelectedItem="{Binding Form.Ssh.Authentication}"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate DataType="pres:SshAuthenticationChoice">
+                  <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+        </Grid>
+
+        <!-- 秘密鍵 -->
+        <StackPanel Spacing="5" IsVisible="{Binding Form.Ssh.RequiresPrivateKey}">
+          <TextBlock Classes="label" Text="秘密鍵"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Grid.Column="0"
+                     Classes="mono"
+                     Classes.error="{Binding Form.Ssh.HasPrivateKeyError}"
+                     Text="{Binding Form.Ssh.PrivateKeyPath}"
+                     PlaceholderText="~/.ssh/id_ed25519"/>
+            <Button Grid.Column="1"
+                    Theme="{StaticResource SecondaryButton}"
+                    Command="{Binding Form.Ssh.BrowsePrivateKeyCommand}"
+                    IsVisible="{Binding Form.Ssh.CanBrowse}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Classes="icon" Data="{StaticResource IconFolder}"/>
+                <TextBlock Text="参照…" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+        </StackPanel>
+
+        <!-- パスワード / パスフレーズ -->
+        <StackPanel Spacing="5">
+          <TextBlock Classes="label" Text="{Binding Form.Ssh.SecretLabel}"/>
+          <Border Height="{DynamicResource ControlHeightMd}"
+                  Padding="10,0,4,0"
+                  Background="{DynamicResource InputBackgroundBrush}"
+                  BorderBrush="{DynamicResource BorderStrongBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RadiusMd}">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+              <TextBox Grid.Column="0" Classes="mono search"
+                       Text="{Binding Form.Ssh.Secret}"
+                       PasswordChar="•"
+                       RevealPassword="{Binding Form.Ssh.IsSecretVisible}"
+                       VerticalAlignment="Center"/>
+              <ToggleButton Grid.Column="1"
+                            Theme="{StaticResource IconToggle}"
+                            IsChecked="{Binding Form.Ssh.IsSecretVisible}"
+                            ToolTip.Tip="入力を表示">
+                <Path Classes="icon" Data="{StaticResource IconEye}"/>
+              </ToggleButton>
+              <Border Grid.Column="2" Theme="{StaticResource VerticalDivider}"/>
+              <ToggleButton Grid.Column="3"
+                            Theme="{StaticResource InlineToggle}"
+                            IsChecked="{Binding Form.Ssh.StoreInKeyring}"
+                            IsEnabled="{Binding IsKeyringAvailable}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Path Classes="icon"
+                        Classes.success="{Binding Form.Ssh.StoreInKeyring}"
+                        Data="{StaticResource IconLock}"/>
+                  <TextBlock Text="{Binding KeyringLabel}"
+                             FontSize="{DynamicResource FontSizeSm}"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+              </ToggleButton>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- 手元の待ち受けポート -->
+        <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+          <StackPanel Grid.Column="0" Spacing="5">
+            <TextBlock Classes="label" Text="手元のポート"/>
+            <TextBox Classes="mono"
+                     Classes.error="{Binding Form.Ssh.HasLocalPortError}"
+                     Text="{Binding Form.Ssh.LocalPort}"
+                     PlaceholderText="自動"/>
+          </StackPanel>
+          <TextBlock Grid.Column="1"
+                     Classes="label"
+                     TextWrapping="Wrap"
+                     VerticalAlignment="Bottom"
+                     Margin="0,0,0,7"
+                     Text="空欄なら空いているポートを自動で選びます。決め打ちにするのは、他の道具から同じ口を使いたいときだけで足ります。"/>
+        </Grid>
+
+        <!-- 証明書の名前がずれることへの断り書き -->
+        <Border Padding="12,10"
+                Background="{DynamicResource BgPanelBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource RadiusLg}">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Path Classes="icon" Data="{StaticResource IconShield}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+            <TextBlock Classes="label"
+                       TextWrapping="Wrap"
+                       MaxWidth="520"
+                       Text="トンネルを通すと、ドライバーから見た繋ぎ先は 127.0.0.1 になります。TLS の証明書はサーバーの本来の名前で出ているので、証明書を検証する設定では「TLS / SSL」タブの［証明書内のホスト名］にその名前を入れてください。"/>
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

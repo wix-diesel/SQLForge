@@ -15,7 +15,7 @@ public class SaveConnectionUseCaseTests
     {
         var (useCase, store, draft) = Setup();
 
-        await useCase.ExecuteAsync(draft, "s3cret");
+        await useCase.ExecuteAsync(draft, new ConnectionSecrets("s3cret"));
 
         Assert.Equal("s3cret", await store.ReadAsync(KeyFor(draft)));
     }
@@ -24,9 +24,9 @@ public class SaveConnectionUseCaseTests
     public async Task 保存トグルを外すと預けてある資格情報を消す()
     {
         var (useCase, store, draft) = Setup();
-        await useCase.ExecuteAsync(draft, "s3cret");
+        await useCase.ExecuteAsync(draft, new ConnectionSecrets("s3cret"));
 
-        await useCase.ExecuteAsync(draft with { StoreSecretInKeyring = false }, "s3cret");
+        await useCase.ExecuteAsync(draft with { StoreSecretInKeyring = false }, new ConnectionSecrets("s3cret"));
 
         Assert.Null(await store.ReadAsync(KeyFor(draft)));
     }
@@ -35,9 +35,9 @@ public class SaveConnectionUseCaseTests
     public async Task パスワード認証をやめると預けてある資格情報を消す()
     {
         var (useCase, store, draft) = Setup();
-        await useCase.ExecuteAsync(draft, "s3cret");
+        await useCase.ExecuteAsync(draft, new ConnectionSecrets("s3cret"));
 
-        await useCase.ExecuteAsync(draft with { Authentication = AuthenticationMethod.Integrated }, null);
+        await useCase.ExecuteAsync(draft with { Authentication = AuthenticationMethod.Integrated }, ConnectionSecrets.None);
 
         Assert.Null(await store.ReadAsync(KeyFor(draft)));
     }
@@ -47,9 +47,9 @@ public class SaveConnectionUseCaseTests
     {
         // 保存済み接続を開くとパスワード欄は空になるので、空を削除扱いにしてはいけない。
         var (useCase, store, draft) = Setup();
-        await useCase.ExecuteAsync(draft, "s3cret");
+        await useCase.ExecuteAsync(draft, new ConnectionSecrets("s3cret"));
 
-        await useCase.ExecuteAsync(draft with { Database = "other_db" }, string.Empty);
+        await useCase.ExecuteAsync(draft with { Database = "other_db" }, new ConnectionSecrets(string.Empty));
 
         Assert.Equal("s3cret", await store.ReadAsync(KeyFor(draft)));
     }

@@ -12,7 +12,9 @@ public sealed class ConnectionProfile
         EnvironmentTag environment,
         ConnectionTarget target,
         ConnectionCredentials credentials,
-        AccessMode accessMode)
+        AccessMode accessMode,
+        SshTunnelSettings? tunnel = null,
+        AdvancedConnectionSettings? advanced = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -25,6 +27,8 @@ public sealed class ConnectionProfile
         Target = target ?? throw new ArgumentNullException(nameof(target));
         Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
         AccessMode = accessMode;
+        Tunnel = tunnel ?? SshTunnelSettings.Disabled;
+        Advanced = advanced ?? AdvancedConnectionSettings.Default;
     }
 
     public ConnectionProfileId Id { get; }
@@ -38,6 +42,12 @@ public sealed class ConnectionProfile
     public ConnectionCredentials Credentials { get; }
 
     public AccessMode AccessMode { get; }
+
+    /// <summary>SSH の踏み台ごしに繋ぐかどうか（「SSH トンネル」タブ）。</summary>
+    public SshTunnelSettings Tunnel { get; }
+
+    /// <summary>接続の細かい指定（「詳細設定」タブ）。</summary>
+    public AdvancedConnectionSettings Advanced { get; }
 
     public bool IsReadOnly => AccessMode == AccessMode.ReadOnly;
 

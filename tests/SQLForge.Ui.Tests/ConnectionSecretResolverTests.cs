@@ -15,7 +15,7 @@ public class ConnectionSecretResolverTests
         var (resolver, store, profile) = Setup();
         await store.SaveAsync(SaveConnectionUseCase.SecretKeyFor(profile), "keyring");
 
-        var request = await resolver.ResolveAsync(profile, "typed");
+        var request = await resolver.ResolveAsync(profile, new ConnectionSecrets("typed"));
 
         Assert.Equal("typed", request.Secret);
     }
@@ -27,7 +27,7 @@ public class ConnectionSecretResolverTests
         var (resolver, store, profile) = Setup();
         await store.SaveAsync(SaveConnectionUseCase.SecretKeyFor(profile), "keyring");
 
-        var request = await resolver.ResolveAsync(profile, string.Empty);
+        var request = await resolver.ResolveAsync(profile, new ConnectionSecrets(string.Empty));
 
         Assert.Equal("keyring", request.Secret);
     }
@@ -44,7 +44,7 @@ public class ConnectionSecretResolverTests
             new ConnectionCredentials(string.Empty, AuthenticationMethod.Integrated, storeSecretInKeyring: true),
             profile.AccessMode);
 
-        var request = await resolver.ResolveAsync(integrated, "typed");
+        var request = await resolver.ResolveAsync(integrated, new ConnectionSecrets("typed"));
 
         Assert.Null(request.Secret);
     }

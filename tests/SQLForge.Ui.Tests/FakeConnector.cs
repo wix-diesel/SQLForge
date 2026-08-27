@@ -17,11 +17,20 @@ public sealed class FakeConnector(DatabaseDriver? driver = null) : IDatabaseConn
 
     public int ConnectCount { get; private set; }
 
+    /// <summary>接続の代わりに投げる例外。失敗したときの後始末を確かめるために差し込む。</summary>
+    public Exception? Failure { get; set; }
+
     public Task<IDatabaseSession> ConnectAsync(ConnectionRequest request, CancellationToken cancellationToken = default)
     {
         LastRequest = request;
         ConnectCount++;
 
-        return Task.FromResult<IDatabaseSession>(new FakeDatabaseSession(request.Profile));
+        if (Failure is { } failure)
+        {
+            throw failure;
+        }
+
+        // 本物のドライバーと同じく、開いた時点で経路の後始末もセッションの持ち物になる。
+        return Task.FromResult<IDatabaseSession>(new FakeDatabaseSession(request.Profile) { Route = request.Tunnel });
     }
 }

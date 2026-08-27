@@ -33,6 +33,15 @@ public sealed record ConnectionDraft
 
     public required AccessMode AccessMode { get; init; }
 
+    /// <summary>「TLS / SSL」タブ。既定は指定なし。</summary>
+    public TlsCertificateSettings Certificate { get; init; } = TlsCertificateSettings.None;
+
+    /// <summary>「SSH トンネル」タブ。既定は使わない。</summary>
+    public SshTunnelSettings Tunnel { get; init; } = SshTunnelSettings.Disabled;
+
+    /// <summary>「詳細設定」タブ。既定は SSMS と同じ値。</summary>
+    public AdvancedConnectionSettings Advanced { get; init; } = AdvancedConnectionSettings.Default;
+
     public static ConnectionDraft FromProfile(ConnectionProfile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
@@ -50,7 +59,10 @@ public sealed record ConnectionDraft
             Authentication = profile.Credentials.Method,
             StoreSecretInKeyring = profile.Credentials.StoreSecretInKeyring,
             Tls = profile.Target.Tls,
-            AccessMode = profile.AccessMode
+            AccessMode = profile.AccessMode,
+            Certificate = profile.Target.Certificate,
+            Tunnel = profile.Tunnel,
+            Advanced = profile.Advanced
         };
     }
 
@@ -59,15 +71,17 @@ public sealed record ConnectionDraft
         new(Id,
             Name,
             Environment,
-            new ConnectionTarget(Driver, new ServerAddress(Host, Port), Database, Tls),
+            new ConnectionTarget(Driver, new ServerAddress(Host, Port), Database, Tls, Certificate),
             new ConnectionCredentials(UserName, Authentication, StoreSecretInKeyring),
-            AccessMode);
+            AccessMode,
+            Tunnel,
+            Advanced);
 
     /// <summary>検証前でも出せる接続 URL（下部の確認用表示）。</summary>
     public string ToUrl()
     {
         var host = string.IsNullOrWhiteSpace(Host) ? "…" : Host.Trim();
-        var target = new ConnectionTarget(Driver, new ServerAddress(host, Port), Database, Tls);
+        var target = new ConnectionTarget(Driver, new ServerAddress(host, Port), Database, Tls, Certificate);
         return ConnectionUrl.Build(target, new ConnectionCredentials(UserName, Authentication, StoreSecretInKeyring));
     }
 }

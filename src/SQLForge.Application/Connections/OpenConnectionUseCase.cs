@@ -42,14 +42,18 @@ public sealed record OpenConnectionResult(
 /// ダイアログの「接続」。入力を検証し、資格情報を解決し、ドライバーでセッションを開く。
 /// 開いたセッションはそのまま呼び出し側へ渡す（メインウィンドウが受け取って使い、閉じる）。
 /// </summary>
-public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, ConnectionSecretResolver secrets)
+public sealed class OpenConnectionUseCase(
+    IDatabaseConnectorRegistry registry,
+    ConnectionSecretResolver secrets,
+    ConnectionTunnelOpener tunnels)
 {
     private readonly IDatabaseConnectorRegistry _registry = registry;
     private readonly ConnectionSecretResolver _secrets = secrets;
+    private readonly ConnectionTunnelOpener _tunnels = tunnels;
 
     public async Task<OpenConnectionResult> ExecuteAsync(
         ConnectionDraft draft,
-        string? typedSecret = null,
+        ConnectionSecrets? typedSecrets = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(draft);
@@ -60,7 +64,7 @@ public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, C
             return OpenConnectionResult.Invalid(validation);
         }
 
-        var request = await _secrets.ResolveAsync(draft.ToProfile(), typedSecret, cancellationToken).ConfigureAwait(false);
+        var request = await _secrets.ResolveAsync(draft.ToProfile(), typedSecrets, cancellationToken).ConfigureAwait(false);
 
         return await OpenAsync(request, validation, cancellationToken).ConfigureAwait(false);
     }
@@ -101,9 +105,20 @@ public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, C
             return OpenConnectionResult.Failure(UnsupportedDriverMessage.For(driver, _registry.SupportedDrivers));
         }
 
+        ConnectionRequest tunneled;
         try
         {
-            var session = await connector.ConnectAsync(request, cancellationToken).ConfigureAwait(false);
+            tunneled = await _tunnels.OpenAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (SshTunnelException exception)
+        {
+            return OpenConnectionResult.Failure(exception.Message);
+        }
+
+        try
+        {
+            // ここから先はトンネルもセッションの持ち物になる（開けたぶんはセッションが閉じる）。
+            var session = await connector.ConnectAsync(tunneled, cancellationToken).ConfigureAwait(false);
 
             return new OpenConnectionResult(
                 true,
@@ -112,14 +127,27 @@ public sealed class OpenConnectionUseCase(IDatabaseConnectorRegistry registry, C
                 validation,
                 session);
         }
-        catch (DbException exception)
+        catch (Exception exception) when (exception is DbException or NotSupportedException)
         {
+            // NotSupportedException は、接続文字列を組む段でドライバーが受け付けないと
+            // 分かったもの（証明書認証など）。
+            await CloseAsync(tunneled).ConfigureAwait(false);
+
             return OpenConnectionResult.Failure(exception.Message);
         }
-        catch (NotSupportedException exception)
+        catch
         {
-            // 接続文字列を組む段でドライバーが受け付けないと分かったもの（証明書認証など）。
-            return OpenConnectionResult.Failure(exception.Message);
+            await CloseAsync(tunneled).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    /// <summary>セッションが開かなかったときの後始末。開いたトンネルを閉じる。</summary>
+    private static async Task CloseAsync(ConnectionRequest request)
+    {
+        if (request.Tunnel is { } tunnel)
+        {
+            await tunnel.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

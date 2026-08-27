@@ -133,6 +133,85 @@ public class ConnectWindowRenderTests
         Assert.Contains(viewModel.SavedConnections.ImportCommand, commands);
     }
 
+    [AvaloniaFact]
+    public void すべてのタブが中身を出す()
+    {
+        // 4 枚とも実装したので、どれを選んでも入力欄が出る（以前は「未実装」の文面だった）。
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.SelectedItem is not null);
+
+        Assert.Equal(
+            ["一般", "SSH トンネル", "TLS / SSL", "詳細設定"],
+            viewModel.Tabs.Select(tab => tab.Title));
+
+        foreach (var tab in viewModel.Tabs)
+        {
+            viewModel.SelectedTab = tab;
+            Dispatcher.UIThread.RunJobs();
+
+            // 4 枚のうち、出ているのは選んだ 1 枚だけ。
+            Assert.Single(TabViews(window).Where(view => view.IsEffectivelyVisible));
+
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+        }
+    }
+
+    [AvaloniaFact]
+    public void SSHトンネルタブで踏み台を打てる()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.SelectedItem is not null);
+
+        viewModel.SelectedTab = viewModel.Tabs.First(tab => tab.IsSshTunnel);
+        viewModel.Form.Ssh.IsEnabled = true;
+        viewModel.Form.Ssh.Host = "bastion.internal";
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Contains(
+            window.GetVisualDescendants().OfType<TextBox>(),
+            box => box.Text == "bastion.internal" && box.IsEffectivelyVisible);
+
+        // 使っているタブには見出しに印が付く。
+        Assert.True(viewModel.Tabs.First(tab => tab.IsSshTunnel).HasBadge);
+    }
+
+    [AvaloniaFact]
+    public void 詳細設定タブを既定値へ戻せる()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.SelectedItem is not null);
+
+        viewModel.SelectedTab = viewModel.Tabs.First(tab => tab.IsAdvanced);
+        viewModel.Form.Advanced.PacketSize = "8192";
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(viewModel.Tabs.First(tab => tab.IsAdvanced).HasBadge);
+
+        // 「すべて既定値に戻す」が XAML ごしにビューモデルへ繋がっていること。
+        var reset = window.GetVisualDescendants()
+            .OfType<Button>()
+            .First(button => ReferenceEquals(button.Command, viewModel.Form.Advanced.ResetCommand));
+
+        reset.Command!.Execute(reset.CommandParameter);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(viewModel.Form.Advanced.IsDefault);
+        Assert.False(viewModel.Tabs.First(tab => tab.IsAdvanced).HasBadge);
+    }
+
+    /// <summary>タブ 1 枚ぶんの入力欄（4 枚ぶん）。出ているのが 1 枚だけであることを見るのに使う。</summary>
+    private static IEnumerable<UserControl> TabViews(Window window) =>
+        window.GetVisualDescendants()
+            .OfType<UserControl>()
+            .Where(view => view is ConnectionFormView
+                or SshTunnelFormView
+                or TlsCertificateFormView
+                or AdvancedConnectionFormView);
+
     /// <summary>指定した名前の接続行（の中の名前を出している要素）を探す。</summary>
     private static Visual RowOf(Window window, string name) =>
         window.GetVisualDescendants()
