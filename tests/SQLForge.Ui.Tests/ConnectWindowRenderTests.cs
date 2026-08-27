@@ -103,6 +103,36 @@ public class ConnectWindowRenderTests
         Assert.NotNull(frame);
     }
 
+    [AvaloniaFact]
+    public void 一覧の行から書き出しと削除を選べる()
+    {
+        // 右クリックのメニューが XAML ごしに行のビューモデルへ繋がっていること。
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.Entries.Count > 0);
+
+        var menu = RowOf(window, "staging-eu")
+            .GetSelfAndVisualAncestors()
+            .OfType<Control>()
+            .Select(control => control.ContextMenu)
+            .First(context => context is not null);
+
+        Assert.Equal(["書き出し…", "削除"], menu!.Items.OfType<MenuItem>().Select(item => item.Header as string));
+    }
+
+    [AvaloniaFact]
+    public void フッターに書き出しと取り込みのボタンが並ぶ()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+        WaitFor(() => viewModel.SavedConnections.Entries.Count > 0);
+
+        var commands = window.GetVisualDescendants().OfType<Button>().Select(button => button.Command).ToList();
+
+        Assert.Contains(viewModel.SavedConnections.ExportAllCommand, commands);
+        Assert.Contains(viewModel.SavedConnections.ImportCommand, commands);
+    }
+
     /// <summary>指定した名前の接続行（の中の名前を出している要素）を探す。</summary>
     private static Visual RowOf(Window window, string name) =>
         window.GetVisualDescendants()

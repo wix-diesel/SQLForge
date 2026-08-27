@@ -3,6 +3,7 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Ui.Composition;
 using SQLForge.Ui.ViewModels;
+using SQLForge.Ui.Views;
 using Xunit;
 
 namespace SQLForge.Ui.Tests;
@@ -41,6 +42,20 @@ public class AppServicesTests
 
         var directory = provider.GetRequiredService<IPlatformProfile>().ProfileDirectory;
         Assert.Equal(Path.Combine(directory, "connections.toml"), repository.FilePath);
+    }
+
+    [Fact]
+    public void 保存済み接続の書き出しと取り込みを組み立てられる()
+    {
+        // 左ペインの削除・書き出し・取り込みは、差し込み忘れると
+        // 起動して右クリックした瞬間に落ちる。
+        using var provider = BuildProvider();
+
+        Assert.IsType<TomlConnectionArchive>(provider.GetRequiredService<IConnectionArchive>());
+        Assert.Same(
+            provider.GetRequiredService<SavedConnectionDialogService>(),
+            provider.GetRequiredService<ISavedConnectionPrompt>());
+        Assert.NotNull(provider.GetRequiredService<SavedConnectionsViewModel>());
     }
 
     [Fact]

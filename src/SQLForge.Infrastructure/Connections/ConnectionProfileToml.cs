@@ -1,4 +1,5 @@
 using System.Globalization;
+using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 
 namespace SQLForge.Infrastructure.Connections;
@@ -7,10 +8,17 @@ namespace SQLForge.Infrastructure.Connections;
 /// 保存済み接続 1 件と TOML のテーブル 1 つの対応。
 /// 書き出すのは「どこへ誰として繋ぐか」までで、パスワードは含めない
 /// （資格情報は <see cref="Application.Abstractions.ISecretStore"/> の担当）。
+///
+/// 唯一の例外が持ち運び用のファイル（<see cref="WriteArchive"/>）で、
+/// 利用者が「ユーザー名とパスワードも書き出す」を選んだときだけ <c>password</c> の行が付く。
+/// 行が増えるだけで形は同じなので、書き出したファイルはふだんの保存先としても読める。
 /// </summary>
 internal static class ConnectionProfileToml
 {
     private const string TableName = "connection";
+
+    /// <summary>持ち運び用のファイルにだけ現れるキー。</summary>
+    private const string SecretKey = "password";
 
     private const string Header =
         """
@@ -21,11 +29,35 @@ internal static class ConnectionProfileToml
 
         """;
 
+    private const string ArchiveHeader =
+        """
+        # SQLForge から書き出した接続。取り込むと保存済み接続へ足される。
+        # password の行があるときは、そのまま読める形のパスワードが入っている。
+        # 受け渡しと保管の仕方に気をつけること。
+
+
+        """;
+
     public static string Write(IEnumerable<ConnectionProfile> profiles) =>
         TomlArrayOfTables.Write(TableName, profiles.Select(ToTable), Header);
 
     public static IReadOnlyList<ConnectionProfile> Read(string text) =>
         TomlArrayOfTables.Read(TableName, text).Select(ToProfile).ToList();
+
+    /// <summary>持ち運び用に書き出す。パスワードを持たせた接続にだけ <c>password</c> の行を足す。</summary>
+    public static string WriteArchive(IEnumerable<ArchivedConnection> connections) =>
+        TomlArrayOfTables.Write(TableName, connections.Select(ToArchiveTable), ArchiveHeader);
+
+    /// <summary>持ち運び用のファイルを読む。<c>password</c> の行が無ければパスワード無しとして読む。</summary>
+    public static IReadOnlyList<ArchivedConnection> ReadArchive(string text) =>
+        TomlArrayOfTables.Read(TableName, text)
+            .Select(table => new ArchivedConnection(ToProfile(table), Optional(table, SecretKey)))
+            .ToList();
+
+    private static IReadOnlyList<KeyValuePair<string, object>> ToArchiveTable(ArchivedConnection connection) =>
+        connection.Secret is { Length: > 0 } secret
+            ? [.. ToTable(connection.Profile), new KeyValuePair<string, object>(SecretKey, secret)]
+            : ToTable(connection.Profile);
 
     private static IReadOnlyList<KeyValuePair<string, object>> ToTable(ConnectionProfile profile) =>
     [
@@ -62,6 +94,10 @@ internal static class ConnectionProfileToml
 
     private static string Text(IReadOnlyDictionary<string, string> table, string key) =>
         table.TryGetValue(key, out var value) ? value : throw Missing(key);
+
+    /// <summary>あってもなくてもよいキー。</summary>
+    private static string? Optional(IReadOnlyDictionary<string, string> table, string key) =>
+        table.TryGetValue(key, out var value) ? value : null;
 
     /// <summary>値の読み替えで失敗したときに、どのキーが悪いのかまで含めて伝える。</summary>
     private static T Lookup<T>(IReadOnlyDictionary<string, string> table, string key, Func<string, T> convert)

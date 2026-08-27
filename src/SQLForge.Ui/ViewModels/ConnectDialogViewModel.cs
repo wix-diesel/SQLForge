@@ -50,6 +50,8 @@ public sealed partial class ConnectDialogViewModel : ObservableObject
         SavedConnections.ProfileActivated += (_, profile) => _ = ConnectStoredAsync(profile);
         SavedConnections.LoadFailed += (_, exception) =>
             SetStatus(false, "保存済み接続を読み込めません", exception.Message);
+        SavedConnections.OperationCompleted += (_, outcome) =>
+            SetStatus(outcome.Succeeded, outcome.Headline, outcome.Detail);
     }
 
     public string Title => "データベース接続";

@@ -29,7 +29,8 @@ SQLForge.Application               ユースケースとポート（インター
       ↑                            Domain のみに依存する。
 SQLForge.Infrastructure            ポートの実装のうち DBMS にも OS にも依らないもの
       |                            （接続の台帳・接続テスト・ADO.NET 共通の足回り、
-      |                             保存済み接続の TOML 保存、キーリングの足回り、OS 判定など）。
+      |                             保存済み接続の TOML 保存とその書き出し・取り込み、
+      |                             キーリングの足回り、OS 判定など）。
       ↑
 SQLForge.Infrastructure.SqlServer  SQL Server ドライバー実装。
       |                            DB 固有パッケージ（Microsoft.Data.SqlClient 等）を
@@ -44,7 +45,7 @@ SQLForge.Ui                        最外層。Avalonia のビューとビュー
 | プロジェクト | 役割 |
 | --- | --- |
 | [src/SQLForge.Domain](src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー、サーバー ログイン）、クエリ結果のモデル、編集のモデル（編集できる列・先頭 N 行・セルの書き換え・行の追加と削除） |
-| [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Editing/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
+| [src/SQLForge.Application](src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Editing/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionArchive` / `IConnectionProbe` / `ISecretStore` / `IPlatformProfile`） |
 | [src/SQLForge.Infrastructure](src/SQLForge.Infrastructure) | ポートの DBMS 非依存な実装。`Connections/`・`Platform/`・`Security/` |
 | [src/SQLForge.Infrastructure.SqlServer](src/SQLForge.Infrastructure.SqlServer) | SQL Server 専用ドライバー実装。`Microsoft.Data.SqlClient` を抱えるのはここだけ |
 | src/SQLForge.Infrastructure.{Linux,Windows,MacOs} | OS 固有の実装。ウィンドウの体裁（`PlatformProfileBase` の派生）と、資格情報の預け先（`PlatformSecretStore` の派生。Secret Service / 資格情報マネージャー / キーチェーン） |

@@ -1,6 +1,8 @@
+using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
+using SQLForge.Infrastructure.Security;
 using SQLForge.Ui.ViewModels;
 using Xunit;
 
@@ -50,7 +52,7 @@ public class SavedConnectionsViewModelTests
     [Fact]
     public async Task 読み込みに失敗するとイベントで知らせる()
     {
-        var viewModel = new SavedConnectionsViewModel(new ListSavedConnectionsUseCase(new FailingRepository()));
+        var viewModel = NewViewModel(new FailingRepository());
         Exception? reported = null;
         viewModel.LoadFailed += (_, exception) => reported = exception;
 
@@ -108,7 +110,20 @@ public class SavedConnectionsViewModelTests
     }
 
     private static SavedConnectionsViewModel NewViewModel() =>
-        new(new ListSavedConnectionsUseCase(new InMemoryConnectionProfileRepository()));
+        NewViewModel(new InMemoryConnectionProfileRepository());
+
+    private static SavedConnectionsViewModel NewViewModel(IConnectionProfileRepository repository)
+    {
+        var store = new InMemorySecretStore();
+        var archive = new FakeConnectionArchive();
+
+        return new SavedConnectionsViewModel(
+            new ListSavedConnectionsUseCase(repository),
+            new DeleteConnectionUseCase(repository, store),
+            new ExportConnectionsUseCase(repository, store, archive),
+            new ImportConnectionsUseCase(repository, store, archive),
+            new FakeSavedConnectionPrompt());
+    }
 
     private static async Task WaitUntil(Func<bool> condition)
     {
@@ -120,7 +135,7 @@ public class SavedConnectionsViewModelTests
         Assert.True(condition(), "期待した状態になりませんでした。");
     }
 
-    private sealed class FailingRepository : Application.Abstractions.IConnectionProfileRepository
+    private sealed class FailingRepository : IConnectionProfileRepository
     {
         public Task<IReadOnlyList<ConnectionProfile>> ListAsync(CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("接続情報を読めません。");
