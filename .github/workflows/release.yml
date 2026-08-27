@@ -41,8 +41,6 @@ jobs:
             os-label: windows
           - rid: linux-x64
             os-label: debian
-          - rid: osx-x64
-            os-label: mac-intel
           - rid: osx-arm64
             os-label: mac-arm64
     steps:
