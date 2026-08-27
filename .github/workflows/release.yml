@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish (${{ matrix.rid }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            os-label: windows
+          - rid: linux-x64
+            os-label: debian
+          - rid: osx-x64
+            os-label: mac-intel
+          - rid: osx-arm64
+            os-label: mac-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: >
+          dotnet publish src/SQLForge.Ui/SQLForge.Ui.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          --output publish/${{ matrix.rid }}
+          -p:PublishSingleFile=true
+
+      - name: Archive (zip)
+        run: |
+          cd publish/${{ matrix.rid }}
+          zip -r ../../SQLForge-${{ matrix.os-label }}-${{ matrix.rid }}.zip .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SQLForge-${{ matrix.os-label }}-${{ matrix.rid }}
+          path: SQLForge-${{ matrix.os-label }}-${{ matrix.rid }}.zip
+
+  release:
+    name: Create Release
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          files: artifacts/**/*.zip
