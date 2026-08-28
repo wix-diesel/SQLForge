@@ -8,7 +8,9 @@
 | `Views/ConnectWindow.axaml` | 起動時のウィンドウ。左ペイン・タブ・フッターを組み合わせる |
 | `Views/MainWindow.axaml` | 接続後のウィンドウ。エクスプローラー・作業領域・ステータスバー |
 | `Views/ObjectExplorerPane.axaml` | オブジェクトエクスプローラー。ノードの種類ごとに `TreeDataTemplate` を持つ |
-| `Views/QueryWorkspacePane.axaml` | クエリエディタと結果ペイン。列幅はビューモデルが配り、見出しとセルが同じ値を引く |
+| `Views/QueryWorkspacePane.axaml` | クエリエディタ（`AvaloniaEdit` の `TextEditor`）と結果ペイン。列幅はビューモデルが配り、見出しとセルが同じ値を引く。コードビハインドがやるのは色分けの差し込みと補完ポップアップの出し入れだけ |
+| `Presentation/SqlColorizer.cs` | 字句ごとに色を当てる `DocumentColorizingTransformer`。色は `Syntax*Brush` から引き、テーマが変わったら取り直す |
+| `Presentation/SqlCompletionData.cs` | 補完ポップアップ 1 行。ユースケースが作った候補を AvaloniaEdit へ渡す包み |
 | `Views/TableEditorPane.axaml` | 先頭 100 行の編集グリッド。セルは「表示」と「入力欄」の 2 枚を重ね、開いた側だけを出す。いちばん下は追加用の `*` 行 |
 
 色はすべてトークン経由の `DynamicResource` で引いているので、ライトテーマは

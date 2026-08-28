@@ -1,12 +1,14 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
+using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Query;
 using SQLForge.Domain.Catalog;
 using SQLForge.Domain.Query;
+using SQLForge.Domain.Sql;
 
 namespace SQLForge.Ui.ViewModels.Workspace;
 
@@ -22,6 +24,9 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
     private readonly IDatabaseSession _session;
     private readonly ExecuteQueryUseCase _executeQuery;
 
+    /// <summary>補完の候補を作る口。渡されないときは補完しない（既存のテストなど）。</summary>
+    private readonly SqlCompletionUseCase? _completion;
+
     /// <summary>実行先。接続時に開いたデータベースを初期値にする。</summary>
     private DatabaseName? _target;
 
@@ -34,10 +39,6 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
-    private string _sql = string.Empty;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     private bool _isRunning;
 
     [ObservableProperty] private string _targetDatabase = string.Empty;
@@ -45,10 +46,17 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
     [ObservableProperty] private string _status = string.Empty;
     [ObservableProperty] private bool _hasFailed;
 
-    public QueryEditorViewModel(IDatabaseSession session, ExecuteQueryUseCase executeQuery)
+    public QueryEditorViewModel(
+        IDatabaseSession session,
+        ExecuteQueryUseCase executeQuery,
+        SqlCompletionUseCase? completion = null)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _executeQuery = executeQuery ?? throw new ArgumentNullException(nameof(executeQuery));
+        _completion = completion;
+
+        // 文面が変わったら「実行」「整形」の可否を出し直す。
+        Document.TextChanged += (_, _) => OnTextChanged();
 
         // 接続時に開いたデータベースを既定の実行先にしておく。名前として通らないときは
         // 実行先なしのまま開く（ツリーでデータベースを選べば決まる）。
@@ -56,6 +64,19 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
         {
             SetTarget(opened);
         }
+    }
+
+    /// <summary>
+    /// エディタの文面。AvaloniaEdit は文字列ではなく文書を編集するので、
+    /// ビューモデルが持つのも文書にする（ビューモデルは最外層なので UI の型を持ってよい）。
+    /// </summary>
+    public TextDocument Document { get; } = new();
+
+    /// <summary>実行する文面。文書の中身をそのまま指す。</summary>
+    public string Sql
+    {
+        get => Document.Text;
+        set => Document.Text = value;
     }
 
     /// <summary>「結果 1」…と「メッセージ」。実行のたびに作り直す。</summary>
@@ -87,7 +108,56 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
         RunCommand.Execute(null);
     }
 
+    /// <summary>
+    /// キャレットの位置に出す補完の候補。実行先が決まっていないときや、
+    /// 補完の口が無いときは空を返す（ビューはポップアップを出さない）。
+    /// </summary>
+    public async Task<SqlCompletionResult> CompleteAsync(
+        int caret,
+        CancellationToken cancellationToken = default)
+    {
+        if (_completion is null || _target is not { } database)
+        {
+            return SqlCompletionResult.Empty;
+        }
+
+        try
+        {
+            return await _completion
+                .ExecuteAsync(database, Sql, caret, cancellationToken)
+                .ConfigureAwait(true);
+        }
+        catch (Exception)
+        {
+            // 候補が読めないのは、書いている手を止める理由にならない。黙って出さない。
+            return SqlCompletionResult.Empty;
+        }
+    }
+
     private bool CanRun => !IsRunning && !string.IsNullOrWhiteSpace(Sql);
+
+    private bool CanFormat => !string.IsNullOrWhiteSpace(Sql);
+
+    /// <summary>
+    /// 文面を整える。字句の並びは変えないので、整えても実行の結果は変わらない。
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanFormat))]
+    private void Format()
+    {
+        var formatted = SqlFormatter.Format(Sql);
+
+        if (!string.Equals(formatted, Sql, StringComparison.Ordinal))
+        {
+            Document.Replace(0, Document.TextLength, formatted);
+        }
+    }
+
+    private void OnTextChanged()
+    {
+        OnPropertyChanged(nameof(Sql));
+        RunCommand.NotifyCanExecuteChanged();
+        FormatCommand.NotifyCanExecuteChanged();
+    }
 
     /// <summary>
     /// 文面を 1 回実行して結果ペインへ移す。失敗もメッセージのタブに出すだけで、

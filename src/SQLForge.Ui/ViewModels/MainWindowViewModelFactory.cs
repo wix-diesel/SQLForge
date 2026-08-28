@@ -41,9 +41,12 @@ public sealed class MainWindowViewModelFactory(
     {
         ArgumentNullException.ThrowIfNull(session);
 
+        // 補完はカタログを読むので、接続 1 本につき 1 つの覚え書き（SchemaCache）を持たせる。
+        var completion = new SqlCompletionUseCase(new SchemaCache(session, schemas, tables, columns));
+
         // 作業領域を先に組む。ツリーの右クリックはここへ渡すので、
         // ツリーより先に居てもらう必要がある。
-        var query = new QueryEditorViewModel(session, queries);
+        var query = new QueryEditorViewModel(session, queries, completion);
         var tableEditor = new TableEditorViewModel(
             session, editTableRows, updateTableCell, insertTableRow, deleteTableRow, rowDeletionPrompt);
 

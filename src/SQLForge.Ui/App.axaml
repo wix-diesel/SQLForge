@@ -14,6 +14,9 @@
 
   <Application.Styles>
     <FluentTheme/>
+    <!-- AvaloniaEdit のコントロールテーマ。クエリエディタの見た目は
+         Themes/Controls.axaml で上書きするので、先に読み込んでおく。 -->
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
     <StyleInclude Source="avares://SQLForge/Themes/Controls.axaml"/>
   </Application.Styles>
 
