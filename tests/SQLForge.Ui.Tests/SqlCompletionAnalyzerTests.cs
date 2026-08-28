@@ -112,6 +112,30 @@ public class SqlCompletionAnalyzerTests
     }
 
     [Fact]
+    public void 閉じた文字列の後ろに書き始めたら補完する()
+    {
+        // 字句の末尾ちょうどを「中」と見なすのは、閉じていない文字列を書いている
+        // 最中のため。閉じたあとに語を書き始めれば、キャレットは次の字句の中に居る。
+        const string sql = "SELECT * FROM t WHERE name = 'x' AND re";
+
+        var context = SqlCompletionAnalyzer.Analyze(sql, sql.Length);
+
+        Assert.Equal(SqlCompletionKind.Column, context.Kind);
+        Assert.Equal("re", context.Prefix);
+    }
+
+    [Fact]
+    public void 閉じたブロックコメントの後ろに書き始めたら補完する()
+    {
+        const string sql = "SELECT /* 覚え書き */ na";
+
+        var context = SqlCompletionAnalyzer.Analyze(sql, sql.Length);
+
+        Assert.Equal(SqlCompletionKind.Column, context.Kind);
+        Assert.Equal("na", context.Prefix);
+    }
+
+    [Fact]
     public void コメントの中では補完しない()
     {
         const string sql = "-- select fr";

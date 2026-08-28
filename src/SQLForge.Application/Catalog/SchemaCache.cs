@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using SQLForge.Application.Abstractions;
 using SQLForge.Domain.Catalog;
 
@@ -8,6 +9,10 @@ namespace SQLForge.Application.Catalog;
 ///
 /// エディタは 1 文字打つたびに候補を求めるので、そのつどサーバーへ問い合わせるわけには
 /// いかない。ツリーの遅延読み込みと同じで、要求されたところだけを読んで貯める。
+///
+/// 前の問い合わせが返る前に次が始まる（＝同時に走る）ので、貯め込みはスレッド安全な
+/// 入れ物にする。取りこぼして同じところを 2 回読むことはあるが、それは害がない
+/// （同じ答えが返るだけ）。素の Dictionary だと中身が壊れて例外になる。
 /// </summary>
 public sealed class SchemaCache(
     IDatabaseSession session,
@@ -15,9 +20,14 @@ public sealed class SchemaCache(
     ListTablesUseCase tables,
     ListColumnsUseCase columns)
 {
-    private readonly Dictionary<string, IReadOnlyList<SchemaDescriptor>> _schemas = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, IReadOnlyList<TableDescriptor>> _tables = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, IReadOnlyList<ColumnDescriptor>> _columns = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IReadOnlyList<SchemaDescriptor>> _schemas =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, IReadOnlyList<TableDescriptor>> _tables =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, IReadOnlyList<ColumnDescriptor>> _columns =
+        new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>データベース内のスキーマ一覧。</summary>
     public async Task<IReadOnlyList<SchemaDescriptor>> SchemasAsync(
