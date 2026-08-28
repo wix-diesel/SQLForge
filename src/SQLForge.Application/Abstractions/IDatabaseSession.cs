@@ -21,6 +21,12 @@ public interface IDatabaseSession : IAsyncDisposable
     /// <summary>接続時に読み取ったサーバーの素性。</summary>
     ServerInfo Server { get; }
 
+    /// <summary>
+    /// この接続でできること。DBMS ごとに実装の進み具合が違うので、
+    /// 画面はここを見て枝やメニューを出し分ける（できない操作を押させないため）。
+    /// </summary>
+    SessionCapabilities Capabilities { get; }
+
     /// <summary>サーバー上のデータベース一覧。</summary>
     Task<IReadOnlyList<DatabaseDescriptor>> ListDatabasesAsync(CancellationToken cancellationToken = default);
 
@@ -231,6 +237,14 @@ public interface IDatabaseSession : IAsyncDisposable
         SecurableKind kind,
         DatabaseName? database = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// テーブルの中身をのぞく既定の文面（ツリーの「先頭 N 件を表示」）。
+    ///
+    /// 行数の絞り方（<c>TOP</c> と <c>LIMIT</c>）も識別子の引用符もエンジンごとに違うので、
+    /// 組み立てはドライバーに預ける。画面は出来上がった文面をエディタへ載せるだけ。
+    /// </summary>
+    string BuildTopRowsQuery(SchemaName schema, string table, int maxRows);
 
     /// <summary>
     /// エディタの文面をこの接続で実行する。文面はそのまま送る（分割も書き換えもしない）。

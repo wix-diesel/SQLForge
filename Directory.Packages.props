@@ -17,6 +17,8 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <!-- PostgreSQL のドライバー。抱えるのは SQLForge.Infrastructure.PostgreSql だけ。 -->
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <!-- SSH トンネル（接続ダイアログの「SSH トンネル」タブ）の踏み台接続と手元の
          ポート転送に使う。DBMS にも OS にも依らないので SQLForge.Infrastructure に置く。 -->

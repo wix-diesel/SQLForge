@@ -2,11 +2,13 @@
 
 ## DBMS を増やすとき
 
-PostgreSQL などを足すときに触るのは **新しいドライバープロジェクトと合成ルートの 1 行だけ**で、
+MySQL などを足すときに触るのは **新しいドライバープロジェクトと合成ルートの 1 行だけ**で、
 Domain・Application・UI と既存のドライバーは変わらない。
+実際に足したものとして [src/SQLForge.Infrastructure.PostgreSql](../src/SQLForge.Infrastructure.PostgreSql) がある。
 
-1. `src/SQLForge.Infrastructure.PostgreSql`（例）を作り、`SQLForge.Infrastructure` を参照して
-   ドライバーのパッケージ（`Npgsql` など）を入れる。SQL Server 側がそのまま雛形になる
+1. `src/SQLForge.Infrastructure.MySql`（例）を作り、`SQLForge.Infrastructure` を参照して
+   ドライバーのパッケージ（`MySqlConnector` など）を入れる。
+   既にある SQL Server / PostgreSQL 側がそのまま雛形になる
 2. `IDatabaseConnector` の実装を書く（接続を開いてサーバーの素性を読む）
 3. `AdoDatabaseSession` を継承してカタログの読み方を 3 つ埋め
    （`ReadDatabasesAsync` / `ReadSchemasAsync` / `ReadTablesAsync`）、
@@ -18,7 +20,11 @@ Domain・Application・UI と既存のドライバーは変わらない。
 4. `SQLForge.Ui` から新しいプロジェクトを参照し、`AppServices.AddInfrastructure` に
    `services.AddSingleton<IDatabaseConnector, XxxConnector>()` を足す
 5. `LayerDependencyTests.DriverAssemblies` に新しいパッケージ名を足す
-   （共通の Infrastructure へ混ざり込んだら落ちるようにするため）
+   （共通の Infrastructure や他のドライバーへ混ざり込んだら落ちるようにするため）
+6. 埋めきれないところがあるなら `Capabilities` を上書きして申告する。
+   セキュリティも編集グリッドもまだなら `SessionCapabilities.CatalogOnly`。
+   画面はこの申告を見て枝とメニューを出し分けるので、書いていない操作は最初から出ない
+   （それでも呼ばれたときのために、口の実装は空ではなく理由付きで断る）
 
 `DatabaseConnectorRegistry` は登録された実装を勝手に拾うので、台帳も接続テストも接続も、
 未対応の文言も、追加したドライバーへそのまま追随する。

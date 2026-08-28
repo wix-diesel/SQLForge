@@ -1,6 +1,6 @@
 # SQLForge
 
-Linux で SQL Server を操作するためのアプリ。
+Linux で SQL Server（と PostgreSQL）を操作するためのアプリ。
 
 UI デザインは [`design/`](design/README.md) にある。実装は Avalonia 12 + .NET 10。
 
@@ -28,7 +28,7 @@ Avalonia は 12.1 系を使う。net10.0 向けアセットが同梱されてい
 | ドキュメント | 内容 |
 | --- | --- |
 | [docs/features.md](docs/features.md) | 現在動く機能の一覧と状態、デザインからの意図的な差分 |
-| [docs/connections.md](docs/connections.md) | SQL Server への接続、OS 統合認証、SSH トンネル、TLS の証明書指定、詳細設定、接続情報の保存・削除・書き出し・取り込み |
+| [docs/connections.md](docs/connections.md) | SQL Server と PostgreSQL への接続、OS 統合認証、SSH トンネル、TLS の証明書指定、詳細設定、接続情報の保存・削除・書き出し・取り込み |
 | [docs/query-editing.md](docs/query-editing.md) | クエリの実行、テーブルの先頭 100 行の編集、行の追加と削除 |
 | [docs/architecture.md](docs/architecture.md) | オニオンアーキテクチャと層ごとの役割 |
 | [docs/extending.md](docs/extending.md) | 新しい DBMS・OS を追加する手順 |

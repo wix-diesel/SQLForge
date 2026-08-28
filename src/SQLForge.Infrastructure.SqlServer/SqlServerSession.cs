@@ -20,6 +20,14 @@ public sealed partial class SqlServerSession(
     : AdoDatabaseSession(profile, connection, server, route)
 {
     /// <summary>
+    /// 先頭 N 行をのぞく文面。SQL Server は行数を <c>TOP</c> で頭から絞る。
+    /// </summary>
+    public override string BuildTopRowsQuery(SchemaName schema, string table, int maxRows) =>
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"SELECT TOP ({maxRows}) * FROM {Quote(schema.Value)}.{Quote(table)};");
+
+    /// <summary>
     /// USE で切り替える。カタログの照会は 3 部名で読むのでこの状態に依らないが、
     /// エディタの文面は修飾なしで書かれるのが普通なので、実行の直前に合わせる。
     /// </summary>
