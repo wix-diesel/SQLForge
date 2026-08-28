@@ -240,11 +240,17 @@ public class QueryEditorViewModelTests
         var running = document.RunCommand.ExecuteAsync(null);
 
         document.CloseCommand.Execute(null);
+
+        // 取り消しが効かなかったときに、待ち続けずテストとして落ちるようにしておく。
         session.QueryGate.SetResult();
         await running;
 
         Assert.Empty(editor.Documents);
         Assert.False(document.IsRunning);
+
+        // 走らせたまま放り出さず、取り消しとして終わっていること。
+        Assert.True(document.HasFailed);
+        Assert.Equal("実行を取り消しました。", document.SelectedTab!.Text);
     }
 
     [Fact]

@@ -190,11 +190,60 @@ public class QueryWorkspacePaneRenderTests
         Assert.False(pane.IsVisible);
     }
 
-    private static IReadOnlyList<string> Texts(Window window) =>
-        window.GetVisualDescendants()
-            .OfType<TextBlock>()
-            .Select(block => block.Text ?? string.Empty)
-            .ToList();
+    [AvaloniaFact]
+    public void 候補を読んでいる間にタブを切り替えたらポップアップを出さない()
+    {
+        // 候補は別のタブの文書・別の実行先のもの。今のエディタへ出すと嘘になる。
+        // キャレットの位置だけでは見分けられない（たまたま同じ位置のことがある）ので、
+        // 2 枚目のキャレットを 1 枚目と同じ位置に置いた状態で確かめる。
+        var session = NewSession();
+        var window = CreateWindow(out var viewModel, session, Completion(session));
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        var first = viewModel.Query.SelectedDocument!;
+        first.Sql = "SELECT * FROM ";
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        var second = viewModel.Query.SelectedDocument!;
+        second.Sql = "SELECT * FROM x";
+        Dispatcher.UIThread.RunJobs();
+
+        var editor = Editor(window);
+
+        // 2 枚目は「o を打ったあとの 1 枚目」と同じ位置で待たせておく。
+        editor.CaretOffset = 15;
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.Query.SelectedDocument = first;
+        Dispatcher.UIThread.RunJobs();
+        editor.CaretOffset = first.Sql.Length;
+        editor.TextArea.Focus();
+        Dispatcher.UIThread.RunJobs();
+
+        // カタログを読みに行ったところで止めてから、語を 1 文字打つ。
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.TableGate = gate;
+        window.KeyTextInput("o");
+        Dispatcher.UIThread.RunJobs();
+
+        // 読み終わる前に 2 枚目へ移り、それから候補を返させる。
+        viewModel.Query.SelectedDocument = second;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(second.Document, editor.Document);
+        Assert.Equal(15, editor.CaretOffset);
+
+        gate.SetResult();
+
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(10);
+        }
+
+        Assert.Empty(window.GetVisualDescendants().OfType<CompletionList>());
+    }
 
     /// <summary>ポップアップは候補を読み終えてから出るので、出るまで待つ。</summary>
     private static CompletionList WaitFor(Func<CompletionList?> probe)
@@ -221,6 +270,12 @@ public class QueryWorkspacePaneRenderTests
         new FakeDatabaseSession()
             .WithSchemas("sales_db", new SchemaDescriptor(new SchemaName("dbo")))
             .WithTables("sales_db", "dbo", new TableDescriptor(new SchemaName("dbo"), "orders"));
+
+    private static IReadOnlyList<string> Texts(Window window) =>
+        window.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .Select(block => block.Text ?? string.Empty)
+            .ToList();
 
     private static TextEditor Editor(Window window) =>
         window.GetVisualDescendants().OfType<TextEditor>().Single();
