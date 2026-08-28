@@ -50,7 +50,8 @@ public sealed partial class SqlServerSession(
                 new DatabaseName(reader.GetString(0)),
                 IsSystem: reader.GetBoolean(1),
                 IsAccessible: reader.GetBoolean(2),
-                Collation: reader.IsDBNull(3) ? null : reader.GetString(3)));
+                Collation: reader.IsDBNull(3) ? null : reader.GetString(3),
+                CreatedAt: reader.IsDBNull(4) ? null : reader.GetDateTime(4)));
         }
 
         return databases;
@@ -100,7 +101,8 @@ public sealed partial class SqlServerSession(
             tables.Add(new TableDescriptor(
                 schema,
                 reader.GetString(0),
-                RowCount: reader.IsDBNull(1) ? null : reader.GetInt64(1)));
+                RowCount: reader.IsDBNull(1) ? null : reader.GetInt64(1),
+                CreatedAt: reader.IsDBNull(2) ? null : reader.GetDateTime(2)));
         }
 
         return tables;
@@ -171,7 +173,8 @@ public sealed partial class SqlServerSession(
             procedures.Add(new StoredProcedureDescriptor(
                 schema,
                 reader.GetString(0),
-                ParameterCount: reader.GetInt32(1)));
+                ParameterCount: reader.GetInt32(1),
+                CreatedAt: reader.IsDBNull(2) ? null : reader.GetDateTime(2)));
         }
 
         return procedures;

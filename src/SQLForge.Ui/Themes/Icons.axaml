@@ -70,6 +70,9 @@
   <!-- ストアド プロシージャ: 折り目付きの文書に実行三角を重ねる -->
   <StreamGeometry x:Key="IconProcedure">M4.0,2.6 H9.2 L12.0,5.4 V13.2 H4.0 Z M9.2,2.6 V5.4 H12.0 M6.6,8.0 L9.6,9.8 L6.6,11.6 Z</StreamGeometry>
 
+  <!-- 絞り込み: 漏斗 -->
+  <StreamGeometry x:Key="IconFilter">M2.8,3.2 H13.2 L9.0,8.0 V12.4 L7.0,13.4 V8.0 Z</StreamGeometry>
+
   <!-- 読み直し -->
   <StreamGeometry x:Key="IconRefresh">M13,8 A5,5 0 1 1 11.4,4.3 M13.2,2.6 V5.2 H10.6</StreamGeometry>
 

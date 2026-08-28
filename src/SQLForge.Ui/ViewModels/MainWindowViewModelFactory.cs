@@ -35,7 +35,8 @@ public sealed class MainWindowViewModelFactory(
     ListServerLoginsUseCase serverLogins,
     IServerLoginEditor loginEditor,
     ListServerRolesUseCase serverRoles,
-    IServerRoleEditor serverRoleEditor)
+    IServerRoleEditor serverRoleEditor,
+    IObjectFilterEditor filterEditor)
 {
     public MainWindowViewModel Create(IDatabaseSession session)
     {
@@ -54,6 +55,7 @@ public sealed class MainWindowViewModelFactory(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
         {
             TableEditor = tableEditor,
+            FilterEditor = filterEditor,
             Security = new DatabaseSecurityContext(databaseUsers, userEditor)
             {
                 Roles = databaseRoles,

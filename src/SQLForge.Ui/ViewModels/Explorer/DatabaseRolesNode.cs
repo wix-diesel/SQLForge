@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Filtering;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -8,14 +9,17 @@ namespace SQLForge.Ui.ViewModels.Explorer;
 /// [データベース ロール] にあたる。
 /// 追加はこの見出しから、編集と削除は下のロール行から行う。
 /// </summary>
-public sealed partial class DatabaseRolesNode : ObjectExplorerNode
+public sealed partial class DatabaseRolesNode : FolderNode
 {
     private readonly CatalogContext _context;
     private readonly DatabaseSecurityContext _security;
     private readonly DatabaseName _database;
 
     public DatabaseRolesNode(CatalogContext context, DatabaseSecurityContext security, DatabaseName database)
-        : base("データベース ロール", canExpand: true)
+        : base(
+            "データベース ロール",
+            new ObjectFilterSpec(
+                [ObjectFilterProperty.Name], context.FilterEditor, $"{database.Value}/セキュリティ"))
     {
         _context = context;
         _security = security;
@@ -40,10 +44,6 @@ public sealed partial class DatabaseRolesNode : ObjectExplorerNode
         }
     }
 
-    /// <summary>右クリックの「最新の情報に更新」。</summary>
-    [RelayCommand]
-    private Task RefreshAsync(CancellationToken cancellationToken) => ReloadAsync(cancellationToken);
-
     protected override async Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(
         CancellationToken cancellationToken)
     {
@@ -56,10 +56,4 @@ public sealed partial class DatabaseRolesNode : ObjectExplorerNode
 
         return loaded.Select(role => new DatabaseRoleNode(_context, _security, _database, role, this)).ToList();
     }
-
-    /// <summary>読み終えたら件数を見出しの右に出す（ほかの見出しと同じ）。</summary>
-    protected override void OnChildrenLoaded(IReadOnlyList<ObjectExplorerNode> children) =>
-        Detail = children.Count.ToString();
-
-    protected override void OnChildrenFailed() => Detail = null;
 }

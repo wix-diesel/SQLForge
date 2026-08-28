@@ -10,8 +10,10 @@ namespace SQLForge.Domain.Catalog;
 /// false のものも一覧には出すが、展開はさせない。
 /// </param>
 /// <param name="Collation">照合順序。取得できないエンジンでは null。</param>
+/// <param name="CreatedAt">作成された日時。ツリーの絞り込み（作成日）に使う。読めないときは null。</param>
 public sealed record DatabaseDescriptor(
     DatabaseName Name,
     bool IsSystem = false,
     bool IsAccessible = true,
-    string? Collation = null);
+    string? Collation = null,
+    DateTime? CreatedAt = null);

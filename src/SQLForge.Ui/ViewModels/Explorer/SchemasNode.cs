@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Filtering;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -8,13 +9,14 @@ namespace SQLForge.Ui.ViewModels.Explorer;
 /// このツリーはテーブルをスキーマの下にぶら下げるので、同じ枝を 2 か所に出さず
 /// データベースの直下 1 か所にまとめている。所有者の付け替えはここから行う。
 /// </summary>
-public sealed partial class SchemasNode : ObjectExplorerNode
+public sealed partial class SchemasNode : FolderNode
 {
     private readonly CatalogContext _context;
     private readonly DatabaseName _database;
 
     public SchemasNode(CatalogContext context, DatabaseName database)
-        : base("スキーマ", canExpand: true)
+        // スキーマは作成日を読めない（sys.schemas が持たない）ので、条件は名前だけ。
+        : base("スキーマ", new ObjectFilterSpec([ObjectFilterProperty.Name], context.FilterEditor, database.Value))
     {
         _context = context;
         _database = database;
@@ -38,10 +40,6 @@ public sealed partial class SchemasNode : ObjectExplorerNode
         }
     }
 
-    /// <summary>右クリックの「最新の情報に更新」。</summary>
-    [RelayCommand]
-    private Task RefreshAsync(CancellationToken cancellationToken) => ReloadAsync(cancellationToken);
-
     protected override async Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(
         CancellationToken cancellationToken)
     {
@@ -51,10 +49,4 @@ public sealed partial class SchemasNode : ObjectExplorerNode
 
         return schemas.Select(schema => new SchemaNode(_context, _database, schema, this)).ToList();
     }
-
-    /// <summary>読み終えたら件数を見出しの右に出す（ほかの見出しと同じ）。</summary>
-    protected override void OnChildrenLoaded(IReadOnlyList<ObjectExplorerNode> children) =>
-        Detail = children.Count.ToString();
-
-    protected override void OnChildrenFailed() => Detail = null;
 }

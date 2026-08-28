@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Input;
+using SQLForge.Domain.Filtering;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -22,7 +23,14 @@ public sealed partial class ServerNode : ObjectExplorerNode
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken)
     {
-        var children = new List<ObjectExplorerNode> { new CatalogFolderNode("データベース", LoadDatabasesAsync) };
+        var children = new List<ObjectExplorerNode>
+        {
+            new CatalogFolderNode(
+                "データベース",
+                LoadDatabasesAsync,
+                filter: new ObjectFilterSpec(
+                    [ObjectFilterProperty.Name, ObjectFilterProperty.CreatedAt], _context.FilterEditor))
+        };
 
         if (_context.ServerSecurity is not null)
         {

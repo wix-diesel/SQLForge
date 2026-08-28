@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SQLForge.Domain.Filtering;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -36,6 +37,12 @@ public abstract partial class ObjectExplorerNode : ObservableObject
 
     public ObservableCollection<ObjectExplorerNode> Children { get; } = [];
 
+    /// <summary>
+    /// 親の見出しの絞り込みに掛けるときの値。既定は名前だけで、
+    /// 作成日を読めるノード（データベース・テーブル・ストアド プロシージャ）が足す。
+    /// </summary>
+    public virtual ObjectFilterTarget FilterTarget => new(Title);
+
     /// <summary>行の右側に出す補足（サーバーのバージョン、件数、行数）。</summary>
     [ObservableProperty] private string? _detail;
 
@@ -71,7 +78,11 @@ public abstract partial class ObjectExplorerNode : ObservableObject
 
         try
         {
-            var children = await LoadChildrenAsync(cancellationToken).ConfigureAwait(true);
+            var loaded = await LoadChildrenAsync(cancellationToken).ConfigureAwait(true);
+
+            // 絞り込みが掛かっている見出しでは、ここで条件に当てはまるものだけへ削る。
+            var children = FilterChildren(loaded);
+
             Replace(children.Count == 0 ? [MessageNode.Empty()] : children);
             _childrenLoaded = true;
             OnChildrenLoaded(children);
@@ -96,6 +107,13 @@ public abstract partial class ObjectExplorerNode : ObservableObject
 
     /// <summary>子を実際に取ってくる。派生クラスが埋める。</summary>
     protected abstract Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// 読んだ一覧を出す前に通す網。既定は素通しで、絞り込みを持つ見出し（<see cref="FolderNode"/>）だけが
+    /// 条件に当てはまるものへ削る。
+    /// </summary>
+    protected virtual IReadOnlyList<ObjectExplorerNode> FilterChildren(IReadOnlyList<ObjectExplorerNode> children) =>
+        children;
 
     /// <summary>読み終えた直後に呼ばれる。件数の表示などに使う。</summary>
     protected virtual void OnChildrenLoaded(IReadOnlyList<ObjectExplorerNode> children)

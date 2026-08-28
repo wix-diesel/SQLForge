@@ -25,7 +25,7 @@ SQLForge.Ui                        最外層。Avalonia のビューとビュー
 
 | プロジェクト | 役割 |
 | --- | --- |
-| [src/SQLForge.Domain](../src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー、サーバー ログイン）、クエリ結果のモデル、編集のモデル（編集できる列・先頭 N 行・セルの書き換え・行の追加と削除）、SQL の読み取り（`Sql/` の字句解析器・整形・補完の文脈判定。DB にも UI にも依らない純粋な処理） |
+| [src/SQLForge.Domain](../src/SQLForge.Domain) | 接続情報のモデルと規則（環境タグ、ドライバー、接続 URL）、カタログのモデル（データベース／スキーマ／テーブル／サーバー情報）、セキュリティのモデル（データベース ユーザー、サーバー ログイン）、クエリ結果のモデル、編集のモデル（編集できる列・先頭 N 行・セルの書き換え・行の追加と削除）、SQL の読み取り（`Sql/` の字句解析器・整形・補完の文脈判定。DB にも UI にも依らない純粋な処理）、ツリーの絞り込みの規則（`Filtering/` の条件と当てはめ） |
 | [src/SQLForge.Application](../src/SQLForge.Application) | ユースケース（`Catalog/`・`Connections/`・`Editing/`・`Query/`・`Security/`）とポート（`Abstractions/` の `IDatabaseConnector` / `IDatabaseSession` / `IConnectionProfileRepository` / `IConnectionArchive` / `IConnectionProbe` / `ISecretStore` / `ISshTunnelBroker` / `IPlatformProfile`）。補完のためにカタログを覚える `Catalog/SchemaCache` もここ |
 | [src/SQLForge.Infrastructure](../src/SQLForge.Infrastructure) | ポートの DBMS 非依存な実装。`Connections/`（SSH トンネルを含む）・`Platform/`・`Security/`。DBMS にも OS にも依らないパッケージ（`SSH.NET`）を抱えるのはここ |
 | [src/SQLForge.Infrastructure.SqlServer](../src/SQLForge.Infrastructure.SqlServer) | SQL Server 専用ドライバー実装。`Microsoft.Data.SqlClient` を抱えるのはここだけ |
