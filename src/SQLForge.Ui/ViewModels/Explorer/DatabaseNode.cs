@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Filtering;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
 
@@ -23,6 +24,9 @@ public sealed partial class DatabaseNode : ObjectExplorerNode
     }
 
     public DatabaseName Name => _descriptor.Name;
+
+    /// <summary>絞り込みに掛ける値。名前に加えて、作成日でも絞り込めるようにする。</summary>
+    public override ObjectFilterTarget FilterTarget => new(Title, _descriptor.CreatedAt);
 
     public string? Collation => _descriptor.Collation;
 

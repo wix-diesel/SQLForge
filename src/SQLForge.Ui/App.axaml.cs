@@ -72,6 +72,7 @@ public partial class App : Avalonia.Application
         services.GetRequiredService<DatabaseRoleDialogService>().Owner = window;
         services.GetRequiredService<ServerRoleDialogService>().Owner = window;
         services.GetRequiredService<SchemaDialogService>().Owner = window;
+        services.GetRequiredService<ObjectFilterDialogService>().Owner = window;
         services.GetRequiredService<TableRowDeleteDialogService>().Owner = window;
 
         window.Show();

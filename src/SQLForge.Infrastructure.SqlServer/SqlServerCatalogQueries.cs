@@ -33,7 +33,8 @@ internal static class SqlServerCatalogQueries
                CONVERT(bit, CASE WHEN d.state_desc = 'ONLINE'
                                   AND ISNULL(HAS_DBACCESS(d.name), 0) = 1
                                  THEN 1 ELSE 0 END)                                AS is_accessible,
-               d.collation_name                                                    AS collation_name
+               d.collation_name                                                    AS collation_name,
+               d.create_date                                                       AS created_at
         FROM sys.databases AS d;
         """;
 
@@ -61,13 +62,14 @@ internal static class SqlServerCatalogQueries
     /// </summary>
     public const string TablesFormat = """
         SELECT t.name                                        AS name,
-               CONVERT(bigint, SUM(ISNULL(p.rows, 0)))       AS row_count
+               CONVERT(bigint, SUM(ISNULL(p.rows, 0)))       AS row_count,
+               t.create_date                                 AS created_at
         FROM {0}.sys.tables AS t
         INNER JOIN {0}.sys.schemas AS s ON s.schema_id = t.schema_id
         LEFT JOIN {0}.sys.partitions AS p
                ON p.object_id = t.object_id AND p.index_id IN (0, 1)
         WHERE s.name = @schema AND t.is_ms_shipped = 0
-        GROUP BY t.name;
+        GROUP BY t.name, t.create_date;
         """;
 
     /// <summary>
@@ -140,7 +142,8 @@ internal static class SqlServerCatalogQueries
                    SELECT COUNT(*)
                    FROM {0}.sys.parameters AS pr
                    WHERE pr.object_id = p.object_id AND pr.parameter_id > 0
-               )                                                                   AS parameter_count
+               )                                                                   AS parameter_count,
+               p.create_date                                                        AS created_at
         FROM {0}.sys.procedures AS p
         INNER JOIN {0}.sys.schemas AS s ON s.schema_id = p.schema_id
         WHERE s.name = @schema AND p.is_ms_shipped = 0

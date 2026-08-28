@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Filtering;
 using SQLForge.Ui.Presentation;
 using SQLForge.Ui.ViewModels.Security;
 
@@ -56,9 +57,20 @@ public sealed partial class SchemaNode : ObjectExplorerNode
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
         [
-            new CatalogFolderNode("テーブル", LoadTablesAsync),
-            new CatalogFolderNode("ストアド プロシージャ", LoadStoredProceduresAsync)
+            new CatalogFolderNode("テーブル", LoadTablesAsync, filter: FilterSpec()),
+            new CatalogFolderNode("ストアド プロシージャ", LoadStoredProceduresAsync, filter: FilterSpec())
         ]);
+
+    /// <summary>
+    /// このスキーマの下の見出しに配る絞り込みの支度。SSMS はテーブルをデータベースの直下に
+    /// 並べるので条件に「スキーマ」があるが、このツリーはスキーマの下に並べるので、
+    /// その条件は見出しの位置そのものが受け持っている。
+    /// </summary>
+    private ObjectFilterSpec FilterSpec() =>
+        new(
+            [ObjectFilterProperty.Name, ObjectFilterProperty.CreatedAt],
+            _context.FilterEditor,
+            $"{_database.Value}/{_descriptor.Name.Value}");
 
     private async Task<IReadOnlyList<ObjectExplorerNode>> LoadTablesAsync(CancellationToken cancellationToken)
     {

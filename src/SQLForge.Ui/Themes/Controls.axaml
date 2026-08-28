@@ -541,6 +541,35 @@
     </Style>
   </ControlTheme>
 
+  <!-- ===== 「フィルターの設定」の 1 行 =====
+       行の中にドロップダウンと入力欄が入るので、Fluent の既定の余白と選択色は使わず、
+       中身を敷き詰められる箱にする（結果グリッドの行と同じ組み方）。 -->
+  <ControlTheme x:Key="FilterRowItem" TargetType="ListBoxItem">
+    <Setter Property="MinHeight"                  Value="0"/>
+    <Setter Property="Padding"                    Value="4,1"/>
+    <Setter Property="Margin"                     Value="0"/>
+    <Setter Property="Background"                 Value="Transparent"/>
+    <Setter Property="Foreground"                 Value="{DynamicResource TextBaseBrush}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Root"
+                Background="{TemplateBinding Background}"
+                CornerRadius="{DynamicResource RadiusSm}">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:selected /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{DynamicResource CellSelectedBrush}"/>
+    </Style>
+  </ControlTheme>
+
   <!-- ===== 区切り線 ===== -->
   <ControlTheme x:Key="VerticalDivider" TargetType="Border">
     <Setter Property="Width"             Value="1"/>

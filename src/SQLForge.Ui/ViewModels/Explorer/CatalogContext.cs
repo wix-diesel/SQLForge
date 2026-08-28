@@ -44,6 +44,12 @@ public sealed record CatalogContext(
     public ServerSecurityContext? ServerSecurity { get; init; }
 
     /// <summary>
+    /// 右クリックの「フィルターの設定」の行き先。無ければツリーに絞り込みのメニューを出さない
+    /// （ツリーだけを組むときに、ダイアログまで用意させないための逃げ道でもある）。
+    /// </summary>
+    public IObjectFilterEditor? FilterEditor { get; init; }
+
+    /// <summary>
     /// 右クリックの「接続解除」の行き先。メインウィンドウのビューモデルは
     /// このコンテキストを組んだあとにしか作れないので、あとから差す。
     /// </summary>

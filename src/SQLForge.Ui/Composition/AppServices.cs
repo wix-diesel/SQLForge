@@ -8,6 +8,7 @@ using SQLForge.Application.Security;
 using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
+using SQLForge.Ui.ViewModels.Explorer;
 using SQLForge.Ui.ViewModels.Security;
 using SQLForge.Ui.ViewModels.Workspace;
 using SQLForge.Ui.Views;
@@ -150,6 +151,11 @@ public static class AppServices
         services.AddSingleton<SchemaDialogService>();
         services.AddSingleton<ISchemaEditor>(provider =>
             provider.GetRequiredService<SchemaDialogService>());
+
+        // ツリーの「フィルターの設定」も、メインウィンドウの上に出すので同じ扱い。
+        services.AddSingleton<ObjectFilterDialogService>();
+        services.AddSingleton<IObjectFilterEditor>(provider =>
+            provider.GetRequiredService<ObjectFilterDialogService>());
 
         // 編集グリッドの「行の削除」の確認も、同じ理由で 1 つを共有する。
         services.AddSingleton<TableRowDeleteDialogService>();

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Domain.Catalog;
+using SQLForge.Domain.Filtering;
 using SQLForge.Ui.Presentation;
 
 namespace SQLForge.Ui.ViewModels.Explorer;
@@ -23,6 +24,9 @@ public sealed partial class TableNode : ObjectExplorerNode
     public string QualifiedName => _descriptor.QualifiedName;
 
     public long? RowCount => _descriptor.RowCount;
+
+    /// <summary>絞り込みに掛ける値。名前に加えて、作成日でも絞り込めるようにする。</summary>
+    public override ObjectFilterTarget FilterTarget => new(Title, _descriptor.CreatedAt);
 
     protected override Task<IReadOnlyList<ObjectExplorerNode>> LoadChildrenAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ObjectExplorerNode>>(
