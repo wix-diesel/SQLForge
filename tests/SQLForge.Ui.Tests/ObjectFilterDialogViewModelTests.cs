@@ -33,8 +33,7 @@ public class ObjectFilterDialogViewModelTests
         var dialog = NewDialog();
 
         Assert.True(Accept(dialog));
-        Assert.NotNull(dialog.Result);
-        Assert.True(dialog.Result!.IsEmpty);
+        Assert.Same(ObjectFilter.None, dialog.Result);
     }
 
     [Fact]
@@ -111,7 +110,7 @@ public class ObjectFilterDialogViewModelTests
 
         // クリアしただけでは何も起きない。確定するのは OK を押してから。
         Assert.True(Accept(dialog));
-        Assert.True(dialog.Result!.IsEmpty);
+        Assert.Same(ObjectFilter.None, dialog.Result);
     }
 
     [Fact]

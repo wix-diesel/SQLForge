@@ -114,7 +114,8 @@ public sealed partial class ObjectFilterDialogViewModel : ObservableObject
             createdAt = new DateFilterClause(row.Operator.Date!.Value, value, bound);
         }
 
-        filter = new ObjectFilter(texts, createdAt);
+        // 1 行も埋まっていなければ「絞り込みなし」そのものを返す（クリアして OK したとき）。
+        filter = texts.Count == 0 && createdAt is null ? ObjectFilter.None : new ObjectFilter(texts, createdAt);
         return true;
     }
 

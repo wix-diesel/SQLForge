@@ -8,6 +8,13 @@ public sealed record TextFilterClause
 {
     public TextFilterClause(ObjectFilterProperty property, TextFilterOperator @operator, string value)
     {
+        // 日付のプロパティを渡されても名前で当ててしまわないよう、ここで弾く（日付は DateFilterClause の受け持ち）。
+        if (property.IsDate())
+        {
+            throw new ArgumentException(
+                $"{property.DisplayName()}は日付なので、文字列の条件にはできません。", nameof(property));
+        }
+
         if (string.IsNullOrWhiteSpace(value))
         {
             throw new ArgumentException("絞り込みの値は空にできません。", nameof(value));
@@ -29,6 +36,7 @@ public sealed record TextFilterClause
     {
         ArgumentNullException.ThrowIfNull(target);
 
+        // 文字列で持っているプロパティは今のところ名前だけ（コンストラクタで保証している）。
         var actual = target.Name;
 
         return Operator switch

@@ -43,6 +43,14 @@ public class ObjectFilterTests
     }
 
     [Fact]
+    public void 日付のプロパティは文字列の条件にできない()
+    {
+        // 名前で当ててしまうのを防ぐ。作成日は DateFilterClause の受け持ち。
+        Assert.Throws<ArgumentException>(() =>
+            new TextFilterClause(ObjectFilterProperty.CreatedAt, TextFilterOperator.Contains, "2026/04/15"));
+    }
+
+    [Fact]
     public void 条件はANDで重なる()
     {
         var filter = new ObjectFilter(
