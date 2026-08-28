@@ -124,8 +124,8 @@ public class MainWindowRenderTests
         Assert.True(pane.IsVisible);
 
         // 開くのは空のエディタ。決まるのは実行先のデータベースだけ。
-        Assert.Equal("sales_db", viewModel.Query.TargetDatabase);
-        Assert.Equal(string.Empty, viewModel.Query.Sql);
+        Assert.Equal("sales_db", viewModel.Query.SelectedDocument!.TargetDatabase);
+        Assert.Equal(string.Empty, viewModel.Query.SelectedDocument.Sql);
     }
 
     [AvaloniaFact]
@@ -151,9 +151,10 @@ public class MainWindowRenderTests
         var table = FindOrders(viewModel);
         table.OpenQueryCommand.Execute(null);
 
-        viewModel.Query.Sql = "SELECT region FROM dbo.orders";
-        viewModel.Query.RunCommand.Execute(null);
-        WaitFor(() => viewModel.Query.Tabs.Count > 0);
+        var document = viewModel.Query.SelectedDocument!;
+        document.Sql = "SELECT region FROM dbo.orders";
+        document.RunCommand.Execute(null);
+        WaitFor(() => document.Tabs.Count > 0);
 
         // ビューモデルだけでなく、グリッドのテンプレートが実際に組み上がることまで見る。
         // 見出しとセルは別のテンプレートなので、両方が出ることを確かめる。

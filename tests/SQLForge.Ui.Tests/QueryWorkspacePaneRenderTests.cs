@@ -38,12 +38,12 @@ public class QueryWorkspacePaneRenderTests
         window.Show();
 
         viewModel.Query.OpenNewQuery(SalesDb);
-        viewModel.Query.Sql = "SELECT 1 FROM dbo.orders";
+        viewModel.Query.SelectedDocument!.Sql = "SELECT 1 FROM dbo.orders";
         Dispatcher.UIThread.RunJobs();
 
         var editor = Editor(window);
 
-        Assert.Same(viewModel.Query.Document, editor.Document);
+        Assert.Same(viewModel.Query.SelectedDocument!.Document, editor.Document);
         Assert.Equal("SELECT 1 FROM dbo.orders", editor.Text);
     }
 
@@ -54,7 +54,7 @@ public class QueryWorkspacePaneRenderTests
         window.Show();
 
         viewModel.Query.OpenNewQuery(SalesDb);
-        viewModel.Query.Sql = "SELECT 1";
+        viewModel.Query.SelectedDocument!.Sql = "SELECT 1";
         Dispatcher.UIThread.RunJobs();
 
         var colorizer = Editor(window).TextArea.TextView.LineTransformers.OfType<SqlColorizer>().Single();
@@ -74,7 +74,7 @@ public class QueryWorkspacePaneRenderTests
         window.Show();
 
         viewModel.Query.OpenNewQuery(SalesDb);
-        viewModel.Query.Sql = "SELECT id, region -- 覚え書き\nFROM dbo.orders WHERE region = 'ゆき'";
+        viewModel.Query.SelectedDocument!.Sql = "SELECT id, region -- 覚え書き\nFROM dbo.orders WHERE region = 'ゆき'";
         Dispatcher.UIThread.RunJobs();
 
         using var frame = window.CaptureRenderedFrame();
@@ -90,11 +90,11 @@ public class QueryWorkspacePaneRenderTests
         window.Show();
 
         viewModel.Query.OpenNewQuery(SalesDb);
-        viewModel.Query.Sql = "SELECT * FROM ";
+        viewModel.Query.SelectedDocument!.Sql = "SELECT * FROM ";
         Dispatcher.UIThread.RunJobs();
 
         var editor = Editor(window);
-        editor.CaretOffset = viewModel.Query.Sql.Length;
+        editor.CaretOffset = viewModel.Query.SelectedDocument!.Sql.Length;
         editor.TextArea.Focus();
         Dispatcher.UIThread.RunJobs();
 
@@ -105,6 +105,144 @@ public class QueryWorkspacePaneRenderTests
         var list = WaitFor(() => window.GetVisualDescendants().OfType<CompletionList>().FirstOrDefault());
 
         Assert.Contains(list.CompletionData, item => item.Text == "dbo.orders");
+    }
+
+    [AvaloniaFact]
+    public void 開いているクエリがタブ帯に並ぶ()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        viewModel.Query.SelectedDocument!.Sql = "SELECT 1";
+        viewModel.Query.OpenNewQuery(SalesDb);
+        Dispatcher.UIThread.RunJobs();
+
+        // 打ちかけの 1 枚目には * が付き、開いたばかりの 2 枚目には付かない。
+        Assert.Contains("SQLQuery1.sql*", Texts(window));
+        Assert.Contains("SQLQuery2.sql", Texts(window));
+    }
+
+    [AvaloniaFact]
+    public void タブを切り替えるとエディタの文面が入れ替わる()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        viewModel.Query.SelectedDocument!.Sql = "SELECT 1";
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        viewModel.Query.SelectedDocument!.Sql = "SELECT 2";
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("SELECT 2", Editor(window).Text);
+
+        viewModel.Query.PreviousDocumentCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("SELECT 1", Editor(window).Text);
+    }
+
+    [AvaloniaFact]
+    public void 書きかけの位置はタブごとに残る()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        var first = viewModel.Query.SelectedDocument!;
+        first.Sql = "SELECT region FROM dbo.orders";
+        Dispatcher.UIThread.RunJobs();
+
+        var editor = Editor(window);
+        editor.CaretOffset = 7;
+        Dispatcher.UIThread.RunJobs();
+
+        // 別のタブを開いて戻ってくると、書いていたところへ帰る。
+        viewModel.Query.OpenNewQuery(SalesDb);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(0, editor.CaretOffset);
+
+        viewModel.Query.SelectedDocument = first;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(7, editor.CaretOffset);
+    }
+
+    [AvaloniaFact]
+    public void 最後のタブを閉じると作業領域が畳まれる()
+    {
+        var window = CreateWindow(out var viewModel);
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        viewModel.Query.OpenNewQuery(SalesDb);
+        Dispatcher.UIThread.RunJobs();
+
+        var pane = window.GetVisualDescendants().OfType<QueryWorkspacePane>().Single();
+        Assert.True(pane.IsVisible);
+
+        viewModel.Query.CloseSelectedCommand.Execute(null);
+        viewModel.Query.CloseSelectedCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.False(pane.IsVisible);
+    }
+
+    [AvaloniaFact]
+    public void 候補を読んでいる間にタブを切り替えたらポップアップを出さない()
+    {
+        // 候補は別のタブの文書・別の実行先のもの。今のエディタへ出すと嘘になる。
+        // キャレットの位置だけでは見分けられない（たまたま同じ位置のことがある）ので、
+        // 2 枚目のキャレットを 1 枚目と同じ位置に置いた状態で確かめる。
+        var session = NewSession();
+        var window = CreateWindow(out var viewModel, session, Completion(session));
+        window.Show();
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        var first = viewModel.Query.SelectedDocument!;
+        first.Sql = "SELECT * FROM ";
+
+        viewModel.Query.OpenNewQuery(SalesDb);
+        var second = viewModel.Query.SelectedDocument!;
+        second.Sql = "SELECT * FROM x";
+        Dispatcher.UIThread.RunJobs();
+
+        var editor = Editor(window);
+
+        // 2 枚目は「o を打ったあとの 1 枚目」と同じ位置で待たせておく。
+        editor.CaretOffset = 15;
+        Dispatcher.UIThread.RunJobs();
+
+        viewModel.Query.SelectedDocument = first;
+        Dispatcher.UIThread.RunJobs();
+        editor.CaretOffset = first.Sql.Length;
+        editor.TextArea.Focus();
+        Dispatcher.UIThread.RunJobs();
+
+        // カタログを読みに行ったところで止めてから、語を 1 文字打つ。
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.TableGate = gate;
+        window.KeyTextInput("o");
+        Dispatcher.UIThread.RunJobs();
+
+        // 読み終わる前に 2 枚目へ移り、それから候補を返させる。
+        viewModel.Query.SelectedDocument = second;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(second.Document, editor.Document);
+        Assert.Equal(15, editor.CaretOffset);
+
+        gate.SetResult();
+
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(10);
+        }
+
+        Assert.Empty(window.GetVisualDescendants().OfType<CompletionList>());
     }
 
     /// <summary>ポップアップは候補を読み終えてから出るので、出るまで待つ。</summary>
@@ -132,6 +270,12 @@ public class QueryWorkspacePaneRenderTests
         new FakeDatabaseSession()
             .WithSchemas("sales_db", new SchemaDescriptor(new SchemaName("dbo")))
             .WithTables("sales_db", "dbo", new TableDescriptor(new SchemaName("dbo"), "orders"));
+
+    private static IReadOnlyList<string> Texts(Window window) =>
+        window.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .Select(block => block.Text ?? string.Empty)
+            .ToList();
 
     private static TextEditor Editor(Window window) =>
         window.GetVisualDescendants().OfType<TextEditor>().Single();

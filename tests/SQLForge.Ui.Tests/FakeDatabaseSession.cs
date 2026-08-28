@@ -88,11 +88,21 @@ public sealed class FakeDatabaseSession : IDatabaseSession
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_schemas.TryGetValue(database.Value, out var schemas) ? schemas : []);
 
-    public Task<IReadOnlyList<TableDescriptor>> ListTablesAsync(
+    /// <summary>置くと、合図をもらうまでテーブルの一覧が返らなくなる。補完の読み込み中の割り込みを作るのに使う。</summary>
+    public TaskCompletionSource? TableGate { get; set; }
+
+    public async Task<IReadOnlyList<TableDescriptor>> ListTablesAsync(
         DatabaseName database,
         SchemaName schema,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_tables.TryGetValue($"{database.Value}.{schema.Value}", out var tables) ? tables : []);
+        CancellationToken cancellationToken = default)
+    {
+        if (TableGate is { } gate)
+        {
+            await gate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return _tables.TryGetValue($"{database.Value}.{schema.Value}", out var tables) ? tables : [];
+    }
 
     public Task<IReadOnlyList<ColumnDescriptor>> ListColumnsAsync(
         DatabaseName database,
@@ -592,7 +602,10 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 
     public int ExecutedMaxRows { get; private set; }
 
-    /// <summary>置くと、合図をもらうまで実行が返らなくなる。実行中の割り込みを作るのに使う。</summary>
+    /// <summary>
+    /// 置くと、合図をもらうまで実行が返らなくなる。実行中の割り込みを作るのに使う。
+    /// 待っている間に取り消されたら、実サーバーと同じように取り消しで返す。
+    /// </summary>
     public TaskCompletionSource? QueryGate { get; set; }
 
     public async Task<QueryResult> ExecuteQueryAsync(
@@ -607,7 +620,7 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 
         if (QueryGate is { } gate)
         {
-            await gate.Task.ConfigureAwait(false);
+            await gate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return QueryFailure is not null

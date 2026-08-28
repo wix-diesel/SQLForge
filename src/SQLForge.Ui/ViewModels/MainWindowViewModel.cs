@@ -41,7 +41,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IAsyncDispos
 
     public ObjectExplorerViewModel Explorer { get; }
 
-    /// <summary>右の作業領域。ツリーから「クエリを実行」を選ぶまでは畳んである。</summary>
+    /// <summary>右の作業領域。クエリのタブを並べる帯で、1 枚も開いていない間は畳んである。</summary>
     public QueryEditorViewModel Query { get; }
 
     /// <summary>同じ作業領域に出す編集グリッド。「先頭 100 行を編集」で開く。</summary>

@@ -3,12 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using SQLForge.Application.Query;
 using SQLForge.Domain.Sql;
 using SQLForge.Ui.Presentation;
 using SQLForge.Ui.ViewModels;
+using SQLForge.Ui.ViewModels.Workspace;
 
 namespace SQLForge.Ui.Views;
 
@@ -37,6 +39,12 @@ public partial class QueryWorkspacePane : UserControl
     private TextEditor? _editor;
     private CompletionWindow? _completion;
 
+    /// <summary>今エディタに出している文書。差し替えの途中で位置を書き戻さないよう、ビュー側で持つ。</summary>
+    private QueryDocumentViewModel? _shown;
+
+    /// <summary>文書の差し替え中。この間のキャレットの動きは打ち手のものではない。</summary>
+    private bool _switching;
+
     public QueryWorkspacePane()
     {
         InitializeComponent();
@@ -52,9 +60,78 @@ public partial class QueryWorkspacePane : UserControl
         _editor.TextArea.TextEntering += OnTextEntering;
         _editor.TextArea.TextEntered += OnTextEntered;
 
+        // タブを切り替えると文書が差し替わる。書きかけの位置はタブごとに覚えておき、
+        // 戻ってきたらそこへ帰す（エディタは 1 つを使い回すため）。
+        _editor.TextArea.Caret.PositionChanged += (_, _) => RememberCaret();
+        _editor.DocumentChanged += (_, _) => OnDocumentChanged();
+
         ApplySyntaxColors();
         ActualThemeVariantChanged += (_, _) => ApplySyntaxColors();
     }
+
+    /// <summary>
+    /// 打ち手が動かしたキャレットだけを覚える。
+    ///
+    /// 差し替えの前後で AvaloniaEdit 自身もキャレットを 0 へ戻すので、素直に受けると
+    /// 覚えておいた位置をその 0 で塗り潰してしまう。出している文書はこちらで持ち（<see cref="_shown"/>）、
+    /// 差し替えの間（<see cref="_switching"/>）は覚えないことで、その取りこぼしを防ぐ。
+    /// </summary>
+    private void RememberCaret()
+    {
+        if (_switching || _editor is null || _shown is not { } document
+            || !ReferenceEquals(_editor.Document, document.Document))
+        {
+            return;
+        }
+
+        document.CaretOffset = _editor.CaretOffset;
+    }
+
+    /// <summary>
+    /// 文書が差し替わった。AvaloniaEdit 側の後始末が済んでから位置を入れ直したいので、
+    /// 戻すのは次の待ち行列へ回す。
+    /// </summary>
+    private void OnDocumentChanged()
+    {
+        // 開いたままの候補は、もう別の文書のものなので閉じる。
+        _completion?.Close();
+        _shown = null;
+        _switching = true;
+
+        Dispatcher.UIThread.Post(RestoreCaret, DispatcherPriority.Background);
+    }
+
+    private void RestoreCaret()
+    {
+        _switching = false;
+
+        if (_editor?.Document is not { } opened || Current() is not { } document
+            || !ReferenceEquals(opened, document.Document))
+        {
+            return;
+        }
+
+        _shown = document;
+        _editor.CaretOffset = Math.Min(document.CaretOffset, opened.TextLength);
+    }
+
+    /// <summary>タブ帯で中クリックしたら、そのタブを閉じる（SSMS と同じ）。</summary>
+    private void OnTabPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton is not MouseButton.Middle)
+        {
+            return;
+        }
+
+        if ((e.Source as Control)?.DataContext is QueryDocumentViewModel document)
+        {
+            document.CloseCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private QueryDocumentViewModel? Current() =>
+        (DataContext as MainWindowViewModel)?.Query.SelectedDocument;
 
     /// <summary>
     /// 画面へ載ってから色を引き直す。組み立てた時点では親をたどれず、
@@ -111,16 +188,21 @@ public partial class QueryWorkspacePane : UserControl
             return;
         }
 
-        if (!ShouldOpen(e.Text[0]) || DataContext is not MainWindowViewModel viewModel)
+        if (!ShouldOpen(e.Text[0]) || Current() is not { } document)
         {
             return;
         }
 
         var caret = _editor.CaretOffset;
-        var result = await viewModel.Query.CompleteAsync(caret);
+        var result = await document.CompleteAsync(caret);
 
-        // 候補を読んでいる間に打ち進められていたら、その位置の候補ではないので捨てる。
-        if (result.IsEmpty || _editor.CaretOffset != caret || _completion is not null)
+        // 候補を読んでいる間に打ち進められたか、別のタブへ移っていたら、
+        // もうその位置・その実行先の候補ではないので捨てる。
+        if (result.IsEmpty
+            || _completion is not null
+            || !ReferenceEquals(Current(), document)
+            || !ReferenceEquals(_editor.Document, document.Document)
+            || _editor.CaretOffset != caret)
         {
             return;
         }

@@ -1,23 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Text;
-using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SQLForge.Application.Abstractions;
 using SQLForge.Application.Query;
 using SQLForge.Domain.Catalog;
-using SQLForge.Domain.Query;
-using SQLForge.Domain.Sql;
 
 namespace SQLForge.Ui.ViewModels.Workspace;
 
 /// <summary>
-/// メインウィンドウ右の作業領域。クエリエディタと結果ペインをまとめる。
+/// メインウィンドウ右の作業領域。クエリのタブを並べる帯。
 ///
-/// 開いていない間は作業領域に何も出さない（<see cref="IsOpen"/>）。
-/// エクスプローラーの右クリックで開くのは空のエディタで、実行先のデータベースだけを
-/// 決めておく（テーブルの中身をのぞく文面は、別の入口として用意する）。
+/// タブ 1 枚が SSMS のクエリ ウィンドウ 1 つ（<see cref="QueryDocumentViewModel"/>）で、
+/// 文面も実行先も結果もタブごとに持つ。ここが受け持つのは開く・切り替える・閉じるだけ。
+/// タブが 1 枚も無い間は作業領域に何も出さない（<see cref="IsOpen"/>）。
 /// </summary>
 public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLauncher
 {
@@ -27,24 +23,19 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
     /// <summary>補完の候補を作る口。渡されないときは補完しない（既存のテストなど）。</summary>
     private readonly SqlCompletionUseCase? _completion;
 
-    /// <summary>実行先。接続時に開いたデータベースを初期値にする。</summary>
-    private DatabaseName? _target;
+    /// <summary>接続時に開いたデータベース。ツールバーから新しいタブを開くときの既定の実行先。</summary>
+    private readonly DatabaseName? _defaultTarget;
 
     /// <summary>
-    /// エディタを開き直した回数。実行の最中に開き直されたかを見分けるのに使う。
+    /// 前に出した順（最後が今のタブ）。閉じたときにどれを前に出すかを決めるのに使う。
+    /// SSMS と同じで、閉じた先は「隣」ではなく「直前に見ていたもの」。
     /// </summary>
-    private int _generation;
+    private readonly List<QueryDocumentViewModel> _activation = [];
 
-    [ObservableProperty] private bool _isOpen;
+    /// <summary>次に付ける見出しの番号。閉じても使い回さない（SSMS と同じ）。</summary>
+    private int _nextNumber = 1;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand))]
-    private bool _isRunning;
-
-    [ObservableProperty] private string _targetDatabase = string.Empty;
-    [ObservableProperty] private QueryTabViewModel? _selectedTab;
-    [ObservableProperty] private string _status = string.Empty;
-    [ObservableProperty] private bool _hasFailed;
+    [ObservableProperty] private QueryDocumentViewModel? _selectedDocument;
 
     public QueryEditorViewModel(
         IDatabaseSession session,
@@ -55,45 +46,29 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
         _executeQuery = executeQuery ?? throw new ArgumentNullException(nameof(executeQuery));
         _completion = completion;
 
-        // 文面が変わったら「実行」「整形」の可否を出し直す。
-        Document.TextChanged += (_, _) => OnTextChanged();
-
         // 接続時に開いたデータベースを既定の実行先にしておく。名前として通らないときは
-        // 実行先なしのまま開く（ツリーでデータベースを選べば決まる）。
+        // 実行先なしで開く（ツリーでデータベースを選べば決まる）。
         if (DatabaseName.TryCreate(session.Profile.Target.Database, out var opened))
         {
-            SetTarget(opened);
+            _defaultTarget = opened;
         }
     }
 
-    /// <summary>
-    /// エディタの文面。AvaloniaEdit は文字列ではなく文書を編集するので、
-    /// ビューモデルが持つのも文書にする（ビューモデルは最外層なので UI の型を持ってよい）。
-    /// </summary>
-    public TextDocument Document { get; } = new();
+    /// <summary>開いているクエリのタブ。左から開いた順に並ぶ。</summary>
+    public ObservableCollection<QueryDocumentViewModel> Documents { get; } = [];
 
-    /// <summary>実行する文面。文書の中身をそのまま指す。</summary>
-    public string Sql
-    {
-        get => Document.Text;
-        set => Document.Text = value;
-    }
-
-    /// <summary>「結果 1」…と「メッセージ」。実行のたびに作り直す。</summary>
-    public ObservableCollection<QueryTabViewModel> Tabs { get; } = [];
+    /// <summary>作業領域を出すか。タブが 1 枚も無ければ畳んでおく。</summary>
+    public bool IsOpen => Documents.Count > 0;
 
     public string MaxRowsLabel =>
         $"取得上限 {ExecuteQueryUseCase.DefaultMaxRows.ToString("N0", CultureInfo.InvariantCulture)} 行";
 
-    public void OpenNewQuery(DatabaseName database)
-    {
-        SetTarget(database);
-        Sql = string.Empty;
-        Open();
-    }
+    /// <summary>そのデータベース向けの空のタブを 1 枚足す。</summary>
+    public void OpenNewQuery(DatabaseName database) => Add(database);
 
     /// <summary>
-    /// 「上位 1000 行を表示」など、ツリーが文面まで決めてくる入口。開いてすぐ実行する。
+    /// 「上位 1000 行を表示」など、ツリーが文面まで決めてくる入口。
+    /// SSMS と同じで、開くたびに新しいタブが増える。
     /// </summary>
     public void OpenAndRunQuery(DatabaseName database, string sql)
     {
@@ -102,222 +77,126 @@ public sealed partial class QueryEditorViewModel : ObservableObject, IQueryLaunc
             throw new ArgumentException("実行する文面は空にできません。", nameof(sql));
         }
 
-        SetTarget(database);
-        Sql = sql;
-        Open();
-        RunCommand.Execute(null);
+        var document = Add(database);
+        document.Sql = sql;
+        document.RunCommand.Execute(null);
     }
 
     /// <summary>
-    /// キャレットの位置に出す補完の候補。実行先が決まっていないときや、
-    /// 補完の口が無いときは空を返す（ビューはポップアップを出さない）。
+    /// タブを 1 枚閉じる。走っている実行はそこで取り消す（結果を出す先が無くなるため）。
     /// </summary>
-    public async Task<SqlCompletionResult> CompleteAsync(
-        int caret,
-        CancellationToken cancellationToken = default)
+    internal void Close(QueryDocumentViewModel document)
     {
-        if (_completion is null || _target is not { } database)
+        var wasSelected = SelectedDocument == document;
+
+        if (!Documents.Remove(document))
         {
-            return SqlCompletionResult.Empty;
-        }
-
-        try
-        {
-            return await _completion
-                .ExecuteAsync(database, Sql, caret, cancellationToken)
-                .ConfigureAwait(true);
-        }
-        catch (Exception)
-        {
-            // 候補が読めないのは、書いている手を止める理由にならない。黙って出さない。
-            return SqlCompletionResult.Empty;
-        }
-    }
-
-    private bool CanRun => !IsRunning && !string.IsNullOrWhiteSpace(Sql);
-
-    private bool CanFormat => !string.IsNullOrWhiteSpace(Sql);
-
-    /// <summary>
-    /// 文面を整える。字句の並びは変えないので、整えても実行の結果は変わらない。
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanFormat))]
-    private void Format()
-    {
-        var formatted = SqlFormatter.Format(Sql);
-
-        if (!string.Equals(formatted, Sql, StringComparison.Ordinal))
-        {
-            Document.Replace(0, Document.TextLength, formatted);
-        }
-    }
-
-    private void OnTextChanged()
-    {
-        OnPropertyChanged(nameof(Sql));
-        RunCommand.NotifyCanExecuteChanged();
-        FormatCommand.NotifyCanExecuteChanged();
-    }
-
-    /// <summary>
-    /// 文面を 1 回実行して結果ペインへ移す。失敗もメッセージのタブに出すだけで、
-    /// 例外は外へ出さない（押した操作の結果は、押した場所の近くで見せる）。
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanRun), IncludeCancelCommand = true)]
-    private async Task RunAsync(CancellationToken cancellationToken)
-    {
-        if (_target is not { } database)
-        {
-            ShowFailure("実行先のデータベースが決まっていません。左のツリーでデータベースかテーブルを選び直してください。");
             return;
         }
 
-        var generation = _generation;
-        IsRunning = true;
+        _activation.Remove(document);
+        document.CancelRun();
 
-        try
+        // ビュー側の一覧が勝手に隣を選ぶことがあるので、閉じた後に選び直す。
+        if (wasSelected || SelectedDocument == document)
         {
-            var result = await _executeQuery
-                .ExecuteAsync(_session, new QueryRequest(database, Sql), cancellationToken)
-                .ConfigureAwait(true);
+            SelectedDocument = _activation.Count > 0 ? _activation[^1] : null;
+        }
 
-            if (IsCurrent(generation))
-            {
-                ShowResult(result);
-            }
-        }
-        catch (OperationCanceledException)
+        Changed();
+    }
+
+    /// <summary>押したタブ以外を閉じる（SSMS の「これ以外をすべて閉じる」）。</summary>
+    internal void CloseOthers(QueryDocumentViewModel keep)
+    {
+        foreach (var document in Documents.Where(candidate => candidate != keep).ToList())
         {
-            if (IsCurrent(generation))
-            {
-                ShowFailure("実行を取り消しました。");
-            }
+            Close(document);
         }
-        catch (Exception exception)
+
+        SelectedDocument = Documents.Contains(keep) ? keep : SelectedDocument;
+    }
+
+    internal void CloseAll()
+    {
+        foreach (var document in Documents.ToList())
         {
-            // 権限エラーも構文エラーもここへ来る。理由はサーバーの言葉のまま出す。
-            if (IsCurrent(generation))
-            {
-                ShowFailure(exception.Message);
-            }
-        }
-        finally
-        {
-            IsRunning = false;
+            Close(document);
         }
     }
 
     /// <summary>
-    /// 待っている間にエディタを開き直されていないか。
-    ///
-    /// 開き直した先はもう別のクエリなので、あとから返ってきた結果をそこへ出すと
-    /// 「書いていない文の結果が出ている」ことになる。結果は捨てるだけで、
-    /// 走っているクエリ自体は止めない（止めたいときは「停止」を押す）。
+    /// ツールバーの「新しいクエリ」。実行先は今のタブと同じ（無ければ接続時のデータベース）。
     /// </summary>
-    private bool IsCurrent(int generation) => generation == _generation;
-
-    /// <summary>作業領域を畳む。文面は残しておき、次に開いたときに続きから書けるようにする。</summary>
     [RelayCommand]
-    private void Close() => IsOpen = false;
+    private void NewDocument() => Add(SelectedDocument?.Target ?? _defaultTarget);
 
-    private void Open()
+    [RelayCommand(CanExecute = nameof(HasDocument))]
+    private void CloseSelected()
     {
-        _generation++;
-        Tabs.Clear();
-        SelectedTab = null;
-        Status = string.Empty;
-        HasFailed = false;
-        IsOpen = true;
+        if (SelectedDocument is { } document)
+        {
+            Close(document);
+        }
     }
 
-    private void SetTarget(DatabaseName database)
+    [RelayCommand(CanExecute = nameof(HasSeveral))]
+    private void NextDocument() => Step(1);
+
+    [RelayCommand(CanExecute = nameof(HasSeveral))]
+    private void PreviousDocument() => Step(-1);
+
+    private bool HasDocument => Documents.Count > 0;
+
+    private bool HasSeveral => Documents.Count > 1;
+
+    /// <summary>タブを 1 枚足して前に出す。</summary>
+    private QueryDocumentViewModel Add(DatabaseName? target)
     {
-        _target = database;
-        TargetDatabase = database.Value;
+        var document = new QueryDocumentViewModel(
+            this,
+            $"SQLQuery{_nextNumber++}.sql",
+            _session,
+            _executeQuery,
+            _completion,
+            target);
+
+        Documents.Add(document);
+        SelectedDocument = document;
+        Changed();
+
+        return document;
     }
 
-    private void ShowResult(QueryResult result)
+    /// <summary>端まで来たら反対の端へ回る（SSMS のタブの行き来と同じ）。</summary>
+    private void Step(int offset)
     {
-        Tabs.Clear();
-
-        for (var index = 0; index < result.ResultSets.Count; index++)
+        if (SelectedDocument is not { } current)
         {
-            Tabs.Add(QueryTabViewModel.ForResult(index + 1, new QueryResultSetViewModel(result.ResultSets[index])));
+            return;
         }
 
-        Tabs.Add(QueryTabViewModel.ForMessages(DescribeMessages(result)));
+        var index = Documents.IndexOf(current);
+        var count = Documents.Count;
 
-        // 行が返ったならグリッド、返らなかったならメッセージが先頭に来る。
-        SelectedTab = Tabs[0];
-        Status = DescribeStatus(result);
-        HasFailed = false;
+        SelectedDocument = Documents[((index + offset) % count + count) % count];
     }
 
-    private void ShowFailure(string message)
+    partial void OnSelectedDocumentChanged(QueryDocumentViewModel? value)
     {
-        Tabs.Clear();
-        Tabs.Add(QueryTabViewModel.ForMessages(message));
-
-        SelectedTab = Tabs[0];
-        Status = "エラー";
-        HasFailed = true;
+        if (value is not null)
+        {
+            _activation.Remove(value);
+            _activation.Add(value);
+        }
     }
 
-    /// <summary>ツールバー右端の一行。実行時間と件数だけを出す。</summary>
-    private static string DescribeStatus(QueryResult result)
+    /// <summary>タブの枚数が変わった。作業領域の出し分けとタブ操作の可否を出し直す。</summary>
+    private void Changed()
     {
-        var status = new StringBuilder(Duration(result.Elapsed));
-
-        if (result.ResultSets.Count > 0)
-        {
-            status.Append(" · ").Append(Count(result.TotalRows)).Append(" 行");
-
-            if (result.ResultSets.Any(set => set.IsTruncated))
-            {
-                status.Append("（上限で打ち切り）");
-            }
-        }
-        else if (result.RecordsAffected >= 0)
-        {
-            status.Append(" · ").Append(Count(result.RecordsAffected)).Append(" 行処理");
-        }
-
-        return status.ToString();
+        OnPropertyChanged(nameof(IsOpen));
+        CloseSelectedCommand.NotifyCanExecuteChanged();
+        NextDocumentCommand.NotifyCanExecuteChanged();
+        PreviousDocumentCommand.NotifyCanExecuteChanged();
     }
-
-    /// <summary>「メッセージ」タブの本文。SSMS のメッセージ欄にあたる。</summary>
-    private static string DescribeMessages(QueryResult result)
-    {
-        var lines = new List<string>();
-
-        for (var index = 0; index < result.ResultSets.Count; index++)
-        {
-            var set = result.ResultSets[index];
-            var label = result.ResultSets.Count > 1 ? $"結果 {index + 1}: " : string.Empty;
-
-            lines.Add(set.IsTruncated
-                ? $"{label}({Count(set.Rows.Count)} 行を取得しました。取得上限に達したため、これより後の行は読んでいません)"
-                : $"{label}({Count(set.Rows.Count)} 行を取得しました)");
-        }
-
-        if (result.RecordsAffected >= 0)
-        {
-            lines.Add($"({Count(result.RecordsAffected)} 行処理されました)");
-        }
-
-        if (lines.Count == 0)
-        {
-            lines.Add("(行は返りませんでした)");
-        }
-
-        lines.Add(string.Empty);
-        lines.Add($"実行時間: {Duration(result.Elapsed)}");
-
-        return string.Join("\n", lines);
-    }
-
-    private static string Count(int value) => value.ToString("N0", CultureInfo.InvariantCulture);
-
-    private static string Duration(TimeSpan elapsed) =>
-        $"{Math.Round(elapsed.TotalMilliseconds).ToString("N0", CultureInfo.InvariantCulture)} ms";
 }
