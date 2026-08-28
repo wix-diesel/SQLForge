@@ -6,6 +6,7 @@ using SQLForge.Application.Editing;
 using SQLForge.Application.Query;
 using SQLForge.Application.Security;
 using SQLForge.Infrastructure.Connections;
+using SQLForge.Infrastructure.PostgreSql;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Ui.ViewModels;
 using SQLForge.Ui.ViewModels.Explorer;
@@ -43,6 +44,7 @@ public static class AppServices
         // 別プロジェクト（SQLForge.Infrastructure.<DBMS>）に置き、ここで差し込む。
         // 台帳・接続テスト・接続は登録された IDatabaseConnector をそのまま拾う。
         services.AddSingleton<IDatabaseConnector, SqlServerConnector>();
+        services.AddSingleton<IDatabaseConnector, PostgreSqlConnector>();
         services.AddSingleton<IDatabaseConnectorRegistry, DatabaseConnectorRegistry>();
         services.AddSingleton<IConnectionProbe, DriverConnectionProbe>();
 

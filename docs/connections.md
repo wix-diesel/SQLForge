@@ -22,6 +22,50 @@ SSMS は［暗号化］と［サーバー証明書を信頼する］の 2 つで
 （`sys.dm_exec_connections`）。この DMV は `VIEW SERVER STATE` 権限が要るので、読めない接続では
 「TLS 不明 (要求 …)」と出して推測しない。
 
+## PostgreSQL へ繋ぐ
+
+ドライバーを **PostgreSQL** に切り替えると、ポートとデータベースの既定が
+5432 / `postgres` に変わる。入れる欄は SQL Server と同じで、
+「接続をテスト」「接続」の押し方も変わらない。
+
+繋がると、ツリーには接続と**データベース一覧**が並ぶ。データベースを開けば
+スキーマ・テーブル・列・ストアド プロシージャ（関数を含む）まで辿れる。
+この版ではそこまでで、セキュリティ（ログイン・ユーザー・ロール・権限）と
+編集グリッドはまだ書いていないので、**枝も右クリックのメニューも出ない**
+（押してから断られないように、セッションが自分でできることを申告している）。
+
+SQL Server と違うところ。
+
+| | SQL Server | PostgreSQL |
+| --- | --- | --- |
+| ドライバー | `Microsoft.Data.SqlClient` | `Npgsql` |
+| 繋ぎ先の書き方 | `Data Source=host,port` | `Host=host` と `Port=port` の 2 欄 |
+| 他のデータベースを読む | 3 部名（`[db].sys.tables`）で 1 本の接続のまま | またげないので、読む前にそのデータベースへ**接続を張り直す** |
+| データベースの作成日時 | `sys.databases.create_date` | 相当する列が無いので「読めない」扱い（ツリーの作成日での絞り込みも掛からない） |
+| 暗号化の確認 | `sys.dm_exec_connections`（`VIEW SERVER STATE` が要る） | `pg_stat_ssl` の自分の行 |
+
+TLS の要求レベルは libpq の `sslmode` へこう写す。
+
+| 「一般」タブの TLS | Npgsql | 意味 |
+| --- | --- | --- |
+| 使用しない | `SslMode=Disable` | 暗号化しない。サーバーが要求すれば繋がらない |
+| 可能なら使用 | `SslMode=Prefer` | 張れるなら張る |
+| 必須 | `SslMode=Require` | 暗号化は必須。証明書は検証しない |
+| 必須 + 証明書検証 | `SslMode=VerifyFull` | 暗号化必須かつ証明書とホスト名を検証する |
+| 厳密 (TDS 8.0) | `SslMode=VerifyFull`, `SslNegotiation=Direct` | 接続直後に TLS を張る（PostgreSQL 17 以降）。SQL Server の TDS 8.0 に当たる |
+
+「TLS / SSL」タブのサーバー証明書は `sslrootcert`（Npgsql の `Root Certificate`）へ写す。
+**証明書内のホスト名は写せない**（Npgsql に相当する指定が無い）ので、入れたまま繋ごうとすると、
+検証が通ったように見せずに接続する前に断る。
+
+認証は、パスワード認証がそのまま `Username` / `Password`。**OS 統合認証**は、Npgsql に
+「統合認証を使う」という指定が無いので、利用者名もパスワードも載せずに繋ぐ
+（名乗る相手は OS が決め、サーバーが求めたときに GSSAPI / SSPI で応じる）。
+クライアント証明書認証は SQL Server と同じく未対応。
+
+「詳細設定」タブのうち、ネットワーク プロトコルとパケット サイズは PostgreSQL に相当する指定が
+無いので効かない。接続と実行のタイムアウトは効く（接続のほうは Npgsql の上限 1024 秒で頭打ち）。
+
 ## OS 統合認証（Windows 認証）で繋ぐ
 
 「一般」タブの認証方式で **OS 統合認証** を選ぶと、SQL Server へは

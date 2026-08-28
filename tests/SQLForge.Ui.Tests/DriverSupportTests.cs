@@ -2,6 +2,7 @@ using SQLForge.Application.Abstractions;
 using SQLForge.Application.Connections;
 using SQLForge.Domain.Connections;
 using SQLForge.Infrastructure.Connections;
+using SQLForge.Infrastructure.PostgreSql;
 using SQLForge.Infrastructure.Security;
 using SQLForge.Infrastructure.SqlServer;
 using Xunit;
@@ -20,21 +21,40 @@ public class DriverSupportTests
         var registry = NewRegistry();
 
         Assert.True(registry.Supports(DatabaseDriver.SqlServer));
-        Assert.False(registry.Supports(DatabaseDriver.PostgreSql));
-        Assert.Equal([DatabaseDriver.SqlServer], registry.SupportedDrivers);
+        Assert.True(registry.Supports(DatabaseDriver.PostgreSql));
+        Assert.False(registry.Supports(DatabaseDriver.MySql));
+
+        // 並びは接続ダイアログのドライバー一覧と同じ順序になる。
+        Assert.Equal([DatabaseDriver.SqlServer, DatabaseDriver.PostgreSql], registry.SupportedDrivers);
     }
 
     [Fact]
     public async Task 未対応ドライバーの接続テストは理由付きで失敗する()
     {
         var probe = new DriverConnectionProbe(NewRegistry());
-        var profile = ProfileFor(DatabaseDriver.PostgreSql);
+        var profile = ProfileFor(DatabaseDriver.ClickHouse);
 
         var result = await probe.ProbeAsync(new ConnectionRequest(profile, null));
 
         Assert.False(result.Succeeded);
-        Assert.Contains("PostgreSQL", result.Detail, StringComparison.Ordinal);
+        Assert.Contains("ClickHouse", result.Detail, StringComparison.Ordinal);
         Assert.Contains("SQL Server", result.Detail, StringComparison.Ordinal);
+        Assert.Contains("PostgreSQL", result.Detail, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PostgreSQLでもドライバーが受け付けない設定は接続前に理由を返す()
+    {
+        // 対応済みのドライバーでも、写せない指定は接続を試す前に分かる。
+        var useCase = new OpenConnectionUseCase(NewRegistry(), NewSecretResolver(), NewTunnelOpener());
+        var profile = ProfileFor(DatabaseDriver.PostgreSql);
+        var draft = ConnectionDraft.FromProfile(profile) with { Authentication = AuthenticationMethod.Certificate };
+
+        var result = await useCase.ExecuteAsync(draft);
+
+        Assert.False(result.Succeeded);
+        Assert.Null(result.Session);
+        Assert.Contains("証明書", result.Detail, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -78,7 +98,8 @@ public class DriverSupportTests
         Assert.Contains("証明書", result.Detail, StringComparison.Ordinal);
     }
 
-    private static DatabaseConnectorRegistry NewRegistry() => new([new SqlServerConnector()]);
+    private static DatabaseConnectorRegistry NewRegistry() =>
+        new([new SqlServerConnector(), new PostgreSqlConnector()]);
 
     private static ConnectionSecretResolver NewSecretResolver() => new(new InMemorySecretStore());
 

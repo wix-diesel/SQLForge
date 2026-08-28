@@ -8,6 +8,9 @@ namespace SQLForge.Ui.ViewModels.Explorer;
 /// <summary>テーブル 1 件。ツリーの葉。右クリックからクエリエディタを開ける。</summary>
 public sealed partial class TableNode : ObjectExplorerNode
 {
+    /// <summary>「先頭 1000 件を表示」で読む行数。SSMS の「上位 1000 行の選択」と同じ。</summary>
+    private const int TopRows = 1000;
+
     private readonly CatalogContext _context;
     private readonly DatabaseName _database;
     private readonly TableDescriptor _descriptor;
@@ -59,10 +62,15 @@ public sealed partial class TableNode : ObjectExplorerNode
     /// <summary>
     /// 右クリックの「先頭 1000 件を表示」。このテーブルの先頭 1000 行を選ぶ文面を
     /// 組み立てて、エディタを開くと同時に実行する。
+    ///
+    /// 文面の組み立てはセッションに頼む。行数の絞り方（TOP と LIMIT）も識別子の引用符も
+    /// エンジンごとに違うので、画面が知っていてよいことではない。
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanQuery))]
     private void ShowTopRows() =>
-        _context.Query?.OpenAndRunQuery(_database, $"SELECT TOP (1000) * FROM {QuotedQualifiedName};");
+        _context.Query?.OpenAndRunQuery(
+            _database,
+            _context.Session.BuildTopRowsQuery(_descriptor.Schema, _descriptor.Name, TopRows));
 
     /// <summary>
     /// 編集グリッドがつながっている構成か（<see cref="CanQuery"/> と同じ理由）。
@@ -76,13 +84,4 @@ public sealed partial class TableNode : ObjectExplorerNode
     [RelayCommand(CanExecute = nameof(CanEditRows))]
     private void EditTopRows() =>
         _context.TableEditor?.OpenTableEditor(_database, _descriptor.Schema, _descriptor.Name);
-
-    /// <summary>
-    /// スキーマ名・テーブル名それぞれを角括弧で囲む。閉じ括弧はテーブル名の側に
-    /// 含まれ得るので、二重にして閉じられないようにする（SQL Server の識別子の作法）。
-    /// </summary>
-    private string QuotedQualifiedName =>
-        $"{Quote(_descriptor.Schema.Value)}.{Quote(_descriptor.Name)}";
-
-    private static string Quote(string identifier) => $"[{identifier.Replace("]", "]]", StringComparison.Ordinal)}]";
 }

@@ -4,6 +4,7 @@ using SQLForge.Infrastructure.Connections;
 using SQLForge.Infrastructure.Linux;
 using SQLForge.Infrastructure.MacOs;
 using SQLForge.Infrastructure.Platform;
+using SQLForge.Infrastructure.PostgreSql;
 using SQLForge.Infrastructure.SqlServer;
 using SQLForge.Infrastructure.Windows;
 using SQLForge.Ui.Composition;
@@ -91,6 +92,16 @@ public class LayerDependencyTests
     {
         // 上が「参照が無いこと」の確認なので、検出できることをここで裏取りする。
         Assert.Contains("Microsoft.Data.SqlClient", ReferencesOf<SqlServerConnector>());
+        Assert.Contains("Npgsql", ReferencesOf<PostgreSqlConnector>());
+    }
+
+    [Fact]
+    public void ドライバーのプロジェクトどうしは互いを知らない()
+    {
+        // DBMS を 1 つ足すたびに他の DBMS の依存まで引き込むことにならないよう、
+        // ドライバーは自分のパッケージだけを抱える。
+        Assert.DoesNotContain("Npgsql", ReferencesOf<SqlServerConnector>());
+        Assert.DoesNotContain("Microsoft.Data.SqlClient", ReferencesOf<PostgreSqlConnector>());
     }
 
     [Fact]

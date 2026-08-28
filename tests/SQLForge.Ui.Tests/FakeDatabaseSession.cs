@@ -30,6 +30,13 @@ public sealed class FakeDatabaseSession : IDatabaseSession
 
     public ServerInfo Server { get; }
 
+    /// <summary>この接続でできること。既定は全部できるものとして扱う。</summary>
+    public SessionCapabilities Capabilities { get; set; } = SessionCapabilities.Full;
+
+    /// <summary>「先頭 N 件を表示」の文面。既定のドライバー（SQL Server）と同じ形にする。</summary>
+    public string BuildTopRowsQuery(SchemaName schema, string table, int maxRows) =>
+        $"SELECT TOP ({maxRows}) * FROM [{schema.Value}].[{table}];";
+
     public IReadOnlyList<DatabaseDescriptor> Databases { get; set; } = [];
 
     /// <summary>読み込み時に投げる例外。失敗の見え方を確かめるために差し込む。</summary>

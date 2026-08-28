@@ -47,6 +47,12 @@ public abstract partial class AdoDatabaseSession : IDatabaseSession
 
     public ServerInfo Server { get; }
 
+    /// <summary>
+    /// 既定はこの版で用意した操作をすべて備えている、とする。
+    /// カタログしか読めないドライバーは上書きして申告する。
+    /// </summary>
+    public virtual SessionCapabilities Capabilities => SessionCapabilities.Full;
+
     public Task<IReadOnlyList<DatabaseDescriptor>> ListDatabasesAsync(CancellationToken cancellationToken = default) =>
         QueryAsync(ReadDatabasesAsync, cancellationToken);
 
@@ -101,6 +107,12 @@ public abstract partial class AdoDatabaseSession : IDatabaseSession
                 return await ReadResultAsync(connection, sql, maxRows, token).ConfigureAwait(false);
             },
             cancellationToken);
+
+    /// <summary>
+    /// テーブルの中身をのぞく既定の文面。接続を要らないただの組み立てなので、
+    /// 門は通さずにそのまま返す。
+    /// </summary>
+    public abstract string BuildTopRowsQuery(SchemaName schema, string table, int maxRows);
 
     /// <summary>
     /// 実行先のデータベースへ切り替える。SQL Server のように 1 本の接続で切り替えられる

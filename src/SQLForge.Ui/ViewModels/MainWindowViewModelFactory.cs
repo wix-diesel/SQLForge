@@ -51,22 +51,30 @@ public sealed class MainWindowViewModelFactory(
         var tableEditor = new TableEditorViewModel(
             session, editTableRows, updateTableCell, insertTableRow, deleteTableRow, rowDeletionPrompt);
 
+        // できることは DBMS ごとに違う。まだ書いていない操作をメニューや枝に出すと、
+        // 押してから断ることになるので、セッションの申告を見て出し分ける。
+        var capabilities = session.Capabilities;
+
         var catalog = new CatalogContext(
             session, databases, schemas, tables, columns, storedProcedures, storedProcedureParameters, query)
         {
-            TableEditor = tableEditor,
+            TableEditor = capabilities.SupportsTableEditing ? tableEditor : null,
             FilterEditor = filterEditor,
-            Security = new DatabaseSecurityContext(databaseUsers, userEditor)
-            {
-                Roles = databaseRoles,
-                RoleEditor = databaseRoleEditor,
-                SchemaEditor = schemaEditor
-            },
-            ServerSecurity = new ServerSecurityContext(serverLogins, loginEditor)
-            {
-                Roles = serverRoles,
-                RoleEditor = serverRoleEditor
-            }
+            Security = capabilities.SupportsSecurity
+                ? new DatabaseSecurityContext(databaseUsers, userEditor)
+                {
+                    Roles = databaseRoles,
+                    RoleEditor = databaseRoleEditor,
+                    SchemaEditor = schemaEditor
+                }
+                : null,
+            ServerSecurity = capabilities.SupportsSecurity
+                ? new ServerSecurityContext(serverLogins, loginEditor)
+                {
+                    Roles = serverRoles,
+                    RoleEditor = serverRoleEditor
+                }
+                : null
         };
 
         return new MainWindowViewModel(session, platform, catalog, query, tableEditor);

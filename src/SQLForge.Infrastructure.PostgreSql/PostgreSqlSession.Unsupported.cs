@@ -1,73 +1,24 @@
 using System.Data.Common;
 using SQLForge.Domain.Catalog;
-using SQLForge.Domain.Connections;
 using SQLForge.Domain.Editing;
 using SQLForge.Domain.Security;
 using SQLForge.Infrastructure.Connections;
 
-namespace SQLForge.Ui.Tests;
+namespace SQLForge.Infrastructure.PostgreSql;
 
 /// <summary>
-/// <see cref="AdoDatabaseSession"/> の口をすべて空で埋めたセッション。
+/// この版の PostgreSQL ドライバーがまだ受け持たない操作。
 ///
-/// 共通部分（門の作法・トランザクション・行の読み取り）を試すテストは、そのうち 1 つ 2 つの
-/// 口しか使わない。ここで既定を用意しておけば、テストは見たい口だけを上書きすればよく、
-/// ポートが増えるたびに差し込み側を 2 つ 3 つと直して回らずに済む。
+/// 口の形は DBMS を問わず 1 つなので、実装の進み具合に関わらず全部を埋める必要がある。
+/// できないことは <see cref="Domain.Connections.SessionCapabilities.CatalogOnly"/> として先に申告してあり、
+/// 画面はそれを見てメニューも枝も出さないので、ここへ来るのは
+/// 画面を通らずに呼ばれたときだけになる。そのときに黙って空を返すと
+/// 「権限が無くて 0 件」と見分けが付かないので、理由を付けて断る。
 /// </summary>
-internal abstract class StubAdoSession(DbConnection connection)
-    : AdoDatabaseSession(
-        SeedConnections.Create().First(),
-        connection,
-        new ServerInfo("SQL Server 2022", "16.0.4215.2"))
+public sealed partial class PostgreSqlSession
 {
-    public override string BuildTopRowsQuery(SchemaName schema, string table, int maxRows) => string.Empty;
-
-    protected override Task SwitchDatabaseAsync(
-        DbConnection connection,
-        DatabaseName database,
-        CancellationToken cancellationToken) =>
-        Task.CompletedTask;
-
-    protected override Task<IReadOnlyList<DatabaseDescriptor>> ReadDatabasesAsync(
-        DbConnection connection,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<DatabaseDescriptor>>([]);
-
-    protected override Task<IReadOnlyList<SchemaDescriptor>> ReadSchemasAsync(
-        DbConnection connection,
-        DatabaseName database,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<SchemaDescriptor>>([]);
-
-    protected override Task<IReadOnlyList<TableDescriptor>> ReadTablesAsync(
-        DbConnection connection,
-        DatabaseName database,
-        SchemaName schema,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<TableDescriptor>>([]);
-
-    protected override Task<IReadOnlyList<ColumnDescriptor>> ReadColumnsAsync(
-        DbConnection connection,
-        DatabaseName database,
-        SchemaName schema,
-        string table,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ColumnDescriptor>>([]);
-
-    protected override Task<IReadOnlyList<StoredProcedureDescriptor>> ReadStoredProceduresAsync(
-        DbConnection connection,
-        DatabaseName database,
-        SchemaName schema,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<StoredProcedureDescriptor>>([]);
-
-    protected override Task<IReadOnlyList<StoredProcedureParameterDescriptor>> ReadStoredProcedureParametersAsync(
-        DbConnection connection,
-        DatabaseName database,
-        SchemaName schema,
-        string procedure,
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<StoredProcedureParameterDescriptor>>([]);
+    private static NotSupportedException NotYet(string operation) =>
+        new($"PostgreSQL ドライバーは{operation}にまだ対応していません。");
 
     protected override Task<IReadOnlyList<EditableColumn>> ReadEditableColumnsAsync(
         DbConnection connection,
@@ -75,48 +26,48 @@ internal abstract class StubAdoSession(DbConnection connection)
         SchemaName schema,
         string table,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<EditableColumn>>([]);
+        throw NotYet("テーブルの編集");
 
     protected override ParameterizedStatement BuildTopRowsSelect(
         SchemaName schema,
         string table,
         IReadOnlyList<EditableColumn> columns,
         int maxRows) =>
-        new(string.Empty, []);
+        throw NotYet("テーブルの編集");
 
     protected override ParameterizedStatement BuildCellUpdate(
         SchemaName schema,
         string table,
         IReadOnlyList<EditableColumn> columns,
         TableCellUpdate update) =>
-        new(string.Empty, []);
+        throw NotYet("テーブルの編集");
 
     protected override ParameterizedStatement BuildRowInsert(
         SchemaName schema,
         string table,
         IReadOnlyList<EditableColumn> columns,
         TableRowInsert insert) =>
-        new(string.Empty, []);
+        throw NotYet("テーブルの編集");
 
     protected override ParameterizedStatement BuildRowDelete(
         SchemaName schema,
         string table,
         IReadOnlyList<EditableColumn> columns,
         TableRowDelete delete) =>
-        new(string.Empty, []);
+        throw NotYet("テーブルの編集");
 
     protected override Task<IReadOnlyList<DatabaseUserDescriptor>> ReadDatabaseUsersAsync(
         DbConnection connection,
         DatabaseName database,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<DatabaseUserDescriptor>>([]);
+        throw NotYet("データベース ユーザーの読み取り");
 
     protected override Task CreateUserAsync(
         DbConnection connection,
         DatabaseName database,
         DatabaseUserDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ユーザーの作成");
 
     protected override Task AlterUserAsync(
         DbConnection connection,
@@ -124,51 +75,51 @@ internal abstract class StubAdoSession(DbConnection connection)
         DatabaseUserDescriptor original,
         DatabaseUserDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ユーザーの変更");
 
     protected override Task DropUserAsync(
         DbConnection connection,
         DatabaseName database,
         DatabaseUserName user,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ユーザーの削除");
 
     protected override Task<IReadOnlyList<ServerLoginDescriptor>> ReadServerLoginsAsync(
         DbConnection connection,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ServerLoginDescriptor>>([]);
+        throw NotYet("ログインの読み取り");
 
     protected override Task CreateLoginAsync(
         DbConnection connection,
         ServerLoginDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("ログインの作成");
 
     protected override Task AlterLoginAsync(
         DbConnection connection,
         ServerLoginDescriptor original,
         ServerLoginDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("ログインの変更");
 
     protected override Task DropLoginAsync(
         DbConnection connection,
         ServerLoginName login,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("ログインの削除");
 
     protected override Task<IReadOnlyList<DatabaseRoleDescriptor>> ReadDatabaseRolesAsync(
         DbConnection connection,
         DatabaseName database,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<DatabaseRoleDescriptor>>([]);
+        throw NotYet("データベース ロールの読み取り");
 
     protected override Task CreateDatabaseRoleAsync(
         DbConnection connection,
         DatabaseName database,
         DatabaseRoleDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ロールの作成");
 
     protected override Task AlterDatabaseRoleAsync(
         DbConnection connection,
@@ -176,45 +127,45 @@ internal abstract class StubAdoSession(DbConnection connection)
         DatabaseRoleDescriptor original,
         DatabaseRoleDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ロールの変更");
 
     protected override Task DropDatabaseRoleAsync(
         DbConnection connection,
         DatabaseName database,
         RoleName role,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("データベース ロールの削除");
 
     protected override Task<IReadOnlyList<ServerRoleDescriptor>> ReadServerRolesAsync(
         DbConnection connection,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<ServerRoleDescriptor>>([]);
+        throw NotYet("サーバー ロールの読み取り");
 
     protected override Task CreateServerRoleAsync(
         DbConnection connection,
         ServerRoleDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("サーバー ロールの作成");
 
     protected override Task AlterServerRoleAsync(
         DbConnection connection,
         ServerRoleDescriptor original,
         ServerRoleDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("サーバー ロールの変更");
 
     protected override Task DropServerRoleAsync(
         DbConnection connection,
         RoleName role,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("サーバー ロールの削除");
 
     protected override Task CreateSchemaAsync(
         DbConnection connection,
         DatabaseName database,
         SchemaDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("スキーマの作成");
 
     protected override Task AlterSchemaAsync(
         DbConnection connection,
@@ -222,20 +173,20 @@ internal abstract class StubAdoSession(DbConnection connection)
         SchemaDescriptor original,
         SchemaDefinition definition,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("スキーマの変更");
 
     protected override Task DropSchemaAsync(
         DbConnection connection,
         DatabaseName database,
         SchemaName schema,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("スキーマの削除");
 
     protected override Task<IReadOnlyList<LoginUserMapping>> ReadLoginUserMappingsAsync(
         DbConnection connection,
         ServerLoginName login,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<LoginUserMapping>>([]);
+        throw NotYet("ユーザー マッピングの読み取り");
 
     protected override Task WriteLoginUserMappingsAsync(
         DbConnection connection,
@@ -243,14 +194,14 @@ internal abstract class StubAdoSession(DbConnection connection)
         IReadOnlyList<LoginUserMapping> original,
         IReadOnlyList<LoginUserMapping> desired,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("ユーザー マッピングの変更");
 
     protected override Task<IReadOnlyList<PermissionEntry>> ReadPermissionsAsync(
         DbConnection connection,
         SecurityPrincipal principal,
         DatabaseName? database,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<PermissionEntry>>([]);
+        throw NotYet("権限の読み取り");
 
     protected override Task WritePermissionsAsync(
         DbConnection connection,
@@ -259,12 +210,12 @@ internal abstract class StubAdoSession(DbConnection connection)
         IReadOnlyList<PermissionEntry> original,
         IReadOnlyList<PermissionEntry> desired,
         CancellationToken cancellationToken) =>
-        Task.CompletedTask;
+        throw NotYet("権限の変更");
 
     protected override Task<IReadOnlyList<SecurableReference>> ReadSecurablesAsync(
         DbConnection connection,
         SecurableKind kind,
         DatabaseName? database,
         CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<SecurableReference>>([]);
+        throw NotYet("権限を付けられるリソースの読み取り");
 }
