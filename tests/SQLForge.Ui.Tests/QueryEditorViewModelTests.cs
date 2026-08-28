@@ -9,61 +9,246 @@ using Xunit;
 namespace SQLForge.Ui.Tests;
 
 /// <summary>
-/// 作業領域のふるまい。ツリーから開く → 文面を書く → 実行 → 結果ペイン、までを追う。
+/// 作業領域のタブ帯。開く・切り替える・閉じるまでを追う（SSMS のクエリ ウィンドウと同じ扱い）。
+/// タブ 1 枚の中のふるまいは <see cref="QueryDocumentViewModelTests"/> にある。
 /// </summary>
 public class QueryEditorViewModelTests
 {
     private static readonly DatabaseName SalesDb = new("sales_db");
+    private static readonly DatabaseName ShopDb = new("shop_db");
 
     [Fact]
-    public void ツリーから開くとエディタが空で出て実行先だけが決まる()
+    public void 開くまではタブが1枚もない()
     {
-        // 接続時に開いたのは shop。ツリーから開いた先のデータベースで上書きされる。
-        var session = ReadWriteSession();
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        var editor = NewEditor();
 
         Assert.False(editor.IsOpen);
+        Assert.Empty(editor.Documents);
+        Assert.Null(editor.SelectedDocument);
+    }
+
+    [Fact]
+    public void ツリーから開くたびにタブが増える()
+    {
+        var editor = NewEditor();
 
         editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(ShopDb);
 
         Assert.True(editor.IsOpen);
-        Assert.Equal("sales_db", editor.TargetDatabase);
-        Assert.Equal(string.Empty, editor.Sql);
+        Assert.Equal(2, editor.Documents.Count);
+
+        // 開いた先が前に出る。前のタブは畳まれずそのまま残る。
+        Assert.Same(editor.Documents[1], editor.SelectedDocument);
     }
 
     [Fact]
-    public void 開いただけでは実行しない()
+    public void タブの見出しはSSMSと同じ連番で付く()
     {
+        var editor = NewEditor();
+
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        Assert.Equal(["SQLQuery1.sql", "SQLQuery2.sql"], editor.Documents.Select(document => document.Name));
+    }
+
+    [Fact]
+    public void 閉じたタブの番号は使い回さない()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        editor.Documents[1].CloseCommand.Execute(null);
+        editor.NewDocumentCommand.Execute(null);
+
+        Assert.Equal(["SQLQuery1.sql", "SQLQuery3.sql"], editor.Documents.Select(document => document.Name));
+    }
+
+    [Fact]
+    public void タブごとに文面と実行先を別々に持つ()
+    {
+        var editor = NewEditor();
+
+        editor.OpenNewQuery(SalesDb);
+        editor.SelectedDocument!.Sql = "SELECT 1";
+
+        editor.OpenNewQuery(ShopDb);
+        editor.SelectedDocument!.Sql = "SELECT 2";
+
+        Assert.Equal("SELECT 1", editor.Documents[0].Sql);
+        Assert.Equal("sales_db", editor.Documents[0].TargetDatabase);
+        Assert.Equal("SELECT 2", editor.Documents[1].Sql);
+        Assert.Equal("shop_db", editor.Documents[1].TargetDatabase);
+    }
+
+    [Fact]
+    public void 新しいタブは今のタブと同じ実行先で開く()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(ShopDb);
+
+        editor.NewDocumentCommand.Execute(null);
+
+        Assert.Equal("shop_db", editor.SelectedDocument!.TargetDatabase);
+    }
+
+    [Fact]
+    public void タブが1枚も無いときの新しいタブは接続時のデータベースを実行先にする()
+    {
+        // 見本データの接続が開いているのは shop。
         var session = ReadWriteSession();
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
 
-        editor.OpenNewQuery(SalesDb);
+        editor.NewDocumentCommand.Execute(null);
 
-        Assert.Null(session.ExecutedSql);
-        Assert.Empty(editor.Tabs);
+        Assert.Equal(session.Profile.Target.Database, editor.SelectedDocument!.TargetDatabase);
     }
 
     [Fact]
-    public async Task 開き直すと前の結果を持ち越さない()
+    public void タブを閉じると残りが詰まり最後の1枚で作業領域が畳まれる()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(ShopDb);
+
+        editor.CloseSelectedCommand.Execute(null);
+
+        Assert.Single(editor.Documents);
+        Assert.True(editor.IsOpen);
+
+        editor.CloseSelectedCommand.Execute(null);
+
+        Assert.Empty(editor.Documents);
+        Assert.Null(editor.SelectedDocument);
+        Assert.False(editor.IsOpen);
+    }
+
+    [Fact]
+    public void 今のタブを閉じると直前に見ていたタブが前に出る()
+    {
+        // SSMS と同じで、閉じた先は「隣」ではなく「直前に見ていたもの」。
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);   // SQLQuery1
+        editor.OpenNewQuery(SalesDb);   // SQLQuery2
+        editor.OpenNewQuery(SalesDb);   // SQLQuery3
+
+        editor.SelectedDocument = editor.Documents[0];
+        editor.SelectedDocument = editor.Documents[2];
+
+        editor.CloseSelectedCommand.Execute(null);
+
+        Assert.Same(editor.Documents[0], editor.SelectedDocument);
+    }
+
+    [Fact]
+    public void 前に出ていないタブを閉じても今見ているタブは変わらない()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        var selected = editor.SelectedDocument!;
+        editor.Documents[0].CloseCommand.Execute(null);
+
+        Assert.Same(selected, editor.SelectedDocument);
+    }
+
+    [Fact]
+    public void これ以外を閉じると押したタブだけが残る()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        var kept = editor.Documents[1];
+        kept.CloseOthersCommand.Execute(null);
+
+        Assert.Same(kept, Assert.Single(editor.Documents));
+        Assert.Same(kept, editor.SelectedDocument);
+    }
+
+    [Fact]
+    public void すべて閉じると作業領域が畳まれる()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        editor.Documents[0].CloseAllCommand.Execute(null);
+
+        Assert.Empty(editor.Documents);
+        Assert.False(editor.IsOpen);
+    }
+
+    [Fact]
+    public void 次と前でタブを行き来する()
+    {
+        var editor = NewEditor();
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+        editor.OpenNewQuery(SalesDb);
+
+        editor.SelectedDocument = editor.Documents[0];
+
+        editor.NextDocumentCommand.Execute(null);
+        Assert.Same(editor.Documents[1], editor.SelectedDocument);
+
+        editor.PreviousDocumentCommand.Execute(null);
+        Assert.Same(editor.Documents[0], editor.SelectedDocument);
+
+        // 端まで来たら反対の端へ回る。
+        editor.PreviousDocumentCommand.Execute(null);
+        Assert.Same(editor.Documents[2], editor.SelectedDocument);
+
+        editor.NextDocumentCommand.Execute(null);
+        Assert.Same(editor.Documents[0], editor.SelectedDocument);
+    }
+
+    [Fact]
+    public void タブが1枚のときは行き来する先がない()
+    {
+        var editor = NewEditor();
+
+        Assert.False(editor.NextDocumentCommand.CanExecute(null));
+        Assert.False(editor.CloseSelectedCommand.CanExecute(null));
+
+        editor.OpenNewQuery(SalesDb);
+
+        Assert.False(editor.NextDocumentCommand.CanExecute(null));
+        Assert.True(editor.CloseSelectedCommand.CanExecute(null));
+
+        editor.OpenNewQuery(SalesDb);
+
+        Assert.True(editor.NextDocumentCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task 実行中のタブを閉じると実行を取り消す()
     {
         var session = ReadWriteSession();
-        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
+        session.NextResult = new QueryResult([], -1, TimeSpan.Zero);
+        session.QueryGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
         editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT 1";
-        await editor.RunCommand.ExecuteAsync(null);
 
-        editor.OpenNewQuery(SalesDb);
+        var document = editor.SelectedDocument!;
+        document.Sql = "SELECT 1";
+        var running = document.RunCommand.ExecuteAsync(null);
 
-        Assert.Equal(string.Empty, editor.Sql);
-        Assert.Empty(editor.Tabs);
-        Assert.Null(editor.SelectedTab);
-        Assert.Equal(string.Empty, editor.Status);
+        document.CloseCommand.Execute(null);
+        session.QueryGate.SetResult();
+        await running;
+
+        Assert.Empty(editor.Documents);
+        Assert.False(document.IsRunning);
     }
 
     [Fact]
-    public async Task 実行中に開き直すと後から返ってきた結果は出さない()
+    public async Task 実行中に別のタブを開いても結果は元のタブに出る()
     {
         var session = ReadWriteSession();
         session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
@@ -71,232 +256,47 @@ public class QueryEditorViewModelTests
 
         var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
         editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT 1";
 
-        var running = editor.RunCommand.ExecuteAsync(null);
+        var first = editor.SelectedDocument!;
+        first.Sql = "SELECT 1";
+        var running = first.RunCommand.ExecuteAsync(null);
 
-        // 結果が返る前に、ツリーから別のクエリを開き直す。
+        // 待っている間に、ツリーから別のクエリを開く。
         editor.OpenNewQuery(SalesDb);
         session.QueryGate.SetResult();
         await running;
 
-        // 開き直した先はもう別のクエリ。そこへ前の実行の結果を出すと嘘になる。
-        Assert.Empty(editor.Tabs);
-        Assert.Null(editor.SelectedTab);
-        Assert.Equal(string.Empty, editor.Status);
-        Assert.False(editor.HasFailed);
+        // 結果は走らせたタブのもの。前に出ているタブは巻き添えにしない。
+        Assert.Equal(["結果 1", "メッセージ"], first.Tabs.Select(tab => tab.Title));
+        Assert.Empty(editor.SelectedDocument!.Tabs);
     }
 
     [Fact]
-    public async Task 実行すると結果とメッセージのタブが並ぶ()
+    public void ツリーから文面付きで開くとその文面のタブが増える()
     {
-        var session = ReadWriteSession();
-        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.FromMilliseconds(128));
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
+        var editor = NewEditor();
         editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT 1";
 
-        await editor.RunCommand.ExecuteAsync(null);
-
-        Assert.Equal(["結果 1", "メッセージ"], editor.Tabs.Select(tab => tab.Title));
-        Assert.True(editor.SelectedTab!.IsGrid);
-        Assert.Equal("1 行", editor.Tabs[0].Badge);
-        Assert.False(editor.HasFailed);
-        Assert.Contains("128 ms", editor.Status, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task 結果セットの中身がグリッドの列と行になる()
-    {
-        var session = ReadWriteSession();
-        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT 1";
-
-        await editor.RunCommand.ExecuteAsync(null);
-
-        var grid = editor.Tabs[0].ResultSet!;
-        Assert.Equal(["region", "revenue"], grid.Columns.Select(column => column.Name));
-
-        var cells = grid.Rows.Single().Cells;
-        Assert.Equal("北米", cells[0].Text);
-        Assert.False(cells[0].IsNull);
-
-        // NULL は「NULL」という値の入ったセルと見分けが付くようにしておく。
-        Assert.True(cells[1].IsNull);
-        Assert.Equal("NULL", cells[1].Text);
-
-        // 数値の列だけ右へ寄せる。
-        Assert.False(grid.Columns[0].IsNumeric);
-        Assert.True(grid.Columns[1].IsNumeric);
-    }
-
-    [Fact]
-    public async Task 行が返らないときはメッセージのタブが選ばれる()
-    {
-        var session = ReadWriteSession();
-        session.NextResult = new QueryResult([], 3, TimeSpan.Zero);
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "UPDATE dbo.orders SET status = 'paid'";
-
-        await editor.RunCommand.ExecuteAsync(null);
-
-        Assert.Equal("メッセージ", editor.SelectedTab!.Title);
-        Assert.Contains("3 行処理されました", editor.SelectedTab.Text, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task 失敗は理由をメッセージへ出す()
-    {
-        var session = ReadWriteSession();
-        session.QueryFailure = new InvalidOperationException("オブジェクト名 'nope' が無効です。");
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT * FROM nope";
-
-        await editor.RunCommand.ExecuteAsync(null);
-
-        Assert.True(editor.HasFailed);
-        Assert.Equal("メッセージ", editor.SelectedTab!.Title);
-        Assert.Contains("nope", editor.SelectedTab.Text, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task 読み取り専用で開いた接続でも書き込みは止めない()
-    {
-        // 見本データの先頭は本番タグの読み取り専用接続。印を出すだけで、文面は素通しする
-        //（止めるのはサーバー側の権限の仕事）。
-        var session = new FakeDatabaseSession();
-        Assert.True(session.Profile.IsReadOnly);
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "DELETE FROM dbo.orders";
-
-        await editor.RunCommand.ExecuteAsync(null);
-
-        Assert.Equal("DELETE FROM dbo.orders", session.ExecutedSql);
-        Assert.False(editor.HasFailed);
-    }
-
-    [Fact]
-    public async Task ツリーから文面付きで開くと即座に実行される()
-    {
-        var session = ReadWriteSession();
-        session.NextResult = new QueryResult([OneRow()], -1, TimeSpan.Zero);
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
         editor.OpenAndRunQuery(SalesDb, "SELECT TOP (1000) * FROM [dbo].[orders];");
 
-        // 実行は非同期に始まる。実行中を経て終わるまで待つ。
-        while (editor.IsRunning)
-        {
-            await Task.Yield();
-        }
-
-        Assert.True(editor.IsOpen);
-        Assert.Equal("sales_db", editor.TargetDatabase);
-        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", editor.Sql);
-        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", session.ExecutedSql);
-        Assert.Equal(["結果 1", "メッセージ"], editor.Tabs.Select(tab => tab.Title));
+        Assert.Equal(2, editor.Documents.Count);
+        Assert.Equal("SELECT TOP (1000) * FROM [dbo].[orders];", editor.SelectedDocument!.Sql);
     }
 
     [Fact]
-    public void 空の文面で開いて実行しようとすると例外になる()
+    public void 空の文面で開こうとすると例外になる()
     {
-        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
+        var editor = NewEditor();
 
         Assert.Throws<ArgumentException>(() => editor.OpenAndRunQuery(SalesDb, "   "));
-    }
-
-    [Fact]
-    public void 空の文面では実行ボタンが押せない()
-    {
-        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-
-        Assert.False(editor.RunCommand.CanExecute(null));
-
-        editor.Sql = "SELECT 1";
-
-        Assert.True(editor.RunCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task 打ち切った結果はその旨を添える()
-    {
-        var session = ReadWriteSession();
-        session.NextResult = new QueryResult([Truncated()], -1, TimeSpan.Zero);
-
-        var editor = new QueryEditorViewModel(session, new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT 1";
-
-        await editor.RunCommand.ExecuteAsync(null);
-
-        Assert.True(editor.Tabs[0].ResultSet!.IsTruncated);
-        Assert.Contains("打ち切り", editor.Status, StringComparison.Ordinal);
-        Assert.Contains("取得上限", editor.Tabs[1].Text, StringComparison.Ordinal);
+        Assert.Empty(editor.Documents);
     }
 
     private static QueryResultSet OneRow() =>
-        new(
-            [
-                new QueryColumn("region", "nvarchar", IsNumeric: false),
-                new QueryColumn("revenue", "decimal", IsNumeric: true)
-            ],
-            [new string?[] { "北米", null }]);
+        new([new QueryColumn("n", "int", IsNumeric: true)], [new string?[] { "1" }]);
 
-    private static QueryResultSet Truncated() =>
-        new(
-            [new QueryColumn("n", "int", IsNumeric: true)],
-            [new string?[] { "1" }],
-            isTruncated: true);
-
-    [Fact]
-    public void 整形すると文面が整う()
-    {
-        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "select a, b from dbo.orders";
-
-        editor.FormatCommand.Execute(null);
-
-        Assert.Equal("SELECT\n    a,\n    b\nFROM dbo.orders", editor.Sql);
-    }
-
-    [Fact]
-    public void 文面が空のあいだは整形も実行もできない()
-    {
-        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-
-        Assert.False(editor.FormatCommand.CanExecute(null));
-        Assert.False(editor.RunCommand.CanExecute(null));
-
-        editor.Sql = "SELECT 1";
-
-        Assert.True(editor.FormatCommand.CanExecute(null));
-        Assert.True(editor.RunCommand.CanExecute(null));
-    }
-
-    [Fact]
-    public async Task 補完の口を渡していなければ候補は出ない()
-    {
-        var editor = new QueryEditorViewModel(ReadWriteSession(), new ExecuteQueryUseCase());
-        editor.OpenNewQuery(SalesDb);
-        editor.Sql = "SELECT * FROM ";
-
-        var result = await editor.CompleteAsync(editor.Sql.Length);
-
-        Assert.True(result.IsEmpty);
-    }
+    private static QueryEditorViewModel NewEditor() =>
+        new(ReadWriteSession(), new ExecuteQueryUseCase());
 
     private static FakeDatabaseSession ReadWriteSession()
     {

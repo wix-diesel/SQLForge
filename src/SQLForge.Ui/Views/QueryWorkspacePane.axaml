@@ -11,13 +11,18 @@
 
   <UserControl.KeyBindings>
     <!-- SSMS と同じで F5。エディタに入力しているときも効くように、ペイン側で受ける。 -->
-    <KeyBinding Gesture="F5" Command="{Binding Query.RunCommand}"/>
-    <KeyBinding Gesture="Ctrl+Return" Command="{Binding Query.RunCommand}"/>
+    <KeyBinding Gesture="F5" Command="{Binding Query.SelectedDocument.RunCommand}"/>
+    <KeyBinding Gesture="Ctrl+Return" Command="{Binding Query.SelectedDocument.RunCommand}"/>
     <!-- 整形は VS Code と同じ Ctrl+Shift+F。 -->
-    <KeyBinding Gesture="Ctrl+Shift+F" Command="{Binding Query.FormatCommand}"/>
+    <KeyBinding Gesture="Ctrl+Shift+F" Command="{Binding Query.SelectedDocument.FormatCommand}"/>
+    <!-- タブの開閉と行き来。どれも SSMS と同じ割り当て。 -->
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding Query.NewDocumentCommand}"/>
+    <KeyBinding Gesture="Ctrl+F4" Command="{Binding Query.CloseSelectedCommand}"/>
+    <KeyBinding Gesture="Ctrl+Tab" Command="{Binding Query.NextDocumentCommand}"/>
+    <KeyBinding Gesture="Ctrl+Shift+Tab" Command="{Binding Query.PreviousDocumentCommand}"/>
   </UserControl.KeyBindings>
 
-  <Grid RowDefinitions="Auto,2*,6,3*" Background="{DynamicResource BgAppBrush}">
+  <Grid RowDefinitions="Auto,Auto,2*,6,3*" Background="{DynamicResource BgAppBrush}">
 
     <!-- ===== ツールバー ===== -->
     <Border Grid.Row="0"
@@ -26,32 +31,43 @@
             Background="{DynamicResource BgPanelBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
 
-        <!-- 実行先のデータベース -->
-        <Border Grid.Column="0"
+        <!-- 新しいクエリ。SSMS と同じで、押すたびにタブが 1 枚増える。 -->
+        <Button Grid.Column="0"
+                Theme="{StaticResource ToolbarButton}"
+                Command="{Binding Query.NewDocumentCommand}"
+                ToolTip.Tip="新しいクエリのタブを開く（Ctrl+N）">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Classes="icon accent" Data="{StaticResource IconPlus}" VerticalAlignment="Center"/>
+            <TextBlock Text="新しいクエリ" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+
+        <!-- 実行先のデータベース（タブごとに決まる） -->
+        <Border Grid.Column="1"
                 Height="{DynamicResource ControlHeightSm}"
                 Padding="9,0"
                 Background="{DynamicResource BgSurfaceBrush}"
                 BorderBrush="{DynamicResource BorderStrongBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource RadiusMd}"
-                ToolTip.Tip="このクエリを実行するデータベース">
+                ToolTip.Tip="このタブのクエリを実行するデータベース">
           <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
             <Path Classes="icon accent" Data="{StaticResource IconCatalog}" VerticalAlignment="Center"/>
             <TextBlock Classes="mono"
-                       Text="{Binding Query.TargetDatabase}"
+                       Text="{Binding Query.SelectedDocument.TargetDatabase}"
                        Foreground="{DynamicResource TextHighBrush}"
                        VerticalAlignment="Center"/>
           </StackPanel>
         </Border>
 
-        <Border Grid.Column="1" Theme="{StaticResource VerticalDivider}"/>
+        <Border Grid.Column="2" Theme="{StaticResource VerticalDivider}"/>
 
         <!-- 実行 -->
-        <Button Grid.Column="2"
+        <Button Grid.Column="3"
                 Theme="{StaticResource ToolbarPrimaryButton}"
-                Command="{Binding Query.RunCommand}"
+                Command="{Binding Query.SelectedDocument.RunCommand}"
                 ToolTip.Tip="クエリを実行（F5 / Ctrl+Enter）">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon onAccent" Data="{StaticResource IconPlay}" VerticalAlignment="Center"/>
@@ -64,10 +80,10 @@
         </Button>
 
         <!-- 停止（実行中だけ出す） -->
-        <Button Grid.Column="3"
+        <Button Grid.Column="4"
                 Theme="{StaticResource ToolbarButton}"
-                Command="{Binding Query.RunCancelCommand}"
-                IsVisible="{Binding Query.IsRunning}"
+                Command="{Binding Query.SelectedDocument.RunCancelCommand}"
+                IsVisible="{Binding Query.SelectedDocument.IsRunning, FallbackValue=False}"
                 ToolTip.Tip="実行を取り消す">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon danger" Data="{StaticResource IconStop}" VerticalAlignment="Center"/>
@@ -76,9 +92,9 @@
         </Button>
 
         <!-- 整形 -->
-        <Button Grid.Column="4"
+        <Button Grid.Column="5"
                 Theme="{StaticResource ToolbarButton}"
-                Command="{Binding Query.FormatCommand}"
+                Command="{Binding Query.SelectedDocument.FormatCommand}"
                 ToolTip.Tip="文面を整える（Ctrl+Shift+F）">
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Classes="icon" Data="{StaticResource IconFormat}" VerticalAlignment="Center"/>
@@ -86,49 +102,97 @@
           </StackPanel>
         </Button>
 
-        <Border Grid.Column="5" Theme="{StaticResource VerticalDivider}"/>
+        <Border Grid.Column="6" Theme="{StaticResource VerticalDivider}"/>
 
         <!-- 取得上限。まだ変えられないので、値だけを見せる。 -->
-        <TextBlock Grid.Column="6"
+        <TextBlock Grid.Column="7"
                    Classes="label"
                    Text="{Binding Query.MaxRowsLabel}"
                    VerticalAlignment="Center"
                    ToolTip.Tip="結果セットごとに読む行数の上限（変更は未実装）"/>
 
         <!-- 実行結果の一行 -->
-        <TextBlock Grid.Column="8"
+        <TextBlock Grid.Column="9"
                    Classes="runStatus"
-                   Classes.failure="{Binding Query.HasFailed}"
-                   Text="{Binding Query.Status}"/>
+                   Classes.failure="{Binding Query.SelectedDocument.HasFailed, FallbackValue=False}"
+                   Text="{Binding Query.SelectedDocument.Status}"/>
 
-        <Button Grid.Column="9"
+        <Button Grid.Column="10"
                 Theme="{StaticResource IconButton}"
-                Command="{Binding Query.CloseCommand}"
-                ToolTip.Tip="クエリを閉じる">
+                Command="{Binding Query.CloseSelectedCommand}"
+                ToolTip.Tip="このタブを閉じる（Ctrl+F4）">
           <Path Classes="icon" Data="{StaticResource IconClose}"/>
         </Button>
       </Grid>
+    </Border>
+
+    <!-- ===== クエリのタブ帯 =====
+         タブ 1 枚が SSMS のクエリ ウィンドウ 1 つ。文面・実行先・結果はタブごとに持つ。
+         中クリックで閉じるのはコードビハインドで受ける（ボタンの外を押せるようにするため）。 -->
+    <Border Grid.Row="1"
+            Height="{DynamicResource TabHeight}"
+            Background="{DynamicResource BgPanelBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ListBox Name="DocumentTabs"
+                 ItemsSource="{Binding Query.Documents}"
+                 SelectedItem="{Binding Query.SelectedDocument, Mode=TwoWay}"
+                 ItemContainerTheme="{StaticResource QueryTabItem}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0"
+                 PointerReleased="OnTabPointerReleased">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal"/>
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="workspace:QueryDocumentViewModel">
+              <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center" Background="Transparent">
+                <StackPanel.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="閉じる" Command="{Binding CloseCommand}"/>
+                    <MenuItem Header="これ以外をすべて閉じる" Command="{Binding CloseOthersCommand}"/>
+                    <MenuItem Header="すべて閉じる" Command="{Binding CloseAllCommand}"/>
+                  </ContextMenu>
+                </StackPanel.ContextMenu>
+                <Path Classes="icon accent" Data="{StaticResource IconQuery}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}"
+                           VerticalAlignment="Center"
+                           ToolTip.Tip="{Binding TargetDatabase}"/>
+                <Button Theme="{StaticResource TabCloseButton}"
+                        Command="{Binding CloseCommand}"
+                        ToolTip.Tip="このタブを閉じる（Ctrl+F4）">
+                  <Path Classes="icon" Data="{StaticResource IconClose}"/>
+                </Button>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
     </Border>
 
     <!-- ===== エディタ =====
          AvaloniaEdit。色分けは TextMate ではなく自前の SqlLexer を SqlColorizer で流し込み、
          色は Tokens.axaml の Syntax*Brush から引く（テーマの切り替えにそのまま追従する）。
          補完のポップアップの出し入れは QueryWorkspacePane.axaml.cs が受け持つ。 -->
-    <Border Grid.Row="1" Background="{DynamicResource BgSurfaceBrush}">
+    <Border Grid.Row="2" Background="{DynamicResource BgSurfaceBrush}">
       <edit:TextEditor Name="Editor"
                        Classes="editor"
-                       Document="{Binding Query.Document}"
+                       Document="{Binding Query.SelectedDocument.Document}"
                        ShowLineNumbers="True"
                        Watermark="SELECT ... と入力して 実行（F5）を押す"/>
     </Border>
 
     <!-- エディタと結果の境目 -->
-    <GridSplitter Grid.Row="2"
+    <GridSplitter Grid.Row="3"
                   ResizeDirection="Rows"
                   Background="{DynamicResource BgAppBrush}"/>
 
     <!-- ===== 結果ペイン ===== -->
-    <Grid Grid.Row="3" RowDefinitions="Auto,*" Background="{DynamicResource BgSurfaceBrush}">
+    <Grid Grid.Row="4" RowDefinitions="Auto,*" Background="{DynamicResource BgSurfaceBrush}">
 
       <!-- タブ帯（結果 1 / 結果 2 / メッセージ）。一度も実行していない間は空の帯を出さない。 -->
       <Border Grid.Row="0"
@@ -136,9 +200,9 @@
               Background="{DynamicResource BgPanelBrush}"
               BorderBrush="{DynamicResource BorderBrush}"
               BorderThickness="0,1,0,1"
-              IsVisible="{Binding Query.SelectedTab, Converter={x:Static ObjectConverters.IsNotNull}}">
-        <ListBox ItemsSource="{Binding Query.Tabs}"
-                 SelectedItem="{Binding Query.SelectedTab, Mode=TwoWay}"
+              IsVisible="{Binding Query.SelectedDocument.SelectedTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <ListBox ItemsSource="{Binding Query.SelectedDocument.Tabs}"
+                 SelectedItem="{Binding Query.SelectedDocument.SelectedTab, Mode=TwoWay}"
                  ItemContainerTheme="{StaticResource ResultTabItem}"
                  Background="Transparent"
                  BorderThickness="0"
@@ -177,9 +241,9 @@
                    Foreground="{DynamicResource TextFaintBrush}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   IsVisible="{Binding Query.SelectedTab, Converter={x:Static ObjectConverters.IsNull}}"/>
+                   IsVisible="{Binding Query.SelectedDocument.SelectedTab, Converter={x:Static ObjectConverters.IsNull}}"/>
 
-        <ContentControl Content="{Binding Query.SelectedTab}">
+        <ContentControl Content="{Binding Query.SelectedDocument.SelectedTab}">
           <ContentControl.ContentTemplate>
             <DataTemplate x:DataType="workspace:QueryTabViewModel">
               <Panel>

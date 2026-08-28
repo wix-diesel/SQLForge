@@ -9,6 +9,7 @@ using SQLForge.Application.Query;
 using SQLForge.Domain.Sql;
 using SQLForge.Ui.Presentation;
 using SQLForge.Ui.ViewModels;
+using SQLForge.Ui.ViewModels.Workspace;
 
 namespace SQLForge.Ui.Views;
 
@@ -52,9 +53,53 @@ public partial class QueryWorkspacePane : UserControl
         _editor.TextArea.TextEntering += OnTextEntering;
         _editor.TextArea.TextEntered += OnTextEntered;
 
+        // タブを切り替えると文書が差し替わる。書きかけの位置はタブごとに覚えておき、
+        // 戻ってきたらそこへ帰す（エディタは 1 つを使い回すため）。
+        _editor.TextArea.Caret.PositionChanged += (_, _) => RememberCaret();
+        _editor.DocumentChanged += (_, _) => RestoreCaret();
+
         ApplySyntaxColors();
         ActualThemeVariantChanged += (_, _) => ApplySyntaxColors();
     }
+
+    /// <summary>今のタブの文書を編集しているときだけ、その位置を覚える。</summary>
+    private void RememberCaret()
+    {
+        if (Current() is { } document && ReferenceEquals(_editor?.Document, document.Document))
+        {
+            document.CaretOffset = _editor.CaretOffset;
+        }
+    }
+
+    private void RestoreCaret()
+    {
+        // 差し替えの途中で開いたままの候補は、もう別の文書のものなので閉じる。
+        _completion?.Close();
+
+        if (_editor?.Document is { } opened && Current() is { } document
+            && ReferenceEquals(opened, document.Document))
+        {
+            _editor.CaretOffset = Math.Min(document.CaretOffset, opened.TextLength);
+        }
+    }
+
+    /// <summary>タブ帯で中クリックしたら、そのタブを閉じる（SSMS と同じ）。</summary>
+    private void OnTabPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton is not MouseButton.Middle)
+        {
+            return;
+        }
+
+        if ((e.Source as Control)?.DataContext is QueryDocumentViewModel document)
+        {
+            document.CloseCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private QueryDocumentViewModel? Current() =>
+        (DataContext as MainWindowViewModel)?.Query.SelectedDocument;
 
     /// <summary>
     /// 画面へ載ってから色を引き直す。組み立てた時点では親をたどれず、
@@ -111,13 +156,13 @@ public partial class QueryWorkspacePane : UserControl
             return;
         }
 
-        if (!ShouldOpen(e.Text[0]) || DataContext is not MainWindowViewModel viewModel)
+        if (!ShouldOpen(e.Text[0]) || DataContext is not MainWindowViewModel { Query.SelectedDocument: not null } viewModel)
         {
             return;
         }
 
         var caret = _editor.CaretOffset;
-        var result = await viewModel.Query.CompleteAsync(caret);
+        var result = await viewModel.Query.SelectedDocument!.CompleteAsync(caret);
 
         // 候補を読んでいる間に打ち進められていたら、その位置の候補ではないので捨てる。
         if (result.IsEmpty || _editor.CaretOffset != caret || _completion is not null)
