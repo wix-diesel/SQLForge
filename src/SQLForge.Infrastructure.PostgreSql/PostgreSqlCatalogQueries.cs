@@ -121,26 +121,55 @@ internal static class PostgreSqlCatalogQueries
         """;
 
     /// <summary>
-    /// ストアド プロシージャのパラメーター。型と既定値の有無まで揃っているので
-    /// information_schema から読む。
+    /// ストアド プロシージャのパラメーター。
+    ///
+    /// information_schema.parameters には型も既定値も揃っているが、既定値
+    /// （parameter_default）は「その関数を持っているロールで繋いだとき」しか返らない。
+    /// 他人の作った関数を眺めるのが普通なので、それだと既定値が常に「無し」に見えてしまう。
+    /// 誰でも読める pg_proc から組み立てる。
+    ///
+    /// 引数は型・モード・名前の 3 つの配列に分かれている。OUT を持たない関数では
+    /// proallargtypes が、すべて IN の関数では proargmodes が、名前の無い関数では
+    /// proargnames が空になるので、複数配列の unnest（短いほうは NULL で埋まる）で並べ直す。
+    ///
+    /// 既定値は「入力引数の後ろから pronargdefaults 個」に付く決まりなので、
+    /// 入力として数える引数（IN / INOUT / VARIADIC）の中での位置で判ずる。
     ///
     /// 多重定義があるときは 1 つに絞る（呼び出し側は名前しか持たないため）。
     /// 名前の無い引数は $1 のように位置で呼ぶ。
     /// </summary>
     public const string StoredProcedureParameters = """
-        SELECT COALESCE(a.parameter_name::text, '$' || a.ordinal_position::text)
-                                                             AS name,
-               a.ordinal_position::int                       AS ordinal_position,
-               a.data_type                                   AS data_type,
-               (a.parameter_mode IN ('OUT', 'INOUT'))        AS is_output,
-               (a.parameter_default IS NOT NULL)             AS has_default
-        FROM information_schema.parameters AS a
-        WHERE a.specific_schema = @schema
-          AND a.specific_name = (
-              SELECT r.specific_name
-              FROM information_schema.routines AS r
-              WHERE r.specific_schema = @schema AND r.routine_name = @procedure
-              ORDER BY r.specific_name
-              LIMIT 1);
+        SELECT COALESCE(arg.name, '$' || arg.ordinal::text)          AS name,
+               arg.ordinal::int                                      AS ordinal_position,
+               pg_catalog.format_type(arg.type, NULL)                AS data_type,
+               (arg.mode IN ('o', 'b', 't'))                         AS is_output,
+               (arg.mode IN ('i', 'b', 'v')
+                AND arg.input_position > arg.input_count - arg.default_count)
+                                                                     AS has_default
+        FROM (
+            SELECT a.type                                            AS type,
+                   COALESCE(a.mode, 'i')                             AS mode,
+                   a.name                                            AS name,
+                   a.ordinal                                         AS ordinal,
+                   p.pronargs                                        AS input_count,
+                   p.pronargdefaults                                 AS default_count,
+                   count(*) FILTER (WHERE COALESCE(a.mode, 'i') IN ('i', 'b', 'v'))
+                       OVER (ORDER BY a.ordinal ROWS UNBOUNDED PRECEDING)
+                                                                     AS input_position
+            FROM pg_catalog.pg_proc AS p
+            CROSS JOIN LATERAL unnest(
+                    COALESCE(p.proallargtypes, p.proargtypes::oid[]),
+                    p.proargmodes,
+                    p.proargnames)
+                WITH ORDINALITY AS a(type, mode, name, ordinal)
+            WHERE p.oid = (
+                SELECT q.oid
+                FROM pg_catalog.pg_proc AS q
+                INNER JOIN pg_catalog.pg_namespace AS n ON n.oid = q.pronamespace
+                WHERE n.nspname = @schema AND q.proname = @procedure
+                  AND q.prokind IN ('f', 'p')
+                ORDER BY q.oid
+                LIMIT 1)
+        ) AS arg;
         """;
 }

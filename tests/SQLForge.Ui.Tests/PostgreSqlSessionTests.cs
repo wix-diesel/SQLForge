@@ -113,6 +113,35 @@ public class PostgreSqlSessionTests
     }
 
     [Fact]
+    public async Task ストアドのパラメーターは名前とスキーマをパラメータで渡す()
+    {
+        // 既定値の有無は pg_proc から組み立てる。information_schema の parameter_default は
+        // その関数を持っているロールで繋いだときしか返らず、他人の関数では常に「無し」に見えるため。
+        var connection = new FakeDbConnection
+        {
+            Rows =
+            [
+                new object?[] { "customer_id", 1, "integer", false, false },
+                new object?[] { "order_id", 2, "integer", true, true }
+            ]
+        };
+
+        var parameters = await NewSession(connection).ListStoredProcedureParametersAsync(
+            new DatabaseName("sales_db"),
+            new SchemaName("public"),
+            "usp_place_order");
+
+        Assert.Equal(new object?[] { "public", "usp_place_order" }, connection.Commands[0].Values);
+        Assert.Equal("customer_id", parameters[0].Name);
+        Assert.Equal(1, parameters[0].OrdinalPosition);
+        Assert.Equal("integer", parameters[0].DataType);
+        Assert.False(parameters[0].IsOutput);
+        Assert.False(parameters[0].HasDefaultValue);
+        Assert.True(parameters[1].IsOutput);
+        Assert.True(parameters[1].HasDefaultValue);
+    }
+
+    [Fact]
     public void 先頭N行をのぞく文面はLIMITで絞る()
     {
         // PostgreSQL に TOP は無い。識別子は二重引用符で囲む（囲まないと小文字へ畳まれる）。
