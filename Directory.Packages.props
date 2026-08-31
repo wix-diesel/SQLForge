@@ -23,7 +23,7 @@
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <!-- Avalonia.Headless.XUnit 12 は xUnit v3 (xunit.v3.extensibility.core 3.2.2) に
          依存するため、テストも v3 へ移行する。 -->
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
 </Project>
