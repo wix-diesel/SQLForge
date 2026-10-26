@@ -3,11 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Skia" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageVersion Include="Avalonia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
     <!-- クエリエディタ。素の TextBox では文字ごとに色を変えられないため入れる。
          12.0.0 は net10.0 ターゲットで Avalonia 12.0.0 依存なので 12.1 系と同居できる。
          色分けは TextMate ではなく自前の SqlLexer + SqlColorizer で行うので、
@@ -15,8 +15,8 @@
          （テーマの色は Themes/Tokens.axaml の Syntax*Brush に合わせる）。 -->
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <!-- SSH トンネル（接続ダイアログの「SSH トンネル」タブ）の踏み台接続と手元の
          ポート転送に使う。DBMS にも OS にも依らないので SQLForge.Infrastructure に置く。 -->
@@ -24,6 +24,6 @@
     <!-- Avalonia.Headless.XUnit 12 は xUnit v3 (xunit.v3.extensibility.core 3.2.2) に
          依存するため、テストも v3 へ移行する。 -->
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 </Project>
